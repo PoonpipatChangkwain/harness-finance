@@ -119,8 +119,11 @@ LIBRARY: dict[str, RoleSpec] = {
         RoleSpec(name="trade_bull_researcher", title="Bull Researcher", version="v2"),
         RoleSpec(name="trade_bear_researcher", title="Bear Researcher", version="v2"),
         RoleSpec(name="trade_research_manager", title="Research Manager", version="v2"),
-        # v3: horizon, time stop, invalidation; v4: pending limit/stop orders
-        RoleSpec(name="trade_trader", title="Trader", version="v4"),
+        # v3: horizon, time stop, invalidation; v4: pending limit/stop orders;
+        # v5: flat is allowed on a marginal setup even when the plan leans a side, and
+        # confidence must be calibrated to actual win rate, not thesis conviction
+        # (live/backtest showed frequent stop-outs from low-quality forced entries)
+        RoleSpec(name="trade_trader", title="Trader", version="v5"),
         RoleSpec(
             name="trade_aggressive_debator", title="Aggressive Risk Debator", version="v2", tier="quick"
         ),

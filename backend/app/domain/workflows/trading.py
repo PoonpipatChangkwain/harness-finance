@@ -81,7 +81,9 @@ DEFAULT_RISK_PCT = 0.01
 MAX_POLICY_ATTEMPTS = 2  # the first proposal + one trader retry (phase-10 §10.2)
 MAX_ENTRY_DRIFT_ATR = 0.5  # approval rejects when price moved further than this since the card was shown
 DEFAULT_MIN_CONFIDENCE = 0.7  # below it the PM's call is not traded (block) unless Settings say warn
-DEFAULT_MIN_RISK_REWARD = 1.0  # R:R at the first target must exceed it; 0 = rule off
+DEFAULT_MIN_RISK_REWARD = 1.5  # R:R at the first target must exceed it; 0 = rule off
+# (raised from 1.0: backtests + live showed frequent stop-outs — at a realistic ~30-40% win
+# rate, a 1:1 floor is a losing expectancy; 1.5 forces the trader to find a better entry/stop)
 # a trader retry cannot fix these (confidence is the PM's own call; retrying invites inflating it)
 NO_RETRY_RULES = frozenset({"min_confidence"})
 LESSONS_SAME_SYMBOL = 3
