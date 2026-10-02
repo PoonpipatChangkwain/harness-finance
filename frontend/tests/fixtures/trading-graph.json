@@ -1,0 +1,343 @@
+{
+  "nodes": [
+    {
+      "id": "resolve_symbol",
+      "label": "Resolve symbol",
+      "kind": "compute",
+      "phase": "retrieve"
+    },
+    {
+      "id": "load_context",
+      "label": "Load context",
+      "kind": "compute",
+      "phase": "retrieve"
+    },
+    {
+      "id": "analysts",
+      "label": "Analysts",
+      "kind": "agent",
+      "phase": "analyze"
+    },
+    {
+      "id": "bull_researcher",
+      "label": "Bull",
+      "kind": "agent",
+      "phase": "analyze"
+    },
+    {
+      "id": "bear_researcher",
+      "label": "Bear",
+      "kind": "agent",
+      "phase": "analyze"
+    },
+    {
+      "id": "research_manager",
+      "label": "Research manager",
+      "kind": "agent",
+      "phase": "synthesize"
+    },
+    {
+      "id": "trader",
+      "label": "Trader",
+      "kind": "agent",
+      "phase": "compute"
+    },
+    {
+      "id": "aggressive",
+      "label": "Aggressive",
+      "kind": "agent",
+      "phase": "verify"
+    },
+    {
+      "id": "conservative",
+      "label": "Conservative",
+      "kind": "agent",
+      "phase": "verify"
+    },
+    {
+      "id": "neutral",
+      "label": "Neutral",
+      "kind": "agent",
+      "phase": "verify"
+    },
+    {
+      "id": "portfolio_manager",
+      "label": "Portfolio manager",
+      "kind": "agent",
+      "phase": "synthesize"
+    },
+    {
+      "id": "policy_gate",
+      "label": "Policy gate",
+      "kind": "gate",
+      "phase": "verify"
+    },
+    {
+      "id": "refresh_price",
+      "label": "Live price",
+      "kind": "compute",
+      "phase": "compute"
+    },
+    {
+      "id": "approval",
+      "label": "Approval",
+      "kind": "approval",
+      "phase": "verify"
+    },
+    {
+      "id": "record_decision",
+      "label": "Record decision",
+      "kind": "compute",
+      "phase": "report"
+    },
+    {
+      "id": "report",
+      "label": "Report",
+      "kind": "report",
+      "phase": "report"
+    }
+  ],
+  "edges": [
+    {
+      "source": "analysts",
+      "target": "bull_researcher"
+    },
+    {
+      "source": "trader",
+      "target": "aggressive"
+    },
+    {
+      "source": "record_decision",
+      "target": "report"
+    },
+    {
+      "source": "report",
+      "target": "END"
+    },
+    {
+      "source": "resolve_symbol",
+      "target": "load_context",
+      "label": "ok"
+    },
+    {
+      "source": "resolve_symbol",
+      "target": "report",
+      "label": "invalid"
+    },
+    {
+      "source": "resolve_symbol",
+      "target": "report",
+      "label": "__fallback__"
+    },
+    {
+      "source": "load_context",
+      "target": "analysts",
+      "label": "ok"
+    },
+    {
+      "source": "load_context",
+      "target": "report",
+      "label": "unavailable"
+    },
+    {
+      "source": "load_context",
+      "target": "report",
+      "label": "__fallback__"
+    },
+    {
+      "source": "bull_researcher",
+      "target": "bull_researcher",
+      "label": "bull"
+    },
+    {
+      "source": "bull_researcher",
+      "target": "bear_researcher",
+      "label": "bear"
+    },
+    {
+      "source": "bull_researcher",
+      "target": "research_manager",
+      "label": "manager"
+    },
+    {
+      "source": "bull_researcher",
+      "target": "research_manager",
+      "label": "__fallback__"
+    },
+    {
+      "source": "bear_researcher",
+      "target": "bull_researcher",
+      "label": "bull"
+    },
+    {
+      "source": "bear_researcher",
+      "target": "bear_researcher",
+      "label": "bear"
+    },
+    {
+      "source": "bear_researcher",
+      "target": "research_manager",
+      "label": "manager"
+    },
+    {
+      "source": "bear_researcher",
+      "target": "research_manager",
+      "label": "__fallback__"
+    },
+    {
+      "source": "research_manager",
+      "target": "trader",
+      "label": "trade"
+    },
+    {
+      "source": "research_manager",
+      "target": "report",
+      "label": "reject"
+    },
+    {
+      "source": "research_manager",
+      "target": "trader",
+      "label": "__fallback__"
+    },
+    {
+      "source": "aggressive",
+      "target": "aggressive",
+      "label": "aggressive"
+    },
+    {
+      "source": "aggressive",
+      "target": "conservative",
+      "label": "conservative"
+    },
+    {
+      "source": "aggressive",
+      "target": "neutral",
+      "label": "neutral"
+    },
+    {
+      "source": "aggressive",
+      "target": "portfolio_manager",
+      "label": "pm"
+    },
+    {
+      "source": "aggressive",
+      "target": "portfolio_manager",
+      "label": "__fallback__"
+    },
+    {
+      "source": "conservative",
+      "target": "aggressive",
+      "label": "aggressive"
+    },
+    {
+      "source": "conservative",
+      "target": "conservative",
+      "label": "conservative"
+    },
+    {
+      "source": "conservative",
+      "target": "neutral",
+      "label": "neutral"
+    },
+    {
+      "source": "conservative",
+      "target": "portfolio_manager",
+      "label": "pm"
+    },
+    {
+      "source": "conservative",
+      "target": "portfolio_manager",
+      "label": "__fallback__"
+    },
+    {
+      "source": "neutral",
+      "target": "aggressive",
+      "label": "aggressive"
+    },
+    {
+      "source": "neutral",
+      "target": "conservative",
+      "label": "conservative"
+    },
+    {
+      "source": "neutral",
+      "target": "neutral",
+      "label": "neutral"
+    },
+    {
+      "source": "neutral",
+      "target": "portfolio_manager",
+      "label": "pm"
+    },
+    {
+      "source": "neutral",
+      "target": "portfolio_manager",
+      "label": "__fallback__"
+    },
+    {
+      "source": "portfolio_manager",
+      "target": "policy_gate",
+      "label": "gate"
+    },
+    {
+      "source": "portfolio_manager",
+      "target": "report",
+      "label": "reject"
+    },
+    {
+      "source": "portfolio_manager",
+      "target": "policy_gate",
+      "label": "__fallback__"
+    },
+    {
+      "source": "policy_gate",
+      "target": "refresh_price",
+      "label": "approve"
+    },
+    {
+      "source": "policy_gate",
+      "target": "trader",
+      "label": "retry"
+    },
+    {
+      "source": "policy_gate",
+      "target": "report",
+      "label": "reject"
+    },
+    {
+      "source": "policy_gate",
+      "target": "report",
+      "label": "__fallback__"
+    },
+    {
+      "source": "refresh_price",
+      "target": "approval",
+      "label": "approve"
+    },
+    {
+      "source": "refresh_price",
+      "target": "report",
+      "label": "reject"
+    },
+    {
+      "source": "refresh_price",
+      "target": "approval",
+      "label": "__fallback__"
+    },
+    {
+      "source": "approval",
+      "target": "record_decision",
+      "label": "record"
+    },
+    {
+      "source": "approval",
+      "target": "report",
+      "label": "report"
+    },
+    {
+      "source": "approval",
+      "target": "report",
+      "label": "__fallback__"
+    }
+  ]
+}

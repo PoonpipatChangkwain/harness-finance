@@ -1,0 +1,234 @@
+@import "tailwindcss";
+
+/* Design tokens (ui-spec §2), modelled on deepseek-harness ui-theme --dsw-*.
+   Dark is the default; [data-theme] is set by ThemeController (system/light/dark). */
+
+:root,
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --fh-bg: #0d1014;
+  --fh-bg-layer-1: #141920;
+  --fh-bg-layer-2: #1b222b;
+  --fh-border: #262e38;
+  --fh-border-strong: #36414e;
+  --fh-text: #e6e9ee;
+  --fh-text-muted: #a3adba;
+  --fh-text-subtle: #6f7b89;
+  --fh-accent: #4ea1ff;
+  --fh-accent-muted: #1a3552;
+  --fh-state-ongoing: #4ea1ff;
+  --fh-state-done: #3fb97f;
+  --fh-state-error: #f06a6a;
+  --fh-state-warning: #e6a23c;
+  --fh-state-idle: #6f7b89;
+  --fh-up: #3fb97f;
+  --fh-down: #f06a6a;
+  --fh-verdict-approve: #3fb97f;
+  --fh-verdict-review: #e6a23c;
+  --fh-verdict-reject: #f06a6a;
+  --fh-radius-sm: 6px;
+  --fh-radius-md: 10px;
+  --fh-radius-lg: 14px;
+  --fh-font-ui: var(--font-plex-thai), system-ui, sans-serif;
+  --fh-font-mono: var(--font-jetbrains), ui-monospace, monospace;
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
+  --fh-bg: #f7f8fa;
+  --fh-bg-layer-1: #ffffff;
+  --fh-bg-layer-2: #eef1f5;
+  --fh-border: #dde2e9;
+  --fh-border-strong: #c3cbd6;
+  --fh-text: #151a21;
+  --fh-text-muted: #4d5866;
+  --fh-text-subtle: #7b8795;
+  --fh-accent: #1f6fd1;
+  --fh-accent-muted: #dbe9fa;
+  --fh-state-ongoing: #1f6fd1;
+  --fh-state-done: #1e8a57;
+  --fh-state-error: #cf3c3c;
+  --fh-state-warning: #b87412;
+  --fh-state-idle: #8a95a3;
+  --fh-up: #1e8a57;
+  --fh-down: #cf3c3c;
+  --fh-verdict-approve: #1e8a57;
+  --fh-verdict-review: #b87412;
+  --fh-verdict-reject: #cf3c3c;
+}
+
+@theme inline {
+  --color-bg: var(--fh-bg);
+  --color-layer-1: var(--fh-bg-layer-1);
+  --color-layer-2: var(--fh-bg-layer-2);
+  --color-line: var(--fh-border);
+  --color-line-strong: var(--fh-border-strong);
+  --color-fg: var(--fh-text);
+  --color-muted: var(--fh-text-muted);
+  --color-subtle: var(--fh-text-subtle);
+  --color-accent: var(--fh-accent);
+  --color-accent-muted: var(--fh-accent-muted);
+  --color-ongoing: var(--fh-state-ongoing);
+  --color-done: var(--fh-state-done);
+  --color-error: var(--fh-state-error);
+  --color-warning: var(--fh-state-warning);
+  --color-idle: var(--fh-state-idle);
+  --color-up: var(--fh-up);
+  --color-down: var(--fh-down);
+  --radius-sm: var(--fh-radius-sm);
+  --radius-md: var(--fh-radius-md);
+  --radius-lg: var(--fh-radius-lg);
+  --font-sans: var(--fh-font-ui);
+  --font-mono: var(--fh-font-mono);
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  background: var(--fh-bg);
+  color: var(--fh-text);
+  font-family: var(--fh-font-ui);
+  font-size: 14px;
+}
+
+.num {
+  font-family: var(--fh-font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ToolRow progress text (after dsh TextShimmer) */
+@keyframes fh-shimmer {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+.fh-shimmer {
+  background: linear-gradient(90deg, var(--fh-text-subtle) 30%, var(--fh-text) 50%, var(--fh-text-subtle) 70%);
+  background-size: 200% 100%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  animation: fh-shimmer 2s linear infinite;
+}
+
+@keyframes fh-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+.fh-pulse {
+  animation: fh-pulse 1.4s ease-in-out infinite;
+}
+
+/* pipeline node waiting for approval: amber border blinking (ui-spec §5) */
+@keyframes fh-blink-warning {
+  0%,
+  100% {
+    box-shadow: 0 0 0 1px var(--fh-state-warning);
+  }
+  50% {
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--fh-state-warning) 35%, transparent);
+  }
+}
+.fh-blink-warning {
+  animation: fh-blink-warning 1.2s ease-in-out infinite;
+}
+
+/* React Flow on the design tokens (dark/light) */
+.fh-flow .react-flow {
+  --xy-background-color: var(--fh-bg);
+  --xy-edge-label-background-color: var(--fh-bg);
+  --xy-edge-label-color: var(--fh-text-subtle);
+}
+.fh-flow .react-flow__node {
+  cursor: pointer;
+}
+
+/* unverified numbers in answers: amber wavy underline */
+.fh-unverified {
+  text-decoration: underline wavy var(--fh-state-warning);
+  text-underline-offset: 3px;
+  cursor: help;
+}
+
+.fh-markdown h1,
+.fh-markdown h2,
+.fh-markdown h3 {
+  font-weight: 600;
+  margin: 1em 0 0.4em;
+}
+.fh-markdown h1 {
+  font-size: 1.25rem;
+}
+.fh-markdown h2 {
+  font-size: 1.1rem;
+}
+.fh-markdown h3 {
+  font-size: 1rem;
+}
+.fh-markdown p {
+  margin: 0.5em 0;
+  line-height: 1.7;
+}
+.fh-markdown ul,
+.fh-markdown ol {
+  margin: 0.4em 0 0.4em 1.3em;
+  line-height: 1.7;
+}
+.fh-markdown ul {
+  list-style: disc;
+}
+.fh-markdown ol {
+  list-style: decimal;
+}
+.fh-markdown hr {
+  border-color: var(--fh-border);
+  margin: 1em 0;
+}
+.fh-markdown table {
+  border-collapse: collapse;
+  margin: 0.6em 0;
+  font-size: 13px;
+  display: block;
+  overflow-x: auto;
+  max-width: 100%;
+}
+.fh-markdown th,
+.fh-markdown td {
+  border: 1px solid var(--fh-border);
+  padding: 4px 8px;
+  text-align: left;
+}
+.fh-markdown th {
+  background: var(--fh-bg-layer-2);
+}
+.fh-markdown code {
+  font-family: var(--fh-font-mono);
+  font-size: 12.5px;
+  background: var(--fh-bg-layer-2);
+  padding: 1px 4px;
+  border-radius: 4px;
+}
+.fh-markdown blockquote {
+  border-left: 3px solid var(--fh-border-strong);
+  padding-left: 10px;
+  color: var(--fh-text-muted);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fh-shimmer,
+  .fh-pulse,
+  .fh-blink-warning {
+    animation: none;
+  }
+}

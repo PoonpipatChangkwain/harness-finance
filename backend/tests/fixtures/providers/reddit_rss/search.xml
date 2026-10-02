@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>reddit search results</title>
+  <entry>
+    <title>AAPL earnings beat expectations this quarter</title>
+    <link href="https://www.reddit.com/r/stocks/comments/abc123/aapl_earnings/" />
+    <id>t3_abc123</id>
+    <author><name>/u/investor42</name></author>
+    <updated>2026-09-20T14:00:00+00:00</updated>
+  </entry>
+  <entry>
+    <title>Discussion: AAPL supply chain concerns</title>
+    <link href="https://www.reddit.com/r/investing/comments/def456/aapl_supply/" />
+    <id>t3_def456</id>
+    <author><name>/u/marketwatcher</name></author>
+    <updated>2026-09-19T09:15:00+00:00</updated>
+  </entry>
+</feed>

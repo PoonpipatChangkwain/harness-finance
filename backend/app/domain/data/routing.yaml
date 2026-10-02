@@ -1,0 +1,56 @@
+# Default provider order per capability (docs/data-sources.md §2).
+# Providers not yet implemented/registered are skipped automatically.
+prices:
+  mode: failover
+  order: [spot_metals, yfinance, financial_datasets, alpha_vantage]
+quote:
+  mode: failover
+  order: [spot_metals, yfinance, finnhub, alpha_vantage]
+profile:
+  mode: failover
+  order: [yfinance, finnhub, fmp]
+fundamentals:
+  mode: failover
+  order: [financial_datasets, yfinance, fmp, alpha_vantage, finnhub]
+statements:
+  mode: failover
+  order: [financial_datasets, sec_edgar, yfinance, alpha_vantage]
+news:
+  mode: fanout
+  order: [yfinance, crypto_news, finnhub, alpha_vantage, financial_datasets]
+global_news:
+  mode: failover
+  order: [yfinance, web_search]
+macro:
+  mode: failover
+  order: [fred]
+prediction_markets:
+  mode: failover
+  order: [polymarket]
+social:
+  mode: fanout
+  order: [stocktwits, reddit_api, reddit_rss, x_api, adanos]
+insider:
+  mode: failover
+  order: [financial_datasets, yfinance, alpha_vantage]
+institutional:
+  mode: failover
+  order: [financial_datasets]
+filings:
+  mode: failover
+  order: [sec_edgar, financial_datasets, sec_api]
+analyst:
+  mode: failover
+  order: [fmp, yfinance, financial_datasets]
+web_search:
+  mode: failover
+  order: [exa, perplexity, tavily, langsearch]
+web_fetch:
+  mode: failover
+  order: [web_fetch]
+symbol_search:
+  mode: failover
+  order: [static, yfinance]
+economic_calendar:
+  mode: failover
+  order: [forexfactory]

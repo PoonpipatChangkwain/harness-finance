@@ -1,0 +1,268 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`fixture cancel > reduces to a stable RunView 1`] = `
+{
+  "answer": {
+    "chars": 46,
+    "citations": 1,
+    "unverified": [],
+  },
+  "context": {
+    "compactions": [],
+    "percent": 0.1,
+    "used": 100,
+    "window": 128000,
+  },
+  "items": [
+    "node plan done · skill auto · role research_lead",
+    "node retrieve_analyze done · 1 iterations · 1 tool calls · stopped: cancelled",
+    "batch get_prices:ok",
+    "node verify done · 0 unverified in brief",
+    "node synthesize_report done · 1 citations · 0 unverified",
+  ],
+  "models": {
+    "deep": "fake:fake-model",
+    "quick": "fake:fake-model",
+  },
+  "seq": 25,
+  "status": "cancelled",
+  "steps": 1,
+  "usage": {
+    "byPurpose": {
+      "agent": {
+        "calls": 1,
+        "cost": 0,
+        "in": 100,
+        "out": 20,
+      },
+      "final": {
+        "calls": 1,
+        "cost": 0,
+        "in": 100,
+        "out": 20,
+      },
+      "structured": {
+        "calls": 1,
+        "cost": 0,
+        "in": 100,
+        "out": 20,
+      },
+    },
+    "cacheRead": 0,
+    "cost": 0,
+    "durationMs": 6188,
+    "in": 300,
+    "llmCalls": 3,
+    "out": 60,
+    "toolCalls": 1,
+  },
+  "workflow": "research",
+}
+`;
+
+exports[`fixture compaction-guard > reduces to a stable RunView 1`] = `
+{
+  "answer": {
+    "chars": 23,
+    "citations": 1,
+    "unverified": [],
+  },
+  "context": {
+    "compactions": [
+      "full 120000→2107",
+    ],
+    "percent": 0.1,
+    "used": 100,
+    "window": 128000,
+  },
+  "items": [
+    "node plan done · skill auto · role research_lead",
+    "node retrieve_analyze done · 4 iterations · 5 tool calls",
+    "batch big:ok | big:ok | big:ok",
+    "compaction end 120000→2107",
+    "batch get_prices:ok",
+    "batch get_prices:limited",
+    "reasoning retrieve_analyze 21 chars",
+    "node verify done · 0 unverified in brief",
+    "node synthesize_report done · 1 citations · 0 unverified",
+  ],
+  "models": {
+    "deep": "fake:fake-model",
+    "quick": "fake:fake-model",
+  },
+  "seq": 48,
+  "status": "completed",
+  "steps": 5,
+  "usage": {
+    "byPurpose": {
+      "agent": {
+        "calls": 4,
+        "cost": 0,
+        "in": 120300,
+        "out": 80,
+      },
+      "compact": {
+        "calls": 1,
+        "cost": 0,
+        "in": 100,
+        "out": 20,
+      },
+      "final": {
+        "calls": 1,
+        "cost": 0,
+        "in": 100,
+        "out": 20,
+      },
+      "structured": {
+        "calls": 1,
+        "cost": 0,
+        "in": 100,
+        "out": 20,
+      },
+    },
+    "cacheRead": 0,
+    "cost": 0,
+    "durationMs": 199,
+    "in": 120600,
+    "llmCalls": 7,
+    "out": 140,
+    "toolCalls": 5,
+  },
+  "workflow": "research",
+}
+`;
+
+exports[`fixture concurrent-subcall > reduces to a stable RunView 1`] = `
+{
+  "answer": {
+    "chars": 43,
+    "citations": 1,
+    "unverified": [
+      "99.9",
+    ],
+  },
+  "context": {
+    "compactions": [],
+    "percent": 0.1,
+    "used": 100,
+    "window": 128000,
+  },
+  "items": [
+    "node plan done · skill auto · role research_lead",
+    "node retrieve_analyze done · 3 iterations · 4 tool calls",
+    "batch skill_tool:ok[fake_prices] | progress:ok | get_prices:ok",
+    "batch boom:error",
+    "reasoning retrieve_analyze 21 chars",
+    "node verify done · 0 unverified in brief",
+    "node synthesize_report done · 1 citations · 1 unverified",
+  ],
+  "models": {
+    "deep": "fake:fake-model",
+    "quick": "fake:fake-model",
+  },
+  "seq": 41,
+  "status": "completed",
+  "steps": 3,
+  "usage": {
+    "byPurpose": {
+      "agent": {
+        "calls": 3,
+        "cost": 0,
+        "in": 300,
+        "out": 60,
+      },
+      "final": {
+        "calls": 1,
+        "cost": 0,
+        "in": 100,
+        "out": 20,
+      },
+      "structured": {
+        "calls": 1,
+        "cost": 0,
+        "in": 100,
+        "out": 20,
+      },
+    },
+    "cacheRead": 0,
+    "cost": 0,
+    "durationMs": 283,
+    "in": 500,
+    "llmCalls": 5,
+    "out": 100,
+    "toolCalls": 5,
+  },
+  "workflow": "research",
+}
+`;
+
+exports[`fixture normal > reduces to a stable RunView 1`] = `
+{
+  "answer": {
+    "chars": 4512,
+    "citations": 8,
+    "unverified": [
+      "12",
+      "27",
+      "15,999",
+      "2,230",
+      "18",
+      "19,999",
+    ],
+  },
+  "context": {
+    "compactions": [],
+    "percent": 10.8,
+    "used": 13833,
+    "window": 128000,
+  },
+  "items": [
+    "node plan done · skill earnings-review · role equity_analyst",
+    "node retrieve_analyze done · 2 iterations · 6 tool calls",
+    "batch skill:ok",
+    "batch get_statements:ok | get_statements:ok | get_fundamentals:ok | get_analyst_estimates:ok | get_news:ok | get_market_snapshot:ok",
+    "reasoning retrieve_analyze 4679 chars",
+    "node verify done · 14 unverified in brief · re-checked once",
+    "warning llm_failover",
+    "reasoning verify 4603 chars",
+    "node synthesize_report done · 8 citations · 6 unverified",
+  ],
+  "models": {
+    "deep": "google:gemini-3.8-flash",
+    "quick": "google:gemini-3.8-flash",
+  },
+  "seq": 116,
+  "status": "completed",
+  "steps": 5,
+  "usage": {
+    "byPurpose": {
+      "agent": {
+        "calls": 3,
+        "cost": 0,
+        "in": 35100,
+        "out": 8499,
+      },
+      "final": {
+        "calls": 1,
+        "cost": 0,
+        "in": 9605,
+        "out": 10349,
+      },
+      "structured": {
+        "calls": 1,
+        "cost": 0,
+        "in": 828,
+        "out": 306,
+      },
+    },
+    "cacheRead": 12097,
+    "cost": 0,
+    "durationMs": 114437,
+    "in": 45533,
+    "llmCalls": 5,
+    "out": 19154,
+    "toolCalls": 7,
+  },
+  "workflow": "research",
+}
+`;

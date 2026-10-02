@@ -1,0 +1,1600 @@
+{
+  "trade_result": {
+    "run_id": "run_01M3K3JEM33F5BS11XJFFXHBA6",
+    "symbol": "PTT.BK",
+    "date": "2026-09-25",
+    "recorded_at": "2026-09-28T04:15:05.782877+00:00",
+    "card": {
+      "price_source": "live",
+      "price_ts": "2026-09-28T03:15:00Z",
+      "snapshot_close": 34.5,
+      "symbol": "PTT.BK",
+      "display": "PTT (SET)",
+      "rating": "Buy",
+      "verdict": "APPROVE",
+      "confidence": 0.8,
+      "side": "long",
+      "entry": 34.5,
+      "stop": 33.3,
+      "targets": [
+        37.0,
+        39.0
+      ],
+      "risk_reward": [
+        2.0833333333333335,
+        3.75
+      ],
+      "units": 4100,
+      "notional": 141450.0,
+      "position_weight": 0.14145,
+      "risk_fraction": 0.00492,
+      "currency": "THB",
+      "horizon": "swing",
+      "interval": "1h",
+      "time_stop_bars": 48,
+      "time_stop_at": "2026-09-30T03:15:00+00:00",
+      "invalidation": ""
+    },
+    "outcome": null,
+    "reflection": null,
+    "reflection_error": null
+  },
+  "event_risk": null,
+  "run": {
+    "id": "run_01M3K3JEM33F5BS11XJFFXHBA6",
+    "session_id": null,
+    "workflow": "trading",
+    "status": "completed",
+    "input": {
+      "symbol": "PTT",
+      "debate_rounds": 2,
+      "language": "en"
+    },
+    "output": {
+      "symbol": "PTT.BK",
+      "status": "approved",
+      "rating": "Buy",
+      "verdict": "APPROVE",
+      "report_md": "# PTT (SET) — approved\n\n## Narrative\nPTT: uptrend, buy the pullback.\n\n## Decision (computed)\n\n| | |\n|---|---|\n| Rating | Buy |\n| Verdict | APPROVE (0.80) |\n| Side | long |\n| Entry | 34.5 (live 2026-09-28T03:15:00Z; snapshot close 34.5) |\n| Stop | 33.3 |\n| Targets | 37, 39 |\n| Risk/Reward | 2.083, 3.75 |\n| Units | 4100 |\n| Notional | 1.414e+05 THB |\n| Weight | 14.14% |\n| Risk of equity | 0.49% |\n| Horizon | swing (1h bars) |\n| Time stop | 48 bars · 2026-09-30T03:15:00+00:00 |\n| Invalidation | - |\n\n## Policy\n\n- ✓ valid_symbol: symbol is valid\n- ✓ require_stop_loss: stop-loss present\n- ✓ max_risk_per_trade: risk 0.49% within cap 2.00% of equity\n- ✓ min_confidence: confidence 0.80 meets minimum 0.60\n- ✓ no_short_if_disallowed: not a short\n- ✓ no_high_impact_event_soon: no high-impact release within 12h\n- ✓ max_position_weight: position weight 14.14% within cap 20.00%\n- ✓ cash_sufficient: cash required 141450.0 <= available 1000000.0\n\n---\n_Analysis only. No order was sent to any broker._",
+      "state": {
+        "instrument": {
+          "valid": true,
+          "raw": "PTT",
+          "canonical": "PTT.BK",
+          "display": "PTT (SET)",
+          "asset_type": "stock",
+          "market": "TH",
+          "currency": "THB",
+          "lot_size": 100,
+          "analysts": [
+            "market",
+            "news",
+            "fundamentals",
+            "sentiment"
+          ],
+          "analysis_date": null
+        },
+        "market_snapshot": {
+          "available": true,
+          "interval": "1h",
+          "as_of": "2026-09-25",
+          "bar_ts": "2026-09-25T09:00:00+00:00",
+          "currency": "THB",
+          "close": 34.5,
+          "indicators": {
+            "atr14": 0.6,
+            "rsi14": 55.0,
+            "sma50": 33.81
+          },
+          "change_pct": {},
+          "high_52w": null,
+          "low_52w": null,
+          "range_high": null,
+          "range_low": null,
+          "provenance_ids": [
+            "prov_01M3K3JEP7A3022Z234TZBEM8V"
+          ],
+          "higher_tf": {
+            "available": true,
+            "interval": "1d",
+            "as_of": "2026-09-25",
+            "bar_ts": "2026-09-25T09:00:00+00:00",
+            "currency": "THB",
+            "close": 34.5,
+            "indicators": {
+              "atr14": 0.6,
+              "rsi14": 55.0,
+              "sma50": 33.81
+            },
+            "change_pct": {},
+            "high_52w": null,
+            "low_52w": null,
+            "range_high": null,
+            "range_low": null,
+            "provenance_ids": [
+              "prov_01M3K3JEPJ07EHJ6YVN0X06XFD"
+            ]
+          }
+        },
+        "portfolio_ctx": {
+          "state": "not_provided"
+        },
+        "reports": {
+          "market": {
+            "status": "ok",
+            "text": "analyst report: trend up, support 33.8",
+            "tool_calls": 0,
+            "stop_reason": null
+          },
+          "news": {
+            "status": "ok",
+            "text": "analyst report: trend up, support 33.8",
+            "tool_calls": 0,
+            "stop_reason": null
+          },
+          "fundamentals": {
+            "status": "ok",
+            "text": "analyst report: trend up, support 33.8",
+            "tool_calls": 0,
+            "stop_reason": null
+          },
+          "sentiment": {
+            "status": "ok",
+            "text": "analyst report: trend up, support 33.8",
+            "tool_calls": 0,
+            "stop_reason": null
+          }
+        },
+        "invest_debate": {
+          "history": [
+            {
+              "speaker": "bull",
+              "text": "bull: momentum"
+            },
+            {
+              "speaker": "bear",
+              "text": "bear: valuation"
+            },
+            {
+              "speaker": "bull",
+              "text": "bull: momentum"
+            },
+            {
+              "speaker": "bear",
+              "text": "bear: valuation"
+            }
+          ],
+          "count": 4,
+          "latest_speaker": "bear"
+        },
+        "research_plan": {
+          "stance": "Buy",
+          "thesis": "uptrend with support",
+          "key_risks": [
+            "oil price"
+          ],
+          "catalysts": [
+            "earnings"
+          ],
+          "decision": {
+            "verdict": "APPROVE",
+            "confidence": 0.8,
+            "reason": "ok",
+            "next_action": null
+          },
+          "verdict": "APPROVE",
+          "mode": "native"
+        },
+        "trade_proposal": {
+          "proposal": {
+            "side": "long",
+            "entry_zone": [
+              34.0,
+              34.8
+            ],
+            "stop_basis": "atr",
+            "atr_multiple": 2.0,
+            "stop_level": null,
+            "target_levels": [
+              37.0,
+              39.0
+            ],
+            "horizon": "swing",
+            "time_stop_bars": null,
+            "invalidation": "",
+            "rationale": "buy the pullback",
+            "decision": {
+              "verdict": "APPROVE",
+              "confidence": 0.8,
+              "reason": "ok",
+              "next_action": null
+            }
+          },
+          "sizing": {
+            "side": "long",
+            "entry": 34.5,
+            "stop": 33.3,
+            "targets": [
+              37.0,
+              39.0
+            ],
+            "risk_reward": [
+              2.0833333333333335,
+              3.75
+            ],
+            "units": 5700,
+            "risk_amount": 6840.0,
+            "notional": 196650.0,
+            "position_weight": 0.19665,
+            "risk_fraction": 0.00684,
+            "equity": 1000000.0,
+            "currency": "THB",
+            "notes": [
+              "units capped by max position weight 20%"
+            ],
+            "time_stop_bars": 48,
+            "interval": "1h",
+            "time_stop_at": "2026-09-27T09:00:00+00:00"
+          },
+          "provenance_ids": [
+            "prov_01M3K3JETYAEFW15MWEBMFJ606",
+            "prov_01M3K3JETYAEFW15MWEBMFJ607",
+            "prov_01M3K3JETYAEFW15MWEBMFJ608",
+            "prov_01M3K3JETYAEFW15MWEBMFJ609",
+            "prov_01M3K3JETYAEFW15MWEBMFJ60A",
+            "prov_01M3K3JETYAEFW15MWEBMFJ60B"
+          ],
+          "mode": "native",
+          "attempt": 1
+        },
+        "risk_debate": {
+          "history": [
+            {
+              "speaker": "aggressive",
+              "text": "aggressive: size up"
+            },
+            {
+              "speaker": "conservative",
+              "text": "conservative: size down"
+            },
+            {
+              "speaker": "neutral",
+              "text": "neutral: keep"
+            }
+          ],
+          "count": 3,
+          "latest_speaker": "neutral"
+        },
+        "final_decision": {
+          "rating": "Buy",
+          "decision": {
+            "verdict": "APPROVE",
+            "confidence": 0.8,
+            "reason": "ok",
+            "next_action": null
+          },
+          "verdict": "APPROVE",
+          "final_size_pct": 1.0,
+          "adjustments": "",
+          "summary": "go",
+          "sizing": {
+            "side": "long",
+            "entry": 34.5,
+            "stop": 33.3,
+            "targets": [
+              37.0,
+              39.0
+            ],
+            "risk_reward": [
+              2.0833333333333335,
+              3.75
+            ],
+            "units": 5700,
+            "risk_amount": 6840.0,
+            "notional": 196650.0,
+            "position_weight": 0.19665,
+            "risk_fraction": 0.00684,
+            "equity": 1000000.0,
+            "currency": "THB",
+            "notes": [
+              "units capped by max position weight 20%"
+            ],
+            "time_stop_bars": 48,
+            "interval": "1h",
+            "time_stop_at": "2026-09-27T09:00:00+00:00"
+          },
+          "provenance_ids": [
+            "prov_01M3K3JEX04JMC3Z7E4DJ0YM2J",
+            "prov_01M3K3JEX04JMC3Z7E4DJ0YM2K",
+            "prov_01M3K3JEX04JMC3Z7E4DJ0YM2M",
+            "prov_01M3K3JEX04JMC3Z7E4DJ0YM2N",
+            "prov_01M3K3JEX04JMC3Z7E4DJ0YM2P",
+            "prov_01M3K3JEX04JMC3Z7E4DJ0YM2Q"
+          ],
+          "mode": "native"
+        },
+        "policy": {
+          "blocked": false,
+          "results": [
+            {
+              "rule_id": "valid_symbol",
+              "passed": true,
+              "severity": "block",
+              "message": "symbol is valid",
+              "values": {}
+            },
+            {
+              "rule_id": "require_stop_loss",
+              "passed": true,
+              "severity": "block",
+              "message": "stop-loss present",
+              "values": {
+                "stop_loss": 33.3
+              }
+            },
+            {
+              "rule_id": "max_risk_per_trade",
+              "passed": true,
+              "severity": "block",
+              "message": "risk 0.68% within cap 2.00% of equity",
+              "values": {
+                "fraction": 0.00684,
+                "limit": 0.02
+              }
+            },
+            {
+              "rule_id": "min_confidence",
+              "passed": true,
+              "severity": "warn",
+              "message": "confidence 0.80 meets minimum 0.60",
+              "values": {
+                "confidence": 0.8,
+                "limit": 0.6
+              }
+            },
+            {
+              "rule_id": "no_short_if_disallowed",
+              "passed": true,
+              "severity": "block",
+              "message": "not a short",
+              "values": {}
+            },
+            {
+              "rule_id": "no_high_impact_event_soon",
+              "passed": true,
+              "severity": "warn",
+              "message": "no high-impact release within 12h",
+              "values": {
+                "hours_to_next": null,
+                "hours": 12.0
+              }
+            },
+            {
+              "rule_id": "max_position_weight",
+              "passed": true,
+              "severity": "block",
+              "message": "position weight 19.66% within cap 20.00%",
+              "values": {
+                "weight": 0.19665,
+                "limit": 0.2
+              }
+            },
+            {
+              "rule_id": "cash_sufficient",
+              "passed": true,
+              "severity": "block",
+              "message": "cash required 196650.0 <= available 1000000.0",
+              "values": {
+                "required": 196650.0,
+                "available": 1000000.0
+              }
+            }
+          ],
+          "attempts": 1
+        },
+        "approval": {
+          "outcome": "edited",
+          "comment": null,
+          "edits": {
+            "final_size_pct": 0.5
+          },
+          "sizing": {
+            "side": "long",
+            "entry": 34.5,
+            "stop": 33.3,
+            "targets": [
+              37.0,
+              39.0
+            ],
+            "risk_reward": [
+              2.0833333333333335,
+              3.75
+            ],
+            "units": 4100,
+            "risk_amount": 4920.0,
+            "notional": 141450.0,
+            "position_weight": 0.14145,
+            "risk_fraction": 0.00492,
+            "equity": 1000000.0,
+            "currency": "THB",
+            "notes": [],
+            "time_stop_bars": 48,
+            "interval": "1h",
+            "time_stop_at": "2026-09-30T03:15:00+00:00"
+          },
+          "provenance_ids": [
+            "prov_01M3K3JF106QR9RB73PRJNQZQ3",
+            "prov_01M3K3JF106QR9RB73PRJNQZQ4",
+            "prov_01M3K3JF106QR9RB73PRJNQZQ5",
+            "prov_01M3K3JF106QR9RB73PRJNQZQ6",
+            "prov_01M3K3JF106QR9RB73PRJNQZQ7",
+            "prov_01M3K3JF106QR9RB73PRJNQZQ8"
+          ],
+          "final_size_pct": 0.5,
+          "policy": {
+            "blocked": false,
+            "results": [
+              {
+                "rule_id": "valid_symbol",
+                "passed": true,
+                "severity": "block",
+                "message": "symbol is valid",
+                "values": {}
+              },
+              {
+                "rule_id": "require_stop_loss",
+                "passed": true,
+                "severity": "block",
+                "message": "stop-loss present",
+                "values": {
+                  "stop_loss": 33.3
+                }
+              },
+              {
+                "rule_id": "max_risk_per_trade",
+                "passed": true,
+                "severity": "block",
+                "message": "risk 0.49% within cap 2.00% of equity",
+                "values": {
+                  "fraction": 0.00492,
+                  "limit": 0.02
+                }
+              },
+              {
+                "rule_id": "min_confidence",
+                "passed": true,
+                "severity": "warn",
+                "message": "confidence 0.80 meets minimum 0.60",
+                "values": {
+                  "confidence": 0.8,
+                  "limit": 0.6
+                }
+              },
+              {
+                "rule_id": "no_short_if_disallowed",
+                "passed": true,
+                "severity": "block",
+                "message": "not a short",
+                "values": {}
+              },
+              {
+                "rule_id": "no_high_impact_event_soon",
+                "passed": true,
+                "severity": "warn",
+                "message": "no high-impact release within 12h",
+                "values": {
+                  "hours_to_next": null,
+                  "hours": 12.0
+                }
+              },
+              {
+                "rule_id": "max_position_weight",
+                "passed": true,
+                "severity": "block",
+                "message": "position weight 14.14% within cap 20.00%",
+                "values": {
+                  "weight": 0.14145,
+                  "limit": 0.2
+                }
+              },
+              {
+                "rule_id": "cash_sufficient",
+                "passed": true,
+                "severity": "block",
+                "message": "cash required 141450.0 <= available 1000000.0",
+                "values": {
+                  "required": 141450.0,
+                  "available": 1000000.0
+                }
+              }
+            ],
+            "blocking": []
+          },
+          "quote": {
+            "price": 34.5,
+            "ts": "2026-09-28T03:15:00Z",
+            "provider": "fake",
+            "provenance_ids": [
+              "prov_01M3K3JF0S52BE17PYDK267ADW"
+            ]
+          },
+          "entry_drift_atr": 0.0
+        },
+        "decision_record": {
+          "key": "PTT.BK:2026-09-25:run_01M3K3JEM33F5BS11XJFFXHBA6",
+          "run_id": "run_01M3K3JEM33F5BS11XJFFXHBA6",
+          "symbol": "PTT.BK",
+          "date": "2026-09-25",
+          "card": {
+            "price_source": "live",
+            "price_ts": "2026-09-28T03:15:00Z",
+            "snapshot_close": 34.5,
+            "symbol": "PTT.BK",
+            "display": "PTT (SET)",
+            "rating": "Buy",
+            "verdict": "APPROVE",
+            "confidence": 0.8,
+            "side": "long",
+            "entry": 34.5,
+            "stop": 33.3,
+            "targets": [
+              37.0,
+              39.0
+            ],
+            "risk_reward": [
+              2.0833333333333335,
+              3.75
+            ],
+            "units": 4100,
+            "notional": 141450.0,
+            "position_weight": 0.14145,
+            "risk_fraction": 0.00492,
+            "currency": "THB",
+            "horizon": "swing",
+            "interval": "1h",
+            "time_stop_bars": 48,
+            "time_stop_at": "2026-09-30T03:15:00+00:00",
+            "invalidation": ""
+          },
+          "thesis": "uptrend with support",
+          "language": "en",
+          "approval": "edited",
+          "comment": null,
+          "provenance_ids": [
+            "prov_01M3K3JF106QR9RB73PRJNQZQ3",
+            "prov_01M3K3JF106QR9RB73PRJNQZQ4",
+            "prov_01M3K3JF106QR9RB73PRJNQZQ5",
+            "prov_01M3K3JF106QR9RB73PRJNQZQ6",
+            "prov_01M3K3JF106QR9RB73PRJNQZQ7",
+            "prov_01M3K3JF106QR9RB73PRJNQZQ8"
+          ]
+        },
+        "outcome": {
+          "status": "approved",
+          "reason": null,
+          "rating": "Buy",
+          "verdict": "APPROVE"
+        }
+      }
+    },
+    "error": null,
+    "thread_id": "d0b1db479c70bd87",
+    "started_at": "2026-09-28T04:15:05.347936",
+    "finished_at": "2026-09-28T04:15:05.811876",
+    "usage": {
+      "input_tokens": 1500,
+      "output_tokens": 300,
+      "cache_read_tokens": 0,
+      "cost_usd": 0.0,
+      "llm_calls": 15,
+      "tool_calls": 9,
+      "by_purpose": {
+        "agent": {
+          "input_tokens": 400.0,
+          "output_tokens": 80.0,
+          "cost_usd": 0.0,
+          "calls": 4.0
+        },
+        "debate": {
+          "input_tokens": 700.0,
+          "output_tokens": 140.0,
+          "cost_usd": 0.0,
+          "calls": 7.0
+        },
+        "structured": {
+          "input_tokens": 300.0,
+          "output_tokens": 60.0,
+          "cost_usd": 0.0,
+          "calls": 3.0
+        },
+        "final": {
+          "input_tokens": 100,
+          "output_tokens": 20,
+          "cost_usd": 0.0,
+          "calls": 1
+        }
+      }
+    }
+  },
+  "input": {
+    "symbol": "PTT",
+    "debate_rounds": 2,
+    "language": "en"
+  },
+  "graph_view": {
+    "nodes": [
+      {
+        "id": "resolve_symbol",
+        "label": "Resolve symbol",
+        "kind": "compute",
+        "phase": "retrieve"
+      },
+      {
+        "id": "load_context",
+        "label": "Load context",
+        "kind": "compute",
+        "phase": "retrieve"
+      },
+      {
+        "id": "analysts",
+        "label": "Analysts",
+        "kind": "agent",
+        "phase": "analyze"
+      },
+      {
+        "id": "bull_researcher",
+        "label": "Bull",
+        "kind": "agent",
+        "phase": "analyze"
+      },
+      {
+        "id": "bear_researcher",
+        "label": "Bear",
+        "kind": "agent",
+        "phase": "analyze"
+      },
+      {
+        "id": "research_manager",
+        "label": "Research manager",
+        "kind": "agent",
+        "phase": "synthesize"
+      },
+      {
+        "id": "trader",
+        "label": "Trader",
+        "kind": "agent",
+        "phase": "compute"
+      },
+      {
+        "id": "aggressive",
+        "label": "Aggressive",
+        "kind": "agent",
+        "phase": "verify"
+      },
+      {
+        "id": "conservative",
+        "label": "Conservative",
+        "kind": "agent",
+        "phase": "verify"
+      },
+      {
+        "id": "neutral",
+        "label": "Neutral",
+        "kind": "agent",
+        "phase": "verify"
+      },
+      {
+        "id": "portfolio_manager",
+        "label": "Portfolio manager",
+        "kind": "agent",
+        "phase": "synthesize"
+      },
+      {
+        "id": "policy_gate",
+        "label": "Policy gate",
+        "kind": "gate",
+        "phase": "verify"
+      },
+      {
+        "id": "refresh_price",
+        "label": "Live price",
+        "kind": "compute",
+        "phase": "compute"
+      },
+      {
+        "id": "approval",
+        "label": "Approval",
+        "kind": "approval",
+        "phase": "verify"
+      },
+      {
+        "id": "record_decision",
+        "label": "Record decision",
+        "kind": "compute",
+        "phase": "report"
+      },
+      {
+        "id": "report",
+        "label": "Report",
+        "kind": "report",
+        "phase": "report"
+      }
+    ],
+    "edges": [
+      {
+        "source": "analysts",
+        "target": "bull_researcher"
+      },
+      {
+        "source": "trader",
+        "target": "aggressive"
+      },
+      {
+        "source": "record_decision",
+        "target": "report"
+      },
+      {
+        "source": "report",
+        "target": "END"
+      },
+      {
+        "source": "resolve_symbol",
+        "target": "load_context",
+        "label": "ok"
+      },
+      {
+        "source": "resolve_symbol",
+        "target": "report",
+        "label": "invalid"
+      },
+      {
+        "source": "resolve_symbol",
+        "target": "report",
+        "label": "__fallback__"
+      },
+      {
+        "source": "load_context",
+        "target": "analysts",
+        "label": "ok"
+      },
+      {
+        "source": "load_context",
+        "target": "report",
+        "label": "unavailable"
+      },
+      {
+        "source": "load_context",
+        "target": "report",
+        "label": "__fallback__"
+      },
+      {
+        "source": "bull_researcher",
+        "target": "bull_researcher",
+        "label": "bull"
+      },
+      {
+        "source": "bull_researcher",
+        "target": "bear_researcher",
+        "label": "bear"
+      },
+      {
+        "source": "bull_researcher",
+        "target": "research_manager",
+        "label": "manager"
+      },
+      {
+        "source": "bull_researcher",
+        "target": "research_manager",
+        "label": "__fallback__"
+      },
+      {
+        "source": "bear_researcher",
+        "target": "bull_researcher",
+        "label": "bull"
+      },
+      {
+        "source": "bear_researcher",
+        "target": "bear_researcher",
+        "label": "bear"
+      },
+      {
+        "source": "bear_researcher",
+        "target": "research_manager",
+        "label": "manager"
+      },
+      {
+        "source": "bear_researcher",
+        "target": "research_manager",
+        "label": "__fallback__"
+      },
+      {
+        "source": "research_manager",
+        "target": "trader",
+        "label": "trade"
+      },
+      {
+        "source": "research_manager",
+        "target": "report",
+        "label": "reject"
+      },
+      {
+        "source": "research_manager",
+        "target": "trader",
+        "label": "__fallback__"
+      },
+      {
+        "source": "aggressive",
+        "target": "aggressive",
+        "label": "aggressive"
+      },
+      {
+        "source": "aggressive",
+        "target": "conservative",
+        "label": "conservative"
+      },
+      {
+        "source": "aggressive",
+        "target": "neutral",
+        "label": "neutral"
+      },
+      {
+        "source": "aggressive",
+        "target": "portfolio_manager",
+        "label": "pm"
+      },
+      {
+        "source": "aggressive",
+        "target": "portfolio_manager",
+        "label": "__fallback__"
+      },
+      {
+        "source": "conservative",
+        "target": "aggressive",
+        "label": "aggressive"
+      },
+      {
+        "source": "conservative",
+        "target": "conservative",
+        "label": "conservative"
+      },
+      {
+        "source": "conservative",
+        "target": "neutral",
+        "label": "neutral"
+      },
+      {
+        "source": "conservative",
+        "target": "portfolio_manager",
+        "label": "pm"
+      },
+      {
+        "source": "conservative",
+        "target": "portfolio_manager",
+        "label": "__fallback__"
+      },
+      {
+        "source": "neutral",
+        "target": "aggressive",
+        "label": "aggressive"
+      },
+      {
+        "source": "neutral",
+        "target": "conservative",
+        "label": "conservative"
+      },
+      {
+        "source": "neutral",
+        "target": "neutral",
+        "label": "neutral"
+      },
+      {
+        "source": "neutral",
+        "target": "portfolio_manager",
+        "label": "pm"
+      },
+      {
+        "source": "neutral",
+        "target": "portfolio_manager",
+        "label": "__fallback__"
+      },
+      {
+        "source": "portfolio_manager",
+        "target": "policy_gate",
+        "label": "gate"
+      },
+      {
+        "source": "portfolio_manager",
+        "target": "report",
+        "label": "reject"
+      },
+      {
+        "source": "portfolio_manager",
+        "target": "policy_gate",
+        "label": "__fallback__"
+      },
+      {
+        "source": "policy_gate",
+        "target": "refresh_price",
+        "label": "approve"
+      },
+      {
+        "source": "policy_gate",
+        "target": "trader",
+        "label": "retry"
+      },
+      {
+        "source": "policy_gate",
+        "target": "report",
+        "label": "reject"
+      },
+      {
+        "source": "policy_gate",
+        "target": "report",
+        "label": "__fallback__"
+      },
+      {
+        "source": "refresh_price",
+        "target": "approval",
+        "label": "approve"
+      },
+      {
+        "source": "refresh_price",
+        "target": "report",
+        "label": "reject"
+      },
+      {
+        "source": "refresh_price",
+        "target": "approval",
+        "label": "__fallback__"
+      },
+      {
+        "source": "approval",
+        "target": "record_decision",
+        "label": "record"
+      },
+      {
+        "source": "approval",
+        "target": "report",
+        "label": "report"
+      },
+      {
+        "source": "approval",
+        "target": "report",
+        "label": "__fallback__"
+      }
+    ]
+  },
+  "nodes": {
+    "resolve_symbol": {
+      "status": "done",
+      "started_at": "2026-09-28T04:15:05.404216",
+      "runs": 1,
+      "finished_at": "2026-09-28T04:15:05.406791",
+      "duration_ms": 0,
+      "summary": "PTT.BK · stock · market, news, fundamentals, sentiment"
+    },
+    "load_context": {
+      "status": "done",
+      "started_at": "2026-09-28T04:15:05.411817",
+      "runs": 1,
+      "finished_at": "2026-09-28T04:15:05.452129",
+      "duration_ms": 30,
+      "summary": "1h close 34.5 · portfolio not_provided · 0 lessons"
+    },
+    "analysts": {
+      "status": "done",
+      "started_at": "2026-09-28T04:15:05.457129",
+      "runs": 1,
+      "finished_at": "2026-09-28T04:15:05.502695",
+      "duration_ms": 31,
+      "summary": "4/4 reports · market, news, fundamentals, sentiment"
+    },
+    "analyst.market": {
+      "status": "done",
+      "started_at": "2026-09-28T04:15:05.460413",
+      "runs": 1,
+      "finished_at": "2026-09-28T04:15:05.496888",
+      "duration_ms": 31,
+      "summary": "1 iterations · 0 tools · ok"
+    },
+    "analyst.news": {
+      "status": "done",
+      "started_at": "2026-09-28T04:15:05.464411",
+      "runs": 1,
+      "finished_at": "2026-09-28T04:15:05.497887",
+      "duration_ms": 31,
+      "summary": "1 iterations · 0 tools · ok"
+    },
+    "analyst.fundamentals": {
+      "status": "done",
+      "started_at": "2026-09-28T04:15:05.465922",
+      "runs": 1,
+      "finished_at": "2026-09-28T04:15:05.500696",
+      "duration_ms": 31,
+      "summary": "1 iterations · 0 tools · ok"
+    },
+    "analyst.sentiment": {
+      "status": "done",
+      "started_at": "2026-09-28T04:15:05.467925",
+      "runs": 1,
+      "finished_at": "2026-09-28T04:15:05.501694",
+      "duration_ms": 31,
+      "summary": "1 iterations · 0 tools · ok"
+    },
+    "bull_researcher": {
+      "status": "done",
+      "started_at": "2026-09-28T04:15:05.526953",
+      "runs": 2,
+      "finished_at": "2026-09-28T04:15:05.531716",
+      "duration_ms": 0,
+      "summary": "bull turn 3"
+    },
+    "bear_researcher": {
+      "status": "done",
+      "started_at": "2026-09-28T04:15:05.536159",
+      "runs": 2,
+      "finished_at": "2026-09-28T04:15:05.541218",
+      "duration_ms": 0,
+      "summary": "bear turn 4"
+    },
+    "research_manager": {
+      "status": "done",
+      "started_at": "2026-09-28T04:15:05.544312",
+      "runs": 1,
+      "finished_at": "2026-09-28T04:15:05.551940",
+      "duration_ms": 14,
+      "summary": "Buy · APPROVE (0.80)"
+    },
+    "trader": {
+      "status": "done",
+      "started_at": "2026-09-28T04:15:05.557816",
+      "runs": 1,
+      "finished_at": "2026-09-28T04:15:05.579272",
+      "duration_ms": 16,
+      "summary": "long · stop 33.3 · 5700 units"
+    },
+    "aggressive": {
+      "status": "done",
+      "started_at": "2026-09-28T04:15:05.583392",
+      "runs": 1,
+      "finished_at": "2026-09-28T04:15:05.601185",
+      "duration_ms": 0,
+      "summary": "aggressive turn 1"
+    },
+    "conservative": {
+      "status": "done",
+      "started_at": "2026-09-28T04:15:05.605758",
+      "runs": 1,
+      "finished_at": "2026-09-28T04:15:05.609897",
+      "duration_ms": 0,
+      "summary": "conservative turn 2"
+    },
+    "neutral": {
+      "status": "done",
+      "started_at": "2026-09-28T04:15:05.615560",
+      "runs": 1,
+      "finished_at": "2026-09-28T04:15:05.621682",
+      "duration_ms": 0,
+      "summary": "neutral turn 3"
+    },
+    "portfolio_manager": {
+      "status": "done",
+      "started_at": "2026-09-28T04:15:05.624865",
+      "runs": 1,
+      "finished_at": "2026-09-28T04:15:05.644648",
+      "duration_ms": 31,
+      "summary": "Buy · APPROVE (0.80) · 5700 units"
+    },
+    "policy_gate": {
+      "status": "done",
+      "started_at": "2026-09-28T04:15:05.648159",
+      "runs": 1,
+      "finished_at": "2026-09-28T04:15:05.650676",
+      "duration_ms": 0,
+      "summary": "passed"
+    },
+    "refresh_price": {
+      "status": "done",
+      "started_at": "2026-09-28T04:15:05.654683",
+      "runs": 1,
+      "finished_at": "2026-09-28T04:15:05.678263",
+      "duration_ms": 30,
+      "summary": "live 34.5 (snapshot 34.5) · passed"
+    },
+    "approval": {
+      "status": "done",
+      "started_at": "2026-09-28T04:15:05.749691",
+      "runs": 2,
+      "finished_at": "2026-09-28T04:15:05.775589",
+      "duration_ms": 31,
+      "summary": "edited"
+    },
+    "record_decision": {
+      "status": "done",
+      "started_at": "2026-09-28T04:15:05.780864",
+      "runs": 1,
+      "finished_at": "2026-09-28T04:15:05.787237",
+      "duration_ms": 16,
+      "summary": "recorded PTT.BK:2026-09-25:run_01M3K3JEM33F5BS11XJFFXHBA6 (no order sent)"
+    },
+    "report": {
+      "status": "done",
+      "started_at": "2026-09-28T04:15:05.792470",
+      "runs": 1,
+      "finished_at": "2026-09-28T04:15:05.801654",
+      "duration_ms": 14,
+      "summary": "approved"
+    }
+  },
+  "instrument": {
+    "valid": true,
+    "raw": "PTT",
+    "canonical": "PTT.BK",
+    "display": "PTT (SET)",
+    "asset_type": "stock",
+    "market": "TH",
+    "currency": "THB",
+    "lot_size": 100,
+    "analysts": [
+      "market",
+      "news",
+      "fundamentals",
+      "sentiment"
+    ],
+    "analysis_date": null
+  },
+  "market_snapshot": {
+    "available": true,
+    "interval": "1h",
+    "as_of": "2026-09-25",
+    "bar_ts": "2026-09-25T09:00:00+00:00",
+    "currency": "THB",
+    "close": 34.5,
+    "indicators": {
+      "atr14": 0.6,
+      "rsi14": 55.0,
+      "sma50": 33.81
+    },
+    "change_pct": {},
+    "high_52w": null,
+    "low_52w": null,
+    "range_high": null,
+    "range_low": null,
+    "provenance_ids": [
+      "prov_01M3K3JEP7A3022Z234TZBEM8V"
+    ],
+    "higher_tf": {
+      "available": true,
+      "interval": "1d",
+      "as_of": "2026-09-25",
+      "bar_ts": "2026-09-25T09:00:00+00:00",
+      "currency": "THB",
+      "close": 34.5,
+      "indicators": {
+        "atr14": 0.6,
+        "rsi14": 55.0,
+        "sma50": 33.81
+      },
+      "change_pct": {},
+      "high_52w": null,
+      "low_52w": null,
+      "range_high": null,
+      "range_low": null,
+      "provenance_ids": [
+        "prov_01M3K3JEPJ07EHJ6YVN0X06XFD"
+      ]
+    }
+  },
+  "portfolio_ctx": {
+    "state": "not_provided"
+  },
+  "reports": {
+    "market": {
+      "status": "ok",
+      "text": "analyst report: trend up, support 33.8",
+      "tool_calls": 0,
+      "stop_reason": null
+    },
+    "news": {
+      "status": "ok",
+      "text": "analyst report: trend up, support 33.8",
+      "tool_calls": 0,
+      "stop_reason": null
+    },
+    "fundamentals": {
+      "status": "ok",
+      "text": "analyst report: trend up, support 33.8",
+      "tool_calls": 0,
+      "stop_reason": null
+    },
+    "sentiment": {
+      "status": "ok",
+      "text": "analyst report: trend up, support 33.8",
+      "tool_calls": 0,
+      "stop_reason": null
+    }
+  },
+  "invest_debate": {
+    "history": [
+      {
+        "speaker": "bull",
+        "text": "bull: momentum"
+      },
+      {
+        "speaker": "bear",
+        "text": "bear: valuation"
+      },
+      {
+        "speaker": "bull",
+        "text": "bull: momentum"
+      },
+      {
+        "speaker": "bear",
+        "text": "bear: valuation"
+      }
+    ],
+    "count": 4,
+    "latest_speaker": "bear"
+  },
+  "research_plan": {
+    "stance": "Buy",
+    "thesis": "uptrend with support",
+    "key_risks": [
+      "oil price"
+    ],
+    "catalysts": [
+      "earnings"
+    ],
+    "decision": {
+      "verdict": "APPROVE",
+      "confidence": 0.8,
+      "reason": "ok",
+      "next_action": null
+    },
+    "verdict": "APPROVE",
+    "mode": "native"
+  },
+  "trade_proposal": {
+    "proposal": {
+      "side": "long",
+      "entry_zone": [
+        34.0,
+        34.8
+      ],
+      "stop_basis": "atr",
+      "atr_multiple": 2.0,
+      "stop_level": null,
+      "target_levels": [
+        37.0,
+        39.0
+      ],
+      "horizon": "swing",
+      "time_stop_bars": null,
+      "invalidation": "",
+      "rationale": "buy the pullback",
+      "decision": {
+        "verdict": "APPROVE",
+        "confidence": 0.8,
+        "reason": "ok",
+        "next_action": null
+      }
+    },
+    "sizing": {
+      "side": "long",
+      "entry": 34.5,
+      "stop": 33.3,
+      "targets": [
+        37.0,
+        39.0
+      ],
+      "risk_reward": [
+        2.0833333333333335,
+        3.75
+      ],
+      "units": 5700,
+      "risk_amount": 6840.0,
+      "notional": 196650.0,
+      "position_weight": 0.19665,
+      "risk_fraction": 0.00684,
+      "equity": 1000000.0,
+      "currency": "THB",
+      "notes": [
+        "units capped by max position weight 20%"
+      ],
+      "time_stop_bars": 48,
+      "interval": "1h",
+      "time_stop_at": "2026-09-27T09:00:00+00:00"
+    },
+    "provenance_ids": [
+      "prov_01M3K3JETYAEFW15MWEBMFJ606",
+      "prov_01M3K3JETYAEFW15MWEBMFJ607",
+      "prov_01M3K3JETYAEFW15MWEBMFJ608",
+      "prov_01M3K3JETYAEFW15MWEBMFJ609",
+      "prov_01M3K3JETYAEFW15MWEBMFJ60A",
+      "prov_01M3K3JETYAEFW15MWEBMFJ60B"
+    ],
+    "mode": "native",
+    "attempt": 1
+  },
+  "risk_debate": {
+    "history": [
+      {
+        "speaker": "aggressive",
+        "text": "aggressive: size up"
+      },
+      {
+        "speaker": "conservative",
+        "text": "conservative: size down"
+      },
+      {
+        "speaker": "neutral",
+        "text": "neutral: keep"
+      }
+    ],
+    "count": 3,
+    "latest_speaker": "neutral"
+  },
+  "decision": {
+    "rating": "Buy",
+    "decision": {
+      "verdict": "APPROVE",
+      "confidence": 0.8,
+      "reason": "ok",
+      "next_action": null
+    },
+    "verdict": "APPROVE",
+    "final_size_pct": 1.0,
+    "adjustments": "",
+    "summary": "go",
+    "sizing": {
+      "side": "long",
+      "entry": 34.5,
+      "stop": 33.3,
+      "targets": [
+        37.0,
+        39.0
+      ],
+      "risk_reward": [
+        2.0833333333333335,
+        3.75
+      ],
+      "units": 5700,
+      "risk_amount": 6840.0,
+      "notional": 196650.0,
+      "position_weight": 0.19665,
+      "risk_fraction": 0.00684,
+      "equity": 1000000.0,
+      "currency": "THB",
+      "notes": [
+        "units capped by max position weight 20%"
+      ],
+      "time_stop_bars": 48,
+      "interval": "1h",
+      "time_stop_at": "2026-09-27T09:00:00+00:00"
+    },
+    "provenance_ids": [
+      "prov_01M3K3JEX04JMC3Z7E4DJ0YM2J",
+      "prov_01M3K3JEX04JMC3Z7E4DJ0YM2K",
+      "prov_01M3K3JEX04JMC3Z7E4DJ0YM2M",
+      "prov_01M3K3JEX04JMC3Z7E4DJ0YM2N",
+      "prov_01M3K3JEX04JMC3Z7E4DJ0YM2P",
+      "prov_01M3K3JEX04JMC3Z7E4DJ0YM2Q"
+    ],
+    "mode": "native"
+  },
+  "policy": {
+    "blocked": false,
+    "results": [
+      {
+        "rule_id": "valid_symbol",
+        "passed": true,
+        "severity": "block",
+        "message": "symbol is valid",
+        "values": {}
+      },
+      {
+        "rule_id": "require_stop_loss",
+        "passed": true,
+        "severity": "block",
+        "message": "stop-loss present",
+        "values": {
+          "stop_loss": 33.3
+        }
+      },
+      {
+        "rule_id": "max_risk_per_trade",
+        "passed": true,
+        "severity": "block",
+        "message": "risk 0.68% within cap 2.00% of equity",
+        "values": {
+          "fraction": 0.00684,
+          "limit": 0.02
+        }
+      },
+      {
+        "rule_id": "min_confidence",
+        "passed": true,
+        "severity": "warn",
+        "message": "confidence 0.80 meets minimum 0.60",
+        "values": {
+          "confidence": 0.8,
+          "limit": 0.6
+        }
+      },
+      {
+        "rule_id": "no_short_if_disallowed",
+        "passed": true,
+        "severity": "block",
+        "message": "not a short",
+        "values": {}
+      },
+      {
+        "rule_id": "no_high_impact_event_soon",
+        "passed": true,
+        "severity": "warn",
+        "message": "no high-impact release within 12h",
+        "values": {
+          "hours_to_next": null,
+          "hours": 12.0
+        }
+      },
+      {
+        "rule_id": "max_position_weight",
+        "passed": true,
+        "severity": "block",
+        "message": "position weight 19.66% within cap 20.00%",
+        "values": {
+          "weight": 0.19665,
+          "limit": 0.2
+        }
+      },
+      {
+        "rule_id": "cash_sufficient",
+        "passed": true,
+        "severity": "block",
+        "message": "cash required 196650.0 <= available 1000000.0",
+        "values": {
+          "required": 196650.0,
+          "available": 1000000.0
+        }
+      }
+    ],
+    "attempts": 1
+  },
+  "live": null,
+  "approval": {
+    "outcome": "edited",
+    "comment": null,
+    "edits": {
+      "final_size_pct": 0.5
+    },
+    "sizing": {
+      "side": "long",
+      "entry": 34.5,
+      "stop": 33.3,
+      "targets": [
+        37.0,
+        39.0
+      ],
+      "risk_reward": [
+        2.0833333333333335,
+        3.75
+      ],
+      "units": 4100,
+      "risk_amount": 4920.0,
+      "notional": 141450.0,
+      "position_weight": 0.14145,
+      "risk_fraction": 0.00492,
+      "equity": 1000000.0,
+      "currency": "THB",
+      "notes": [],
+      "time_stop_bars": 48,
+      "interval": "1h",
+      "time_stop_at": "2026-09-30T03:15:00+00:00"
+    },
+    "provenance_ids": [
+      "prov_01M3K3JF106QR9RB73PRJNQZQ3",
+      "prov_01M3K3JF106QR9RB73PRJNQZQ4",
+      "prov_01M3K3JF106QR9RB73PRJNQZQ5",
+      "prov_01M3K3JF106QR9RB73PRJNQZQ6",
+      "prov_01M3K3JF106QR9RB73PRJNQZQ7",
+      "prov_01M3K3JF106QR9RB73PRJNQZQ8"
+    ],
+    "final_size_pct": 0.5,
+    "policy": {
+      "blocked": false,
+      "results": [
+        {
+          "rule_id": "valid_symbol",
+          "passed": true,
+          "severity": "block",
+          "message": "symbol is valid",
+          "values": {}
+        },
+        {
+          "rule_id": "require_stop_loss",
+          "passed": true,
+          "severity": "block",
+          "message": "stop-loss present",
+          "values": {
+            "stop_loss": 33.3
+          }
+        },
+        {
+          "rule_id": "max_risk_per_trade",
+          "passed": true,
+          "severity": "block",
+          "message": "risk 0.49% within cap 2.00% of equity",
+          "values": {
+            "fraction": 0.00492,
+            "limit": 0.02
+          }
+        },
+        {
+          "rule_id": "min_confidence",
+          "passed": true,
+          "severity": "warn",
+          "message": "confidence 0.80 meets minimum 0.60",
+          "values": {
+            "confidence": 0.8,
+            "limit": 0.6
+          }
+        },
+        {
+          "rule_id": "no_short_if_disallowed",
+          "passed": true,
+          "severity": "block",
+          "message": "not a short",
+          "values": {}
+        },
+        {
+          "rule_id": "no_high_impact_event_soon",
+          "passed": true,
+          "severity": "warn",
+          "message": "no high-impact release within 12h",
+          "values": {
+            "hours_to_next": null,
+            "hours": 12.0
+          }
+        },
+        {
+          "rule_id": "max_position_weight",
+          "passed": true,
+          "severity": "block",
+          "message": "position weight 14.14% within cap 20.00%",
+          "values": {
+            "weight": 0.14145,
+            "limit": 0.2
+          }
+        },
+        {
+          "rule_id": "cash_sufficient",
+          "passed": true,
+          "severity": "block",
+          "message": "cash required 141450.0 <= available 1000000.0",
+          "values": {
+            "required": 141450.0,
+            "available": 1000000.0
+          }
+        }
+      ],
+      "blocking": []
+    },
+    "quote": {
+      "price": 34.5,
+      "ts": "2026-09-28T03:15:00Z",
+      "provider": "fake",
+      "provenance_ids": [
+        "prov_01M3K3JF0S52BE17PYDK267ADW"
+      ]
+    },
+    "entry_drift_atr": 0.0
+  },
+  "outcome": {
+    "status": "approved",
+    "reason": null,
+    "rating": "Buy",
+    "verdict": "APPROVE"
+  },
+  "report_md": "# PTT (SET) — approved\n\n## Narrative\nPTT: uptrend, buy the pullback.\n\n## Decision (computed)\n\n| | |\n|---|---|\n| Rating | Buy |\n| Verdict | APPROVE (0.80) |\n| Side | long |\n| Entry | 34.5 (live 2026-09-28T03:15:00Z; snapshot close 34.5) |\n| Stop | 33.3 |\n| Targets | 37, 39 |\n| Risk/Reward | 2.083, 3.75 |\n| Units | 4100 |\n| Notional | 1.414e+05 THB |\n| Weight | 14.14% |\n| Risk of equity | 0.49% |\n| Horizon | swing (1h bars) |\n| Time stop | 48 bars · 2026-09-30T03:15:00+00:00 |\n| Invalidation | - |\n\n## Policy\n\n- ✓ valid_symbol: symbol is valid\n- ✓ require_stop_loss: stop-loss present\n- ✓ max_risk_per_trade: risk 0.49% within cap 2.00% of equity\n- ✓ min_confidence: confidence 0.80 meets minimum 0.60\n- ✓ no_short_if_disallowed: not a short\n- ✓ no_high_impact_event_soon: no high-impact release within 12h\n- ✓ max_position_weight: position weight 14.14% within cap 20.00%\n- ✓ cash_sufficient: cash required 141450.0 <= available 1000000.0\n\n---\n_Analysis only. No order was sent to any broker._"
+}

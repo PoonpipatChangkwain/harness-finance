@@ -1,0 +1,41 @@
+symbol,name,sector
+AAPL,Apple Inc.,Technology
+MSFT,Microsoft Corporation,Technology
+GOOGL,Alphabet Inc.,Communication Services
+AMZN,Amazon.com Inc.,Consumer Discretionary
+NVDA,NVIDIA Corporation,Technology
+META,Meta Platforms Inc.,Communication Services
+TSLA,Tesla Inc.,Consumer Discretionary
+BRK.B,Berkshire Hathaway Inc.,Financials
+JPM,JPMorgan Chase & Co.,Financials
+V,Visa Inc.,Financials
+JNJ,Johnson & Johnson,Healthcare
+WMT,Walmart Inc.,Consumer Staples
+PG,Procter & Gamble Co.,Consumer Staples
+MA,Mastercard Inc.,Financials
+UNH,UnitedHealth Group Inc.,Healthcare
+HD,Home Depot Inc.,Consumer Discretionary
+XOM,Exxon Mobil Corp.,Energy
+BAC,Bank of America Corp.,Financials
+DIS,Walt Disney Co.,Communication Services
+NFLX,Netflix Inc.,Communication Services
+KO,Coca-Cola Co.,Consumer Staples
+PEP,PepsiCo Inc.,Consumer Staples
+ADBE,Adobe Inc.,Technology
+CRM,Salesforce Inc.,Technology
+INTC,Intel Corp.,Technology
+AMD,Advanced Micro Devices Inc.,Technology
+CSCO,Cisco Systems Inc.,Technology
+PFE,Pfizer Inc.,Healthcare
+ABBV,AbbVie Inc.,Healthcare
+NKE,Nike Inc.,Consumer Discretionary
+MCD,McDonald's Corp.,Consumer Discretionary
+COST,Costco Wholesale Corp.,Consumer Staples
+ORCL,Oracle Corp.,Technology
+IBM,International Business Machines Corp.,Technology
+QCOM,QUALCOMM Inc.,Technology
+T,AT&T Inc.,Communication Services
+VZ,Verizon Communications Inc.,Communication Services
+BA,Boeing Co.,Industrials
+GS,Goldman Sachs Group Inc.,Financials
+CAT,Caterpillar Inc.,Industrials

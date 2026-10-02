@@ -1,0 +1,1051 @@
+{
+  "trade_result": null,
+  "event_risk": {
+    "available": true,
+    "source": "ForexFactory",
+    "window_hours": 120,
+    "currencies": [
+      "THB",
+      "USD"
+    ],
+    "events": [],
+    "next_high_impact_hours": null,
+    "provenance_ids": [
+      "prov_01M3K3JF95J14KC3MJ3NFZVRVZ"
+    ]
+  },
+  "run": {
+    "id": "run_01M3K3JF70XZWMDJ4HACPKFYF1",
+    "session_id": null,
+    "workflow": "trading",
+    "status": "waiting_approval",
+    "input": {
+      "symbol": "EURUSD",
+      "language": "en"
+    },
+    "output": null,
+    "error": null,
+    "thread_id": "b8d94c7f65e027fa",
+    "started_at": "2026-09-28T04:15:05.952075",
+    "finished_at": null,
+    "usage": {
+      "input_tokens": 1100,
+      "output_tokens": 220,
+      "cache_read_tokens": 0,
+      "cost_usd": 0.0,
+      "llm_calls": 11,
+      "tool_calls": 7,
+      "by_purpose": {
+        "agent": {
+          "input_tokens": 300,
+          "output_tokens": 60,
+          "cost_usd": 0.0,
+          "calls": 3
+        },
+        "debate": {
+          "input_tokens": 500,
+          "output_tokens": 100,
+          "cost_usd": 0.0,
+          "calls": 5
+        },
+        "structured": {
+          "input_tokens": 300,
+          "output_tokens": 60,
+          "cost_usd": 0.0,
+          "calls": 3
+        }
+      }
+    }
+  },
+  "input": {
+    "symbol": "EURUSD",
+    "language": "en"
+  },
+  "graph_view": {
+    "nodes": [
+      {
+        "id": "resolve_symbol",
+        "label": "Resolve symbol",
+        "kind": "compute",
+        "phase": "retrieve"
+      },
+      {
+        "id": "load_context",
+        "label": "Load context",
+        "kind": "compute",
+        "phase": "retrieve"
+      },
+      {
+        "id": "analysts",
+        "label": "Analysts",
+        "kind": "agent",
+        "phase": "analyze"
+      },
+      {
+        "id": "bull_researcher",
+        "label": "Bull",
+        "kind": "agent",
+        "phase": "analyze"
+      },
+      {
+        "id": "bear_researcher",
+        "label": "Bear",
+        "kind": "agent",
+        "phase": "analyze"
+      },
+      {
+        "id": "research_manager",
+        "label": "Research manager",
+        "kind": "agent",
+        "phase": "synthesize"
+      },
+      {
+        "id": "trader",
+        "label": "Trader",
+        "kind": "agent",
+        "phase": "compute"
+      },
+      {
+        "id": "aggressive",
+        "label": "Aggressive",
+        "kind": "agent",
+        "phase": "verify"
+      },
+      {
+        "id": "conservative",
+        "label": "Conservative",
+        "kind": "agent",
+        "phase": "verify"
+      },
+      {
+        "id": "neutral",
+        "label": "Neutral",
+        "kind": "agent",
+        "phase": "verify"
+      },
+      {
+        "id": "portfolio_manager",
+        "label": "Portfolio manager",
+        "kind": "agent",
+        "phase": "synthesize"
+      },
+      {
+        "id": "policy_gate",
+        "label": "Policy gate",
+        "kind": "gate",
+        "phase": "verify"
+      },
+      {
+        "id": "refresh_price",
+        "label": "Live price",
+        "kind": "compute",
+        "phase": "compute"
+      },
+      {
+        "id": "approval",
+        "label": "Approval",
+        "kind": "approval",
+        "phase": "verify"
+      },
+      {
+        "id": "record_decision",
+        "label": "Record decision",
+        "kind": "compute",
+        "phase": "report"
+      },
+      {
+        "id": "report",
+        "label": "Report",
+        "kind": "report",
+        "phase": "report"
+      }
+    ],
+    "edges": [
+      {
+        "source": "analysts",
+        "target": "bull_researcher"
+      },
+      {
+        "source": "trader",
+        "target": "aggressive"
+      },
+      {
+        "source": "record_decision",
+        "target": "report"
+      },
+      {
+        "source": "report",
+        "target": "END"
+      },
+      {
+        "source": "resolve_symbol",
+        "target": "load_context",
+        "label": "ok"
+      },
+      {
+        "source": "resolve_symbol",
+        "target": "report",
+        "label": "invalid"
+      },
+      {
+        "source": "resolve_symbol",
+        "target": "report",
+        "label": "__fallback__"
+      },
+      {
+        "source": "load_context",
+        "target": "analysts",
+        "label": "ok"
+      },
+      {
+        "source": "load_context",
+        "target": "report",
+        "label": "unavailable"
+      },
+      {
+        "source": "load_context",
+        "target": "report",
+        "label": "__fallback__"
+      },
+      {
+        "source": "bull_researcher",
+        "target": "bull_researcher",
+        "label": "bull"
+      },
+      {
+        "source": "bull_researcher",
+        "target": "bear_researcher",
+        "label": "bear"
+      },
+      {
+        "source": "bull_researcher",
+        "target": "research_manager",
+        "label": "manager"
+      },
+      {
+        "source": "bull_researcher",
+        "target": "research_manager",
+        "label": "__fallback__"
+      },
+      {
+        "source": "bear_researcher",
+        "target": "bull_researcher",
+        "label": "bull"
+      },
+      {
+        "source": "bear_researcher",
+        "target": "bear_researcher",
+        "label": "bear"
+      },
+      {
+        "source": "bear_researcher",
+        "target": "research_manager",
+        "label": "manager"
+      },
+      {
+        "source": "bear_researcher",
+        "target": "research_manager",
+        "label": "__fallback__"
+      },
+      {
+        "source": "research_manager",
+        "target": "trader",
+        "label": "trade"
+      },
+      {
+        "source": "research_manager",
+        "target": "report",
+        "label": "reject"
+      },
+      {
+        "source": "research_manager",
+        "target": "trader",
+        "label": "__fallback__"
+      },
+      {
+        "source": "aggressive",
+        "target": "aggressive",
+        "label": "aggressive"
+      },
+      {
+        "source": "aggressive",
+        "target": "conservative",
+        "label": "conservative"
+      },
+      {
+        "source": "aggressive",
+        "target": "neutral",
+        "label": "neutral"
+      },
+      {
+        "source": "aggressive",
+        "target": "portfolio_manager",
+        "label": "pm"
+      },
+      {
+        "source": "aggressive",
+        "target": "portfolio_manager",
+        "label": "__fallback__"
+      },
+      {
+        "source": "conservative",
+        "target": "aggressive",
+        "label": "aggressive"
+      },
+      {
+        "source": "conservative",
+        "target": "conservative",
+        "label": "conservative"
+      },
+      {
+        "source": "conservative",
+        "target": "neutral",
+        "label": "neutral"
+      },
+      {
+        "source": "conservative",
+        "target": "portfolio_manager",
+        "label": "pm"
+      },
+      {
+        "source": "conservative",
+        "target": "portfolio_manager",
+        "label": "__fallback__"
+      },
+      {
+        "source": "neutral",
+        "target": "aggressive",
+        "label": "aggressive"
+      },
+      {
+        "source": "neutral",
+        "target": "conservative",
+        "label": "conservative"
+      },
+      {
+        "source": "neutral",
+        "target": "neutral",
+        "label": "neutral"
+      },
+      {
+        "source": "neutral",
+        "target": "portfolio_manager",
+        "label": "pm"
+      },
+      {
+        "source": "neutral",
+        "target": "portfolio_manager",
+        "label": "__fallback__"
+      },
+      {
+        "source": "portfolio_manager",
+        "target": "policy_gate",
+        "label": "gate"
+      },
+      {
+        "source": "portfolio_manager",
+        "target": "report",
+        "label": "reject"
+      },
+      {
+        "source": "portfolio_manager",
+        "target": "policy_gate",
+        "label": "__fallback__"
+      },
+      {
+        "source": "policy_gate",
+        "target": "refresh_price",
+        "label": "approve"
+      },
+      {
+        "source": "policy_gate",
+        "target": "trader",
+        "label": "retry"
+      },
+      {
+        "source": "policy_gate",
+        "target": "report",
+        "label": "reject"
+      },
+      {
+        "source": "policy_gate",
+        "target": "report",
+        "label": "__fallback__"
+      },
+      {
+        "source": "refresh_price",
+        "target": "approval",
+        "label": "approve"
+      },
+      {
+        "source": "refresh_price",
+        "target": "report",
+        "label": "reject"
+      },
+      {
+        "source": "refresh_price",
+        "target": "approval",
+        "label": "__fallback__"
+      },
+      {
+        "source": "approval",
+        "target": "record_decision",
+        "label": "record"
+      },
+      {
+        "source": "approval",
+        "target": "report",
+        "label": "report"
+      },
+      {
+        "source": "approval",
+        "target": "report",
+        "label": "__fallback__"
+      }
+    ]
+  },
+  "nodes": {
+    "resolve_symbol": {
+      "status": "done",
+      "started_at": "2026-09-28T04:15:05.994034",
+      "runs": 1,
+      "finished_at": "2026-09-28T04:15:05.996265",
+      "duration_ms": 0,
+      "summary": "EURUSD=X · forex · market, news, macro"
+    },
+    "load_context": {
+      "status": "done",
+      "started_at": "2026-09-28T04:15:06.000700",
+      "runs": 1,
+      "finished_at": "2026-09-28T04:15:06.033967",
+      "duration_ms": 31,
+      "summary": "1h close 1.08 · portfolio not_provided · 0 lessons"
+    },
+    "analysts": {
+      "status": "done",
+      "started_at": "2026-09-28T04:15:06.039169",
+      "runs": 1,
+      "finished_at": "2026-09-28T04:15:06.075559",
+      "duration_ms": 30,
+      "summary": "3/3 reports · market, news, macro"
+    },
+    "analyst.market": {
+      "status": "done",
+      "started_at": "2026-09-28T04:15:06.041249",
+      "runs": 1,
+      "finished_at": "2026-09-28T04:15:06.070972",
+      "duration_ms": 14,
+      "summary": "1 iterations · 0 tools · ok"
+    },
+    "analyst.news": {
+      "status": "done",
+      "started_at": "2026-09-28T04:15:06.044470",
+      "runs": 1,
+      "finished_at": "2026-09-28T04:15:06.072072",
+      "duration_ms": 14,
+      "summary": "1 iterations · 0 tools · ok"
+    },
+    "analyst.macro": {
+      "status": "done",
+      "started_at": "2026-09-28T04:15:06.046365",
+      "runs": 1,
+      "finished_at": "2026-09-28T04:15:06.073173",
+      "duration_ms": 30,
+      "summary": "1 iterations · 0 tools · ok"
+    },
+    "bull_researcher": {
+      "status": "done",
+      "started_at": "2026-09-28T04:15:06.078568",
+      "runs": 1,
+      "finished_at": "2026-09-28T04:15:06.084849",
+      "duration_ms": 16,
+      "summary": "bull turn 1"
+    },
+    "bear_researcher": {
+      "status": "done",
+      "started_at": "2026-09-28T04:15:06.088316",
+      "runs": 1,
+      "finished_at": "2026-09-28T04:15:06.093238",
+      "duration_ms": 0,
+      "summary": "bear turn 2"
+    },
+    "research_manager": {
+      "status": "done",
+      "started_at": "2026-09-28T04:15:06.096787",
+      "runs": 1,
+      "finished_at": "2026-09-28T04:15:06.103535",
+      "duration_ms": 0,
+      "summary": "Buy · APPROVE (0.80)"
+    },
+    "trader": {
+      "status": "done",
+      "started_at": "2026-09-28T04:15:06.107278",
+      "runs": 1,
+      "finished_at": "2026-09-28T04:15:06.146638",
+      "duration_ms": 31,
+      "summary": "long · stop 1.068 · 833333 units"
+    },
+    "aggressive": {
+      "status": "done",
+      "started_at": "2026-09-28T04:15:06.150178",
+      "runs": 1,
+      "finished_at": "2026-09-28T04:15:06.155087",
+      "duration_ms": 0,
+      "summary": "aggressive turn 1"
+    },
+    "conservative": {
+      "status": "done",
+      "started_at": "2026-09-28T04:15:06.159105",
+      "runs": 1,
+      "finished_at": "2026-09-28T04:15:06.163916",
+      "duration_ms": 0,
+      "summary": "conservative turn 2"
+    },
+    "neutral": {
+      "status": "done",
+      "started_at": "2026-09-28T04:15:06.168053",
+      "runs": 1,
+      "finished_at": "2026-09-28T04:15:06.172324",
+      "duration_ms": 0,
+      "summary": "neutral turn 3"
+    },
+    "portfolio_manager": {
+      "status": "done",
+      "started_at": "2026-09-28T04:15:06.178022",
+      "runs": 1,
+      "finished_at": "2026-09-28T04:15:06.196844",
+      "duration_ms": 16,
+      "summary": "Buy · APPROVE (0.80) · 833333 units"
+    },
+    "policy_gate": {
+      "status": "done",
+      "started_at": "2026-09-28T04:15:06.200804",
+      "runs": 1,
+      "finished_at": "2026-09-28T04:15:06.202899",
+      "duration_ms": 0,
+      "summary": "passed"
+    },
+    "refresh_price": {
+      "status": "done",
+      "started_at": "2026-09-28T04:15:06.207086",
+      "runs": 1,
+      "finished_at": "2026-09-28T04:15:06.230385",
+      "duration_ms": 15,
+      "summary": "live 1.08 (snapshot 1.08) · passed"
+    },
+    "approval": {
+      "status": "running",
+      "started_at": "2026-09-28T04:15:06.234838",
+      "runs": 1
+    }
+  },
+  "instrument": {
+    "valid": true,
+    "raw": "EURUSD",
+    "canonical": "EURUSD=X",
+    "display": "EUR/USD",
+    "asset_type": "forex",
+    "market": "GLOBAL",
+    "currency": "USD",
+    "lot_size": 1,
+    "analysts": [
+      "market",
+      "news",
+      "macro"
+    ],
+    "analysis_date": null
+  },
+  "market_snapshot": {
+    "available": true,
+    "interval": "1h",
+    "as_of": "2026-09-25",
+    "bar_ts": "2026-09-25T09:00:00+00:00",
+    "currency": "USD",
+    "close": 1.08,
+    "indicators": {
+      "atr14": 0.006,
+      "rsi14": 55.0,
+      "sma50": 1.0584
+    },
+    "change_pct": {},
+    "high_52w": null,
+    "low_52w": null,
+    "range_high": null,
+    "range_low": null,
+    "provenance_ids": [
+      "prov_01M3K3JF8NERHNA2CSYHQC562X"
+    ],
+    "higher_tf": {
+      "available": true,
+      "interval": "1d",
+      "as_of": "2026-09-25",
+      "bar_ts": "2026-09-25T09:00:00+00:00",
+      "currency": "USD",
+      "close": 1.08,
+      "indicators": {
+        "atr14": 0.006,
+        "rsi14": 55.0,
+        "sma50": 1.0584
+      },
+      "change_pct": {},
+      "high_52w": null,
+      "low_52w": null,
+      "range_high": null,
+      "range_low": null,
+      "provenance_ids": [
+        "prov_01M3K3JF8XAY2A5RMS6YARHKZR"
+      ]
+    }
+  },
+  "portfolio_ctx": {
+    "state": "not_provided"
+  },
+  "reports": {
+    "market": {
+      "status": "ok",
+      "text": "analyst report: trend up, support 33.8",
+      "tool_calls": 0,
+      "stop_reason": null
+    },
+    "news": {
+      "status": "ok",
+      "text": "analyst report: trend up, support 33.8",
+      "tool_calls": 0,
+      "stop_reason": null
+    },
+    "macro": {
+      "status": "ok",
+      "text": "analyst report: trend up, support 33.8",
+      "tool_calls": 0,
+      "stop_reason": null
+    }
+  },
+  "invest_debate": {
+    "history": [
+      {
+        "speaker": "bull",
+        "text": "bull: momentum"
+      },
+      {
+        "speaker": "bear",
+        "text": "bear: valuation"
+      }
+    ],
+    "count": 2,
+    "latest_speaker": "bear"
+  },
+  "research_plan": {
+    "stance": "Buy",
+    "thesis": "uptrend with support",
+    "key_risks": [
+      "oil price"
+    ],
+    "catalysts": [
+      "earnings"
+    ],
+    "decision": {
+      "verdict": "APPROVE",
+      "confidence": 0.8,
+      "reason": "ok",
+      "next_action": null
+    },
+    "verdict": "APPROVE",
+    "mode": "native"
+  },
+  "trade_proposal": {
+    "proposal": {
+      "side": "long",
+      "entry_zone": [
+        34.0,
+        34.8
+      ],
+      "stop_basis": "atr",
+      "atr_multiple": 2.0,
+      "stop_level": null,
+      "target_levels": [
+        37.0,
+        39.0
+      ],
+      "horizon": "swing",
+      "time_stop_bars": null,
+      "invalidation": "",
+      "rationale": "buy the pullback",
+      "decision": {
+        "verdict": "APPROVE",
+        "confidence": 0.8,
+        "reason": "ok",
+        "next_action": null
+      }
+    },
+    "sizing": {
+      "side": "long",
+      "entry": 1.08,
+      "stop": 1.068,
+      "targets": [
+        37.0,
+        39.0
+      ],
+      "risk_reward": [
+        2993.3333333333335,
+        3160.0
+      ],
+      "units": 833333,
+      "risk_amount": 9999.996,
+      "notional": 899999.64,
+      "position_weight": 0.9,
+      "risk_fraction": 0.01,
+      "equity": 1000000.0,
+      "currency": "USD",
+      "notes": [],
+      "time_stop_bars": 48,
+      "interval": "1h",
+      "time_stop_at": "2026-09-27T09:00:00+00:00"
+    },
+    "provenance_ids": [
+      "prov_01M3K3JFCNNC8NNSFGTNZED2PK",
+      "prov_01M3K3JFCNNC8NNSFGTNZED2PM",
+      "prov_01M3K3JFCNNC8NNSFGTNZED2PN",
+      "prov_01M3K3JFCNNC8NNSFGTNZED2PP",
+      "prov_01M3K3JFCNNC8NNSFGTNZED2PQ",
+      "prov_01M3K3JFCNNC8NNSFGTNZED2PR"
+    ],
+    "mode": "native",
+    "attempt": 1
+  },
+  "risk_debate": {
+    "history": [
+      {
+        "speaker": "aggressive",
+        "text": "aggressive: size up"
+      },
+      {
+        "speaker": "conservative",
+        "text": "conservative: size down"
+      },
+      {
+        "speaker": "neutral",
+        "text": "neutral: keep"
+      }
+    ],
+    "count": 3,
+    "latest_speaker": "neutral"
+  },
+  "decision": {
+    "rating": "Buy",
+    "decision": {
+      "verdict": "APPROVE",
+      "confidence": 0.8,
+      "reason": "ok",
+      "next_action": null
+    },
+    "verdict": "APPROVE",
+    "final_size_pct": 1.0,
+    "adjustments": "",
+    "summary": "go",
+    "sizing": {
+      "side": "long",
+      "entry": 1.08,
+      "stop": 1.068,
+      "targets": [
+        37.0,
+        39.0
+      ],
+      "risk_reward": [
+        2993.3333333333335,
+        3160.0
+      ],
+      "units": 833333,
+      "risk_amount": 9999.996,
+      "notional": 899999.64,
+      "position_weight": 0.9,
+      "risk_fraction": 0.01,
+      "equity": 1000000.0,
+      "currency": "USD",
+      "notes": [],
+      "time_stop_bars": 48,
+      "interval": "1h",
+      "time_stop_at": "2026-09-27T09:00:00+00:00"
+    },
+    "provenance_ids": [
+      "prov_01M3K3JFE8RJ9P5P7WP9XX61H8",
+      "prov_01M3K3JFE8RJ9P5P7WP9XX61H9",
+      "prov_01M3K3JFE8RJ9P5P7WP9XX61HA",
+      "prov_01M3K3JFE8RJ9P5P7WP9XX61HB",
+      "prov_01M3K3JFE8RJ9P5P7WP9XX61HC",
+      "prov_01M3K3JFE8RJ9P5P7WP9XX61HD"
+    ],
+    "mode": "native"
+  },
+  "policy": {
+    "blocked": false,
+    "results": [
+      {
+        "rule_id": "valid_symbol",
+        "passed": true,
+        "severity": "block",
+        "message": "symbol is valid",
+        "values": {}
+      },
+      {
+        "rule_id": "require_stop_loss",
+        "passed": true,
+        "severity": "block",
+        "message": "stop-loss present",
+        "values": {
+          "stop_loss": 1.068
+        }
+      },
+      {
+        "rule_id": "max_risk_per_trade",
+        "passed": true,
+        "severity": "block",
+        "message": "risk 1.00% within cap 2.00% of equity",
+        "values": {
+          "fraction": 0.009999995999999999,
+          "limit": 0.02
+        }
+      },
+      {
+        "rule_id": "min_confidence",
+        "passed": true,
+        "severity": "warn",
+        "message": "confidence 0.80 meets minimum 0.60",
+        "values": {
+          "confidence": 0.8,
+          "limit": 0.6
+        }
+      },
+      {
+        "rule_id": "no_short_if_disallowed",
+        "passed": true,
+        "severity": "block",
+        "message": "not a short",
+        "values": {}
+      },
+      {
+        "rule_id": "no_high_impact_event_soon",
+        "passed": true,
+        "severity": "warn",
+        "message": "no high-impact release within 12h",
+        "values": {
+          "hours_to_next": null,
+          "hours": 12.0
+        }
+      }
+    ],
+    "attempts": 1
+  },
+  "live": {
+    "refreshed": true,
+    "quote": {
+      "price": 1.08,
+      "ts": "2026-09-28T03:15:00Z",
+      "provider": "fake",
+      "provenance_ids": [
+        "prov_01M3K3JFF2RA8PSZ604AJ1WC6Y"
+      ]
+    },
+    "snapshot_close": 1.08,
+    "sizing": {
+      "side": "long",
+      "entry": 1.08,
+      "stop": 1.068,
+      "targets": [
+        37.0,
+        39.0
+      ],
+      "risk_reward": [
+        2993.3333333333335,
+        3160.0
+      ],
+      "units": 833333,
+      "risk_amount": 9999.996,
+      "notional": 899999.64,
+      "position_weight": 0.9,
+      "risk_fraction": 0.01,
+      "equity": 1000000.0,
+      "currency": "USD",
+      "notes": [],
+      "time_stop_bars": 48,
+      "interval": "1h",
+      "time_stop_at": "2026-09-30T03:15:00+00:00"
+    },
+    "provenance_ids": [
+      "prov_01M3K3JFF9RF1BSMM5VY3VXS6G",
+      "prov_01M3K3JFF9RF1BSMM5VY3VXS6H",
+      "prov_01M3K3JFF9RF1BSMM5VY3VXS6J",
+      "prov_01M3K3JFF9RF1BSMM5VY3VXS6K",
+      "prov_01M3K3JFF9RF1BSMM5VY3VXS6M",
+      "prov_01M3K3JFF9RF1BSMM5VY3VXS6N"
+    ],
+    "policy": {
+      "blocked": false,
+      "results": [
+        {
+          "rule_id": "valid_symbol",
+          "passed": true,
+          "severity": "block",
+          "message": "symbol is valid",
+          "values": {}
+        },
+        {
+          "rule_id": "require_stop_loss",
+          "passed": true,
+          "severity": "block",
+          "message": "stop-loss present",
+          "values": {
+            "stop_loss": 1.068
+          }
+        },
+        {
+          "rule_id": "max_risk_per_trade",
+          "passed": true,
+          "severity": "block",
+          "message": "risk 1.00% within cap 2.00% of equity",
+          "values": {
+            "fraction": 0.009999995999999999,
+            "limit": 0.02
+          }
+        },
+        {
+          "rule_id": "min_confidence",
+          "passed": true,
+          "severity": "warn",
+          "message": "confidence 0.80 meets minimum 0.60",
+          "values": {
+            "confidence": 0.8,
+            "limit": 0.6
+          }
+        },
+        {
+          "rule_id": "no_short_if_disallowed",
+          "passed": true,
+          "severity": "block",
+          "message": "not a short",
+          "values": {}
+        },
+        {
+          "rule_id": "no_high_impact_event_soon",
+          "passed": true,
+          "severity": "warn",
+          "message": "no high-impact release within 12h",
+          "values": {
+            "hours_to_next": null,
+            "hours": 12.0
+          }
+        }
+      ],
+      "blocking": []
+    }
+  },
+  "approval": {
+    "id": "apr_01M3K3JFGE6CDMQ7T816PF1R29",
+    "run_id": "run_01M3K3JF70XZWMDJ4HACPKFYF1",
+    "node": "approval",
+    "kind": "trade_decision",
+    "status": "pending",
+    "request": {
+      "kind": "trade_decision",
+      "title": "EUR/USD: Buy · long",
+      "proposal": {
+        "price_source": "live",
+        "price_ts": "2026-09-28T03:15:00Z",
+        "snapshot_close": 1.08,
+        "symbol": "EURUSD=X",
+        "display": "EUR/USD",
+        "rating": "Buy",
+        "verdict": "APPROVE",
+        "confidence": 0.8,
+        "side": "long",
+        "entry": 1.08,
+        "stop": 1.068,
+        "targets": [
+          37.0,
+          39.0
+        ],
+        "risk_reward": [
+          2993.3333333333335,
+          3160.0
+        ],
+        "units": 833333,
+        "notional": 899999.64,
+        "position_weight": 0.9,
+        "risk_fraction": 0.01,
+        "currency": "USD",
+        "horizon": "swing",
+        "interval": "1h",
+        "time_stop_bars": 48,
+        "time_stop_at": "2026-09-30T03:15:00+00:00",
+        "invalidation": ""
+      },
+      "policy_results": [
+        {
+          "rule_id": "valid_symbol",
+          "passed": true,
+          "severity": "block",
+          "message": "symbol is valid",
+          "values": {}
+        },
+        {
+          "rule_id": "require_stop_loss",
+          "passed": true,
+          "severity": "block",
+          "message": "stop-loss present",
+          "values": {
+            "stop_loss": 1.068
+          }
+        },
+        {
+          "rule_id": "max_risk_per_trade",
+          "passed": true,
+          "severity": "block",
+          "message": "risk 1.00% within cap 2.00% of equity",
+          "values": {
+            "fraction": 0.009999995999999999,
+            "limit": 0.02
+          }
+        },
+        {
+          "rule_id": "min_confidence",
+          "passed": true,
+          "severity": "warn",
+          "message": "confidence 0.80 meets minimum 0.60",
+          "values": {
+            "confidence": 0.8,
+            "limit": 0.6
+          }
+        },
+        {
+          "rule_id": "no_short_if_disallowed",
+          "passed": true,
+          "severity": "block",
+          "message": "not a short",
+          "values": {}
+        },
+        {
+          "rule_id": "no_high_impact_event_soon",
+          "passed": true,
+          "severity": "warn",
+          "message": "no high-impact release within 12h",
+          "values": {
+            "hours_to_next": null,
+            "hours": 12.0
+          }
+        }
+      ],
+      "provenance_ids": [
+        "prov_01M3K3JFF9RF1BSMM5VY3VXS6G",
+        "prov_01M3K3JFF9RF1BSMM5VY3VXS6H",
+        "prov_01M3K3JFF9RF1BSMM5VY3VXS6J",
+        "prov_01M3K3JFF9RF1BSMM5VY3VXS6K",
+        "prov_01M3K3JFF9RF1BSMM5VY3VXS6M",
+        "prov_01M3K3JFF9RF1BSMM5VY3VXS6N"
+      ]
+    },
+    "response": null,
+    "created_at": "2026-09-28T04:15:06.255404",
+    "resolved_at": null
+  },
+  "outcome": null,
+  "report_md": null
+}

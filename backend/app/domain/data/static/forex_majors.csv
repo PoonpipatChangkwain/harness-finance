@@ -1,0 +1,13 @@
+symbol,name,base,quote
+EURUSD,Euro / US Dollar,EUR,USD
+GBPUSD,British Pound / US Dollar,GBP,USD
+USDJPY,US Dollar / Japanese Yen,USD,JPY
+USDCHF,US Dollar / Swiss Franc,USD,CHF
+AUDUSD,Australian Dollar / US Dollar,AUD,USD
+USDCAD,US Dollar / Canadian Dollar,USD,CAD
+NZDUSD,New Zealand Dollar / US Dollar,NZD,USD
+EURGBP,Euro / British Pound,EUR,GBP
+EURJPY,Euro / Japanese Yen,EUR,JPY
+GBPJPY,British Pound / Japanese Yen,GBP,JPY
+USDTHB,US Dollar / Thai Baht,USD,THB
+EURTHB,Euro / Thai Baht,EUR,THB

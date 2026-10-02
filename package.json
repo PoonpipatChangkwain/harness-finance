@@ -1,0 +1,23 @@
+{
+  "name": "finance-harness",
+  "private": true,
+  "scripts": {
+    "dev:backend": "uv run --directory backend python -m uvicorn app.api.main:app --reload --port 8000",
+    "dev:frontend": "pnpm --dir frontend dev",
+    "dev": "concurrently -n backend,frontend -c blue,green \"npm:dev:backend\" \"npm:dev:frontend\"",
+    "test:backend": "uv run --project backend python -m pytest",
+    "test:frontend": "pnpm --dir frontend test",
+    "test": "npm run test:backend && npm run test:frontend",
+    "lint:backend": "uv run --project backend ruff check backend && uv run --directory backend lint-imports",
+    "lint:frontend": "pnpm --dir frontend lint",
+    "lint": "npm run lint:backend && npm run lint:frontend",
+    "typecheck:backend": "uv run --directory backend python -m mypy app",
+    "typecheck:frontend": "pnpm --dir frontend typecheck",
+    "typecheck": "npm run typecheck:backend && npm run typecheck:frontend",
+    "fmt:backend": "uv run --project backend ruff format .",
+    "fmt": "npm run fmt:backend"
+  },
+  "devDependencies": {
+    "concurrently": "^9.0.0"
+  }
+}

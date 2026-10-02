@@ -1,0 +1,19 @@
+{
+  "response": {"status": 200},
+  "messages": [
+    {
+      "id": 111,
+      "body": "PTT looking strong today &amp; breaking out",
+      "created_at": "2026-09-20T10:00:00Z",
+      "user": {"username": "trader_th"},
+      "entities": {"sentiment": {"basic": "Bullish"}}
+    },
+    {
+      "id": 112,
+      "body": "Not convinced, might pull back",
+      "created_at": "2026-09-21T08:30:00Z",
+      "user": {"username": "bear_bkk"},
+      "entities": {"sentiment": {"basic": "Bearish"}}
+    }
+  ]
+}

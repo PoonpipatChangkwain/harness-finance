@@ -1,0 +1,2922 @@
+{
+  "$defs": {
+    "AnswerFinal": {
+      "additionalProperties": false,
+      "properties": {
+        "markdown": {
+          "title": "Markdown",
+          "type": "string"
+        },
+        "citations": {
+          "items": {
+            "$ref": "#/$defs/Citation"
+          },
+          "title": "Citations",
+          "type": "array"
+        },
+        "unverified_numbers": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Unverified Numbers",
+          "type": "array"
+        }
+      },
+      "required": [
+        "markdown",
+        "citations",
+        "unverified_numbers"
+      ],
+      "title": "AnswerFinal",
+      "type": "object"
+    },
+    "ApprovalRequired": {
+      "additionalProperties": false,
+      "properties": {
+        "approval_id": {
+          "title": "Approval Id",
+          "type": "string"
+        },
+        "kind": {
+          "title": "Kind",
+          "type": "string"
+        },
+        "title": {
+          "title": "Title",
+          "type": "string"
+        },
+        "proposal": {
+          "additionalProperties": true,
+          "title": "Proposal",
+          "type": "object"
+        },
+        "policy_results": {
+          "items": {
+            "additionalProperties": true,
+            "type": "object"
+          },
+          "title": "Policy Results",
+          "type": "array"
+        },
+        "provenance_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Provenance Ids",
+          "type": "array"
+        }
+      },
+      "required": [
+        "approval_id",
+        "kind",
+        "title",
+        "proposal",
+        "policy_results",
+        "provenance_ids"
+      ],
+      "title": "ApprovalRequired",
+      "type": "object"
+    },
+    "ApprovalResolved": {
+      "additionalProperties": false,
+      "properties": {
+        "approval_id": {
+          "title": "Approval Id",
+          "type": "string"
+        },
+        "outcome": {
+          "enum": [
+            "approved",
+            "rejected",
+            "edited"
+          ],
+          "title": "Outcome",
+          "type": "string"
+        },
+        "edits": {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Edits"
+        }
+      },
+      "required": [
+        "approval_id",
+        "outcome"
+      ],
+      "title": "ApprovalResolved",
+      "type": "object"
+    },
+    "BacktestCell": {
+      "additionalProperties": false,
+      "description": "(P15) One (symbol, date) cell changed state; ``run_id`` is its trading run.",
+      "properties": {
+        "cell_id": {
+          "title": "Cell Id",
+          "type": "string"
+        },
+        "symbol": {
+          "title": "Symbol",
+          "type": "string"
+        },
+        "day": {
+          "title": "Day",
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "pending",
+            "running",
+            "done",
+            "failed"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "run_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Run Id"
+        },
+        "rating": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Rating"
+        },
+        "side": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Side"
+        },
+        "outcome": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Outcome"
+        },
+        "cached": {
+          "default": false,
+          "title": "Cached",
+          "type": "boolean"
+        },
+        "error": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Error"
+        }
+      },
+      "required": [
+        "cell_id",
+        "symbol",
+        "day",
+        "status"
+      ],
+      "title": "BacktestCell",
+      "type": "object"
+    },
+    "BacktestProgress": {
+      "additionalProperties": false,
+      "description": "(P15) Where a backtest stands: phase and cell counts, cost of the LLM cells so far.",
+      "properties": {
+        "phase": {
+          "enum": [
+            "preload",
+            "decisions",
+            "simulate",
+            "done"
+          ],
+          "title": "Phase",
+          "type": "string"
+        },
+        "total": {
+          "default": 0,
+          "title": "Total",
+          "type": "integer"
+        },
+        "done": {
+          "default": 0,
+          "title": "Done",
+          "type": "integer"
+        },
+        "cached": {
+          "default": 0,
+          "title": "Cached",
+          "type": "integer"
+        },
+        "failed": {
+          "default": 0,
+          "title": "Failed",
+          "type": "integer"
+        },
+        "running": {
+          "default": 0,
+          "title": "Running",
+          "type": "integer"
+        },
+        "cost_usd": {
+          "default": 0.0,
+          "title": "Cost Usd",
+          "type": "number"
+        },
+        "message": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Message"
+        }
+      },
+      "required": [
+        "phase"
+      ],
+      "title": "BacktestProgress",
+      "type": "object"
+    },
+    "BacktestSim": {
+      "additionalProperties": false,
+      "description": "(P15) A portfolio simulation finished.",
+      "properties": {
+        "sim_id": {
+          "title": "Sim Id",
+          "type": "string"
+        },
+        "final_equity": {
+          "title": "Final Equity",
+          "type": "string"
+        },
+        "total_return": {
+          "title": "Total Return",
+          "type": "number"
+        },
+        "trades": {
+          "title": "Trades",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "sim_id",
+        "final_equity",
+        "total_return",
+        "trades"
+      ],
+      "title": "BacktestSim",
+      "type": "object"
+    },
+    "CheckpointSaved": {
+      "additionalProperties": false,
+      "properties": {
+        "node": {
+          "title": "Node",
+          "type": "string"
+        },
+        "thread_id": {
+          "title": "Thread Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "node",
+        "thread_id"
+      ],
+      "title": "CheckpointSaved",
+      "type": "object"
+    },
+    "Citation": {
+      "additionalProperties": false,
+      "properties": {
+        "marker": {
+          "title": "Marker",
+          "type": "integer"
+        },
+        "provenance_id": {
+          "title": "Provenance Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "marker",
+        "provenance_id"
+      ],
+      "title": "Citation",
+      "type": "object"
+    },
+    "ContextCompaction": {
+      "additionalProperties": false,
+      "properties": {
+        "phase": {
+          "enum": [
+            "start",
+            "end",
+            "failed",
+            "fallback_clear"
+          ],
+          "title": "Phase",
+          "type": "string"
+        },
+        "pre_tokens": {
+          "title": "Pre Tokens",
+          "type": "integer"
+        },
+        "post_tokens": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Post Tokens"
+        },
+        "summary": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Summary"
+        },
+        "cleared": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Cleared"
+        },
+        "kept": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Kept"
+        }
+      },
+      "required": [
+        "phase",
+        "pre_tokens"
+      ],
+      "title": "ContextCompaction",
+      "type": "object"
+    },
+    "ContextMicrocompact": {
+      "additionalProperties": false,
+      "properties": {
+        "cleared": {
+          "title": "Cleared",
+          "type": "integer"
+        },
+        "tokens_saved": {
+          "title": "Tokens Saved",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "cleared",
+        "tokens_saved"
+      ],
+      "title": "ContextMicrocompact",
+      "type": "object"
+    },
+    "ContextUsage": {
+      "additionalProperties": false,
+      "properties": {
+        "used_tokens": {
+          "title": "Used Tokens",
+          "type": "integer"
+        },
+        "context_window": {
+          "title": "Context Window",
+          "type": "integer"
+        },
+        "percent": {
+          "title": "Percent",
+          "type": "number"
+        }
+      },
+      "required": [
+        "used_tokens",
+        "context_window",
+        "percent"
+      ],
+      "title": "ContextUsage",
+      "type": "object"
+    },
+    "Event_answer_final": {
+      "properties": {
+        "seq": {
+          "title": "Seq",
+          "type": "integer"
+        },
+        "run_id": {
+          "title": "Run Id",
+          "type": "string"
+        },
+        "session_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Session Id"
+        },
+        "ts": {
+          "format": "date-time",
+          "title": "Ts",
+          "type": "string"
+        },
+        "type": {
+          "const": "answer.final",
+          "title": "Type",
+          "type": "string"
+        },
+        "node": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Node"
+        },
+        "call_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Call Id"
+        },
+        "parent_call_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Parent Call Id"
+        },
+        "payload": {
+          "$ref": "#/$defs/AnswerFinal"
+        },
+        "ephemeral": {
+          "default": false,
+          "title": "Ephemeral",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "seq",
+        "run_id",
+        "ts",
+        "type",
+        "payload"
+      ],
+      "title": "Event_answer_final",
+      "type": "object"
+    },
+    "Event_approval_required": {
+      "properties": {
+        "seq": {
+          "title": "Seq",
+          "type": "integer"
+        },
+        "run_id": {
+          "title": "Run Id",
+          "type": "string"
+        },
+        "session_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Session Id"
+        },
+        "ts": {
+          "format": "date-time",
+          "title": "Ts",
+          "type": "string"
+        },
+        "type": {
+          "const": "approval.required",
+          "title": "Type",
+          "type": "string"
+        },
+        "node": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Node"
+        },
+        "call_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Call Id"
+        },
+        "parent_call_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Parent Call Id"
+        },
+        "payload": {
+          "$ref": "#/$defs/ApprovalRequired"
+        },
+        "ephemeral": {
+          "default": false,
+          "title": "Ephemeral",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "seq",
+        "run_id",
+        "ts",
+        "type",
+        "payload"
+      ],
+      "title": "Event_approval_required",
+      "type": "object"
+    },
+    "Event_approval_resolved": {
+      "properties": {
+        "seq": {
+          "title": "Seq",
+          "type": "integer"
+        },
+        "run_id": {
+          "title": "Run Id",
+          "type": "string"
+        },
+        "session_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Session Id"
+        },
+        "ts": {
+          "format": "date-time",
+          "title": "Ts",
+          "type": "string"
+        },
+        "type": {
+          "const": "approval.resolved",
+          "title": "Type",
+          "type": "string"
+        },
+        "node": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Node"
+        },
+        "call_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Call Id"
+        },
+        "parent_call_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Parent Call Id"
+        },
+        "payload": {
+          "$ref": "#/$defs/ApprovalResolved"
+        },
+        "ephemeral": {
+          "default": false,
+          "title": "Ephemeral",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "seq",
+        "run_id",
+        "ts",
+        "type",
+        "payload"
+      ],
+      "title": "Event_approval_resolved",
+      "type": "object"
+    },
+    "Event_backtest_cell": {
+      "properties": {
+        "seq": {
+          "title": "Seq",
+          "type": "integer"
+        },
+        "run_id": {
+          "title": "Run Id",
+          "type": "string"
+        },
+        "session_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Session Id"
+        },
+        "ts": {
+          "format": "date-time",
+          "title": "Ts",
+          "type": "string"
+        },
+        "type": {
+          "const": "backtest.cell",
+          "title": "Type",
+          "type": "string"
+        },
+        "node": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Node"
+        },
+        "call_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Call Id"
+        },
+        "parent_call_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Parent Call Id"
+        },
+        "payload": {
+          "$ref": "#/$defs/BacktestCell"
+        },
+        "ephemeral": {
+          "default": false,
+          "title": "Ephemeral",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "seq",
+        "run_id",
+        "ts",
+        "type",
+        "payload"
+      ],
+      "title": "Event_backtest_cell",
+      "type": "object"
+    },
+    "Event_backtest_progress": {
+      "properties": {
+        "seq": {
+          "title": "Seq",
+          "type": "integer"
+        },
+        "run_id": {
+          "title": "Run Id",
+          "type": "string"
+        },
+        "session_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Session Id"
+        },
+        "ts": {
+          "format": "date-time",
+          "title": "Ts",
+          "type": "string"
+        },
+        "type": {
+          "const": "backtest.progress",
+          "title": "Type",
+          "type": "string"
+        },
+        "node": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Node"
+        },
+        "call_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Call Id"
+        },
+        "parent_call_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Parent Call Id"
+        },
+        "payload": {
+          "$ref": "#/$defs/BacktestProgress"
+        },
+        "ephemeral": {
+          "default": false,
+          "title": "Ephemeral",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "seq",
+        "run_id",
+        "ts",
+        "type",
+        "payload"
+      ],
+      "title": "Event_backtest_progress",
+      "type": "object"
+    },
+    "Event_backtest_sim": {
+      "properties": {
+        "seq": {
+          "title": "Seq",
+          "type": "integer"
+        },
+        "run_id": {
+          "title": "Run Id",
+          "type": "string"
+        },
+        "session_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Session Id"
+        },
+        "ts": {
+          "format": "date-time",
+          "title": "Ts",
+          "type": "string"
+        },
+        "type": {
+          "const": "backtest.sim",
+          "title": "Type",
+          "type": "string"
+        },
+        "node": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Node"
+        },
+        "call_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Call Id"
+        },
+        "parent_call_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Parent Call Id"
+        },
+        "payload": {
+          "$ref": "#/$defs/BacktestSim"
+        },
+        "ephemeral": {
+          "default": false,
+          "title": "Ephemeral",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "seq",
+        "run_id",
+        "ts",
+        "type",
+        "payload"
+      ],
+      "title": "Event_backtest_sim",
+      "type": "object"
+    },
+    "Event_checkpoint_saved": {
+      "properties": {
+        "seq": {
+          "title": "Seq",
+          "type": "integer"
+        },
+        "run_id": {
+          "title": "Run Id",
+          "type": "string"
+        },
+        "session_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Session Id"
+        },
+        "ts": {
+          "format": "date-time",
+          "title": "Ts",
+          "type": "string"
+        },
+        "type": {
+          "const": "checkpoint.saved",
+          "title": "Type",
+          "type": "string"
+        },
+        "node": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Node"
+        },
+        "call_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Call Id"
+        },
+        "parent_call_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Parent Call Id"
+        },
+        "payload": {
+          "$ref": "#/$defs/CheckpointSaved"
+        },
+        "ephemeral": {
+          "default": false,
+          "title": "Ephemeral",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "seq",
+        "run_id",
+        "ts",
+        "type",
+        "payload"
+      ],
+      "title": "Event_checkpoint_saved",
+      "type": "object"
+    },
+    "Event_context_compaction": {
+      "properties": {
+        "seq": {
+          "title": "Seq",
+          "type": "integer"
+        },
+        "run_id": {
+          "title": "Run Id",
+          "type": "string"
+        },
+        "session_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Session Id"
+        },
+        "ts": {
+          "format": "date-time",
+          "title": "Ts",
+          "type": "string"
+        },
+        "type": {
+          "const": "context.compaction",
+          "title": "Type",
+          "type": "string"
+        },
+        "node": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Node"
+        },
+        "call_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Call Id"
+        },
+        "parent_call_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Parent Call Id"
+        },
+        "payload": {
+          "$ref": "#/$defs/ContextCompaction"
+        },
+        "ephemeral": {
+          "default": false,
+          "title": "Ephemeral",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "seq",
+        "run_id",
+        "ts",
+        "type",
+        "payload"
+      ],
+      "title": "Event_context_compaction",
+      "type": "object"
+    },
+    "Event_context_microcompact": {
+      "properties": {
+        "seq": {
+          "title": "Seq",
+          "type": "integer"
+        },
+        "run_id": {
+          "title": "Run Id",
+          "type": "string"
+        },
+        "session_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Session Id"
+        },
+        "ts": {
+          "format": "date-time",
+          "title": "Ts",
+          "type": "string"
+        },
+        "type": {
+          "const": "context.microcompact",
+          "title": "Type",
+          "type": "string"
+        },
+        "node": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Node"
+        },
+        "call_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Call Id"
+        },
+        "parent_call_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Parent Call Id"
+        },
+        "payload": {
+          "$ref": "#/$defs/ContextMicrocompact"
+        },
+        "ephemeral": {
+          "default": false,
+          "title": "Ephemeral",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "seq",
+        "run_id",
+        "ts",
+        "type",
+        "payload"
+      ],
+      "title": "Event_context_microcompact",
+      "type": "object"
+    },
+    "Event_context_usage": {
+      "properties": {
+        "seq": {
+          "title": "Seq",
+          "type": "integer"
+        },
+        "run_id": {
+          "title": "Run Id",
+          "type": "string"
+        },
+        "session_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Session Id"
+        },
+        "ts": {
+          "format": "date-time",
+          "title": "Ts",
+          "type": "string"
+        },
+        "type": {
+          "const": "context.usage",
+          "title": "Type",
+          "type": "string"
+        },
+        "node": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Node"
+        },
+        "call_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Call Id"
+        },
+        "parent_call_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Parent Call Id"
+        },
+        "payload": {
+          "$ref": "#/$defs/ContextUsage"
+        },
+        "ephemeral": {
+          "default": false,
+          "title": "Ephemeral",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "seq",
+        "run_id",
+        "ts",
+        "type",
+        "payload"
+      ],
+      "title": "Event_context_usage",
+      "type": "object"
+    },
+    "Event_guard_limit": {
+      "properties": {
+        "seq": {
+          "title": "Seq",
+          "type": "integer"
+        },
+        "run_id": {
+          "title": "Run Id",
+          "type": "string"
+        },
+        "session_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Session Id"
+        },
+        "ts": {
+          "format": "date-time",
+          "title": "Ts",
+          "type": "string"
+        },
+        "type": {
+          "const": "guard.limit",
+          "title": "Type",
+          "type": "string"
+        },
+        "node": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Node"
+        },
+        "call_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Call Id"
+        },
+        "parent_call_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Parent Call Id"
+        },
+        "payload": {
+          "$ref": "#/$defs/GuardLimit"
+        },
+        "ephemeral": {
+          "default": false,
+          "title": "Ephemeral",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "seq",
+        "run_id",
+        "ts",
+        "type",
+        "payload"
+      ],
+      "title": "Event_guard_limit",
+      "type": "object"
+    },
+    "Event_llm_delta": {
+      "properties": {
+        "seq": {
+          "title": "Seq",
+          "type": "integer"
+        },
+        "run_id": {
+          "title": "Run Id",
+          "type": "string"
+        },
+        "session_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Session Id"
+        },
+        "ts": {
+          "format": "date-time",
+          "title": "Ts",
+          "type": "string"
+        },
+        "type": {
+          "const": "llm.delta",
+          "title": "Type",
+          "type": "string"
+        },
+        "node": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Node"
+        },
+        "call_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Call Id"
+        },
+        "parent_call_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Parent Call Id"
+        },
+        "payload": {
+          "$ref": "#/$defs/LLMDeltaPayload"
+        },
+        "ephemeral": {
+          "default": false,
+          "title": "Ephemeral",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "seq",
+        "run_id",
+        "ts",
+        "type",
+        "payload"
+      ],
+      "title": "Event_llm_delta",
+      "type": "object"
+    },
+    "Event_llm_finished": {
+      "properties": {
+        "seq": {
+          "title": "Seq",
+          "type": "integer"
+        },
+        "run_id": {
+          "title": "Run Id",
+          "type": "string"
+        },
+        "session_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Session Id"
+        },
+        "ts": {
+          "format": "date-time",
+          "title": "Ts",
+          "type": "string"
+        },
+        "type": {
+          "const": "llm.finished",
+          "title": "Type",
+          "type": "string"
+        },
+        "node": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Node"
+        },
+        "call_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Call Id"
+        },
+        "parent_call_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Parent Call Id"
+        },
+        "payload": {
+          "$ref": "#/$defs/LLMFinished"
+        },
+        "ephemeral": {
+          "default": false,
+          "title": "Ephemeral",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "seq",
+        "run_id",
+        "ts",
+        "type",
+        "payload"
+      ],
+      "title": "Event_llm_finished",
+      "type": "object"
+    },
+    "Event_llm_started": {
+      "properties": {
+        "seq": {
+          "title": "Seq",
+          "type": "integer"
+        },
+        "run_id": {
+          "title": "Run Id",
+          "type": "string"
+        },
+        "session_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Session Id"
+        },
+        "ts": {
+          "format": "date-time",
+          "title": "Ts",
+          "type": "string"
+        },
+        "type": {
+          "const": "llm.started",
+          "title": "Type",
+          "type": "string"
+        },
+        "node": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Node"
+        },
+        "call_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Call Id"
+        },
+        "parent_call_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Parent Call Id"
+        },
+        "payload": {
+          "$ref": "#/$defs/LLMStarted"
+        },
+        "ephemeral": {
+          "default": false,
+          "title": "Ephemeral",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "seq",
+        "run_id",
+        "ts",
+        "type",
+        "payload"
+      ],
+      "title": "Event_llm_started",
+      "type": "object"
+    },
+    "Event_node_finished": {
+      "properties": {
+        "seq": {
+          "title": "Seq",
+          "type": "integer"
+        },
+        "run_id": {
+          "title": "Run Id",
+          "type": "string"
+        },
+        "session_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Session Id"
+        },
+        "ts": {
+          "format": "date-time",
+          "title": "Ts",
+          "type": "string"
+        },
+        "type": {
+          "const": "node.finished",
+          "title": "Type",
+          "type": "string"
+        },
+        "node": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Node"
+        },
+        "call_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Call Id"
+        },
+        "parent_call_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Parent Call Id"
+        },
+        "payload": {
+          "$ref": "#/$defs/NodeFinished"
+        },
+        "ephemeral": {
+          "default": false,
+          "title": "Ephemeral",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "seq",
+        "run_id",
+        "ts",
+        "type",
+        "payload"
+      ],
+      "title": "Event_node_finished",
+      "type": "object"
+    },
+    "Event_node_started": {
+      "properties": {
+        "seq": {
+          "title": "Seq",
+          "type": "integer"
+        },
+        "run_id": {
+          "title": "Run Id",
+          "type": "string"
+        },
+        "session_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Session Id"
+        },
+        "ts": {
+          "format": "date-time",
+          "title": "Ts",
+          "type": "string"
+        },
+        "type": {
+          "const": "node.started",
+          "title": "Type",
+          "type": "string"
+        },
+        "node": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Node"
+        },
+        "call_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Call Id"
+        },
+        "parent_call_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Parent Call Id"
+        },
+        "payload": {
+          "$ref": "#/$defs/NodeStarted"
+        },
+        "ephemeral": {
+          "default": false,
+          "title": "Ephemeral",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "seq",
+        "run_id",
+        "ts",
+        "type",
+        "payload"
+      ],
+      "title": "Event_node_started",
+      "type": "object"
+    },
+    "Event_run_finished": {
+      "properties": {
+        "seq": {
+          "title": "Seq",
+          "type": "integer"
+        },
+        "run_id": {
+          "title": "Run Id",
+          "type": "string"
+        },
+        "session_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Session Id"
+        },
+        "ts": {
+          "format": "date-time",
+          "title": "Ts",
+          "type": "string"
+        },
+        "type": {
+          "const": "run.finished",
+          "title": "Type",
+          "type": "string"
+        },
+        "node": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Node"
+        },
+        "call_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Call Id"
+        },
+        "parent_call_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Parent Call Id"
+        },
+        "payload": {
+          "$ref": "#/$defs/RunFinished"
+        },
+        "ephemeral": {
+          "default": false,
+          "title": "Ephemeral",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "seq",
+        "run_id",
+        "ts",
+        "type",
+        "payload"
+      ],
+      "title": "Event_run_finished",
+      "type": "object"
+    },
+    "Event_run_started": {
+      "properties": {
+        "seq": {
+          "title": "Seq",
+          "type": "integer"
+        },
+        "run_id": {
+          "title": "Run Id",
+          "type": "string"
+        },
+        "session_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Session Id"
+        },
+        "ts": {
+          "format": "date-time",
+          "title": "Ts",
+          "type": "string"
+        },
+        "type": {
+          "const": "run.started",
+          "title": "Type",
+          "type": "string"
+        },
+        "node": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Node"
+        },
+        "call_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Call Id"
+        },
+        "parent_call_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Parent Call Id"
+        },
+        "payload": {
+          "$ref": "#/$defs/RunStarted"
+        },
+        "ephemeral": {
+          "default": false,
+          "title": "Ephemeral",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "seq",
+        "run_id",
+        "ts",
+        "type",
+        "payload"
+      ],
+      "title": "Event_run_started",
+      "type": "object"
+    },
+    "Event_tool_finished": {
+      "properties": {
+        "seq": {
+          "title": "Seq",
+          "type": "integer"
+        },
+        "run_id": {
+          "title": "Run Id",
+          "type": "string"
+        },
+        "session_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Session Id"
+        },
+        "ts": {
+          "format": "date-time",
+          "title": "Ts",
+          "type": "string"
+        },
+        "type": {
+          "const": "tool.finished",
+          "title": "Type",
+          "type": "string"
+        },
+        "node": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Node"
+        },
+        "call_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Call Id"
+        },
+        "parent_call_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Parent Call Id"
+        },
+        "payload": {
+          "$ref": "#/$defs/ToolFinished"
+        },
+        "ephemeral": {
+          "default": false,
+          "title": "Ephemeral",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "seq",
+        "run_id",
+        "ts",
+        "type",
+        "payload"
+      ],
+      "title": "Event_tool_finished",
+      "type": "object"
+    },
+    "Event_tool_progress": {
+      "properties": {
+        "seq": {
+          "title": "Seq",
+          "type": "integer"
+        },
+        "run_id": {
+          "title": "Run Id",
+          "type": "string"
+        },
+        "session_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Session Id"
+        },
+        "ts": {
+          "format": "date-time",
+          "title": "Ts",
+          "type": "string"
+        },
+        "type": {
+          "const": "tool.progress",
+          "title": "Type",
+          "type": "string"
+        },
+        "node": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Node"
+        },
+        "call_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Call Id"
+        },
+        "parent_call_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Parent Call Id"
+        },
+        "payload": {
+          "$ref": "#/$defs/ToolProgress"
+        },
+        "ephemeral": {
+          "default": false,
+          "title": "Ephemeral",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "seq",
+        "run_id",
+        "ts",
+        "type",
+        "payload"
+      ],
+      "title": "Event_tool_progress",
+      "type": "object"
+    },
+    "Event_tool_started": {
+      "properties": {
+        "seq": {
+          "title": "Seq",
+          "type": "integer"
+        },
+        "run_id": {
+          "title": "Run Id",
+          "type": "string"
+        },
+        "session_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Session Id"
+        },
+        "ts": {
+          "format": "date-time",
+          "title": "Ts",
+          "type": "string"
+        },
+        "type": {
+          "const": "tool.started",
+          "title": "Type",
+          "type": "string"
+        },
+        "node": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Node"
+        },
+        "call_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Call Id"
+        },
+        "parent_call_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Parent Call Id"
+        },
+        "payload": {
+          "$ref": "#/$defs/ToolStarted"
+        },
+        "ephemeral": {
+          "default": false,
+          "title": "Ephemeral",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "seq",
+        "run_id",
+        "ts",
+        "type",
+        "payload"
+      ],
+      "title": "Event_tool_started",
+      "type": "object"
+    },
+    "Event_warning": {
+      "properties": {
+        "seq": {
+          "title": "Seq",
+          "type": "integer"
+        },
+        "run_id": {
+          "title": "Run Id",
+          "type": "string"
+        },
+        "session_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Session Id"
+        },
+        "ts": {
+          "format": "date-time",
+          "title": "Ts",
+          "type": "string"
+        },
+        "type": {
+          "const": "warning",
+          "title": "Type",
+          "type": "string"
+        },
+        "node": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Node"
+        },
+        "call_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Call Id"
+        },
+        "parent_call_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Parent Call Id"
+        },
+        "payload": {
+          "$ref": "#/$defs/Warning"
+        },
+        "ephemeral": {
+          "default": false,
+          "title": "Ephemeral",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "seq",
+        "run_id",
+        "ts",
+        "type",
+        "payload"
+      ],
+      "title": "Event_warning",
+      "type": "object"
+    },
+    "GuardLimit": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "enum": [
+            "iterations",
+            "tool_calls",
+            "similar_query",
+            "timeout",
+            "budget"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "detail": {
+          "title": "Detail",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "detail"
+      ],
+      "title": "GuardLimit",
+      "type": "object"
+    },
+    "LLMDeltaPayload": {
+      "additionalProperties": false,
+      "properties": {
+        "channel": {
+          "enum": [
+            "reasoning",
+            "answer"
+          ],
+          "title": "Channel",
+          "type": "string"
+        },
+        "text": {
+          "title": "Text",
+          "type": "string"
+        }
+      },
+      "required": [
+        "channel",
+        "text"
+      ],
+      "title": "LLMDeltaPayload",
+      "type": "object"
+    },
+    "LLMFinished": {
+      "additionalProperties": false,
+      "properties": {
+        "input_tokens": {
+          "title": "Input Tokens",
+          "type": "integer"
+        },
+        "output_tokens": {
+          "title": "Output Tokens",
+          "type": "integer"
+        },
+        "cost_usd": {
+          "title": "Cost Usd",
+          "type": "number"
+        },
+        "duration_ms": {
+          "title": "Duration Ms",
+          "type": "integer"
+        },
+        "cache_read_tokens": {
+          "default": 0,
+          "title": "Cache Read Tokens",
+          "type": "integer"
+        },
+        "structured_mode": {
+          "anyOf": [
+            {
+              "enum": [
+                "native",
+                "fallback_parsed",
+                "failed"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Structured Mode"
+        }
+      },
+      "required": [
+        "input_tokens",
+        "output_tokens",
+        "cost_usd",
+        "duration_ms"
+      ],
+      "title": "LLMFinished",
+      "type": "object"
+    },
+    "LLMStarted": {
+      "additionalProperties": false,
+      "properties": {
+        "provider": {
+          "title": "Provider",
+          "type": "string"
+        },
+        "model": {
+          "title": "Model",
+          "type": "string"
+        },
+        "tier": {
+          "enum": [
+            "deep",
+            "quick"
+          ],
+          "title": "Tier",
+          "type": "string"
+        },
+        "purpose": {
+          "title": "Purpose",
+          "type": "string"
+        }
+      },
+      "required": [
+        "provider",
+        "model",
+        "tier",
+        "purpose"
+      ],
+      "title": "LLMStarted",
+      "type": "object"
+    },
+    "NodeFinished": {
+      "additionalProperties": false,
+      "properties": {
+        "node": {
+          "title": "Node",
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "done",
+            "error",
+            "skipped"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "duration_ms": {
+          "title": "Duration Ms",
+          "type": "integer"
+        },
+        "summary": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Summary"
+        }
+      },
+      "required": [
+        "node",
+        "status",
+        "duration_ms"
+      ],
+      "title": "NodeFinished",
+      "type": "object"
+    },
+    "NodeStarted": {
+      "additionalProperties": false,
+      "properties": {
+        "node": {
+          "title": "Node",
+          "type": "string"
+        },
+        "label": {
+          "title": "Label",
+          "type": "string"
+        },
+        "phase": {
+          "title": "Phase",
+          "type": "string"
+        }
+      },
+      "required": [
+        "node",
+        "label",
+        "phase"
+      ],
+      "title": "NodeStarted",
+      "type": "object"
+    },
+    "RunFinished": {
+      "additionalProperties": false,
+      "properties": {
+        "status": {
+          "enum": [
+            "completed",
+            "failed",
+            "cancelled",
+            "interrupted",
+            "limited"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "error": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Error"
+        },
+        "reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Reason"
+        }
+      },
+      "required": [
+        "status"
+      ],
+      "title": "RunFinished",
+      "type": "object"
+    },
+    "RunStarted": {
+      "additionalProperties": false,
+      "properties": {
+        "workflow": {
+          "title": "Workflow",
+          "type": "string"
+        },
+        "input": {
+          "additionalProperties": true,
+          "title": "Input",
+          "type": "object"
+        },
+        "graph": {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Graph"
+        }
+      },
+      "required": [
+        "workflow",
+        "input"
+      ],
+      "title": "RunStarted",
+      "type": "object"
+    },
+    "ToolErrorPayload": {
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "title": "Type",
+          "type": "string"
+        },
+        "message": {
+          "title": "Message",
+          "type": "string"
+        },
+        "retryable": {
+          "title": "Retryable",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "type",
+        "message",
+        "retryable"
+      ],
+      "title": "ToolErrorPayload",
+      "type": "object"
+    },
+    "ToolFinished": {
+      "additionalProperties": false,
+      "properties": {
+        "call_id": {
+          "title": "Call Id",
+          "type": "string"
+        },
+        "tool": {
+          "title": "Tool",
+          "type": "string"
+        },
+        "ok": {
+          "title": "Ok",
+          "type": "boolean"
+        },
+        "status": {
+          "enum": [
+            "ok",
+            "partial",
+            "unavailable",
+            "error",
+            "denied",
+            "limited",
+            "timeout",
+            "cancelled"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "summary": {
+          "title": "Summary",
+          "type": "string"
+        },
+        "preview": {
+          "title": "Preview",
+          "type": "string"
+        },
+        "truncated": {
+          "title": "Truncated",
+          "type": "boolean"
+        },
+        "error": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ToolErrorPayload"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "provenance_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Provenance Ids",
+          "type": "array"
+        },
+        "duration_ms": {
+          "title": "Duration Ms",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "call_id",
+        "tool",
+        "ok",
+        "status",
+        "summary",
+        "preview",
+        "truncated",
+        "provenance_ids",
+        "duration_ms"
+      ],
+      "title": "ToolFinished",
+      "type": "object"
+    },
+    "ToolProgress": {
+      "additionalProperties": false,
+      "properties": {
+        "message": {
+          "title": "Message",
+          "type": "string"
+        }
+      },
+      "required": [
+        "message"
+      ],
+      "title": "ToolProgress",
+      "type": "object"
+    },
+    "ToolStarted": {
+      "additionalProperties": false,
+      "properties": {
+        "tool": {
+          "title": "Tool",
+          "type": "string"
+        },
+        "category": {
+          "title": "Category",
+          "type": "string"
+        },
+        "args": {
+          "additionalProperties": true,
+          "title": "Args",
+          "type": "object"
+        },
+        "read_only": {
+          "title": "Read Only",
+          "type": "boolean"
+        },
+        "batch_id": {
+          "title": "Batch Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "tool",
+        "category",
+        "args",
+        "read_only",
+        "batch_id"
+      ],
+      "title": "ToolStarted",
+      "type": "object"
+    },
+    "Warning": {
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "title": "Code",
+          "type": "string"
+        },
+        "message": {
+          "title": "Message",
+          "type": "string"
+        }
+      },
+      "required": [
+        "code",
+        "message"
+      ],
+      "title": "Warning",
+      "type": "object"
+    }
+  },
+  "discriminator": {
+    "mapping": {
+      "answer.final": "#/$defs/Event_answer_final",
+      "approval.required": "#/$defs/Event_approval_required",
+      "approval.resolved": "#/$defs/Event_approval_resolved",
+      "backtest.cell": "#/$defs/Event_backtest_cell",
+      "backtest.progress": "#/$defs/Event_backtest_progress",
+      "backtest.sim": "#/$defs/Event_backtest_sim",
+      "checkpoint.saved": "#/$defs/Event_checkpoint_saved",
+      "context.compaction": "#/$defs/Event_context_compaction",
+      "context.microcompact": "#/$defs/Event_context_microcompact",
+      "context.usage": "#/$defs/Event_context_usage",
+      "guard.limit": "#/$defs/Event_guard_limit",
+      "llm.delta": "#/$defs/Event_llm_delta",
+      "llm.finished": "#/$defs/Event_llm_finished",
+      "llm.started": "#/$defs/Event_llm_started",
+      "node.finished": "#/$defs/Event_node_finished",
+      "node.started": "#/$defs/Event_node_started",
+      "run.finished": "#/$defs/Event_run_finished",
+      "run.started": "#/$defs/Event_run_started",
+      "tool.finished": "#/$defs/Event_tool_finished",
+      "tool.progress": "#/$defs/Event_tool_progress",
+      "tool.started": "#/$defs/Event_tool_started",
+      "warning": "#/$defs/Event_warning"
+    },
+    "propertyName": "type"
+  },
+  "oneOf": [
+    {
+      "$ref": "#/$defs/Event_backtest_progress"
+    },
+    {
+      "$ref": "#/$defs/Event_backtest_cell"
+    },
+    {
+      "$ref": "#/$defs/Event_backtest_sim"
+    },
+    {
+      "$ref": "#/$defs/Event_run_started"
+    },
+    {
+      "$ref": "#/$defs/Event_run_finished"
+    },
+    {
+      "$ref": "#/$defs/Event_node_started"
+    },
+    {
+      "$ref": "#/$defs/Event_node_finished"
+    },
+    {
+      "$ref": "#/$defs/Event_llm_started"
+    },
+    {
+      "$ref": "#/$defs/Event_llm_delta"
+    },
+    {
+      "$ref": "#/$defs/Event_llm_finished"
+    },
+    {
+      "$ref": "#/$defs/Event_tool_started"
+    },
+    {
+      "$ref": "#/$defs/Event_tool_progress"
+    },
+    {
+      "$ref": "#/$defs/Event_tool_finished"
+    },
+    {
+      "$ref": "#/$defs/Event_context_usage"
+    },
+    {
+      "$ref": "#/$defs/Event_context_microcompact"
+    },
+    {
+      "$ref": "#/$defs/Event_context_compaction"
+    },
+    {
+      "$ref": "#/$defs/Event_guard_limit"
+    },
+    {
+      "$ref": "#/$defs/Event_warning"
+    },
+    {
+      "$ref": "#/$defs/Event_approval_required"
+    },
+    {
+      "$ref": "#/$defs/Event_approval_resolved"
+    },
+    {
+      "$ref": "#/$defs/Event_answer_final"
+    },
+    {
+      "$ref": "#/$defs/Event_checkpoint_saved"
+    }
+  ],
+  "title": "EventEnvelope"
+}
