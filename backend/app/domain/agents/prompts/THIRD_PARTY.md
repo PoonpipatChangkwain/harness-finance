@@ -22,7 +22,7 @@ Source: https://github.com/TauricResearch/TradingAgents (`tradingagents/agents/`
 | `trade_macro_analyst.v2.md` | analyst preamble shared by `analysts/*.py` (role text is our own) |
 | `trade_bull_researcher.v2.md`, `trade_bear_researcher.v2.md` | `researchers/bull_researcher.py`, `researchers/bear_researcher.py` |
 | `trade_research_manager.v2.md` | `managers/research_manager.py` + `schemas.py` (`ResearchPlan`) |
-| `trade_trader.v2.md`, `trade_trader.v3.md`, `trade_trader.v4.md`, `trade_trader.v5.md` (v3 adds our horizon / event-risk / time-stop rules, v4 our pending limit/stop orders, v5 our flat-on-marginal-setup + calibrated-confidence rules) | `trader/trader.py` + `schemas.py` (`TraderProposal`) |
+| `trade_trader.v2.md`, `trade_trader.v3.md`, `trade_trader.v4.md`, `trade_trader.v5.md`, `trade_trader.v6.md` (v3 adds our horizon / event-risk / time-stop rules, v4 our pending limit/stop orders, v5 our flat-on-marginal-setup + calibrated-confidence rules, v6 our range-position entry-quality rules) | `trader/trader.py` + `schemas.py` (`TraderProposal`) |
 | `trade_reflector.v1.md` | `graph/reflection.py` (`Reflector._system_prompt`) |
 | `trade_aggressive_debator.v2.md`, `trade_conservative_debator.v2.md`, `trade_neutral_debator.v2.md` | `risk_mgmt/*_debator.py` |
 | `trade_portfolio_manager.v2.md` | `managers/portfolio_manager.py` + `schemas.py` (`PortfolioDecision`) + `context.py` (portfolio not provided) |

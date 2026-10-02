@@ -624,6 +624,22 @@ async def _size(
     bars = proposal.get("time_stop_bars") or spec.time_stop_bars
     if interval != spec.interval:  # fell back to daily bars: keep the horizon's wall-clock time stop
         bars = max(1, round(bars * INTERVAL_MINUTES[spec.interval] / INTERVAL_MINUTES[interval]))
+    atr_multiple = proposal.get("atr_multiple")
+    if atr_multiple is not None:
+        lo, hi = spec.atr_multiple
+        clamped = min(max(float(atr_multiple), lo), hi)
+        if clamped != atr_multiple:
+            await ctx.emit.emit(
+                "warning",
+                {
+                    "code": "atr_multiple_clamped",
+                    "message": (
+                        f"trader proposed atr_multiple={atr_multiple:g} outside the {spec.name} "
+                        f"playbook's {lo:g}-{hi:g}x range; clamped to {clamped:g}"
+                    ),
+                },
+            )
+        atr_multiple = clamped
     args = {
         "symbol": inst["canonical"],
         "side": proposal["side"],
@@ -636,7 +652,7 @@ async def _size(
         ),
         "stop_basis": proposal.get("stop_basis") or "atr",
         "atr": (snap.get("indicators") or {}).get("atr14"),
-        "atr_multiple": proposal.get("atr_multiple"),
+        "atr_multiple": atr_multiple,
         "stop_level": proposal.get("stop_level"),
         "targets": proposal.get("target_levels") or [],
         "equity": _equity(state, ctx),

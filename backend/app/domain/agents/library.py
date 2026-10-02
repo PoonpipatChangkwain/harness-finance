@@ -122,8 +122,11 @@ LIBRARY: dict[str, RoleSpec] = {
         # v3: horizon, time stop, invalidation; v4: pending limit/stop orders;
         # v5: flat is allowed on a marginal setup even when the plan leans a side, and
         # confidence must be calibrated to actual win rate, not thesis conviction
-        # (live/backtest showed frequent stop-outs from low-quality forced entries)
-        RoleSpec(name="trade_trader", title="Trader", version="v5"),
+        # (live/backtest showed frequent stop-outs from low-quality forced entries);
+        # v6: judge entry quality by where price sits inside a stated range, not just the
+        # trend — a 1-month XAUUSD backtest showed market-shorts taken near the range floor
+        # (and vice versa) getting stopped by the very bounce/pullback the range implied
+        RoleSpec(name="trade_trader", title="Trader", version="v6"),
         RoleSpec(
             name="trade_aggressive_debator", title="Aggressive Risk Debator", version="v2", tier="quick"
         ),

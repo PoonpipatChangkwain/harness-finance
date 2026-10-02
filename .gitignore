@@ -22,3 +22,5 @@ frontend/lib/api-types.ts
 
 .DS_Store
 Thumbs.db
+
+.claude/
