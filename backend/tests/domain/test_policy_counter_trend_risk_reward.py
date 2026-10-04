@@ -11,7 +11,8 @@ def test_counter_trend_risk_reward() -> None:
     with_trend = rule.evaluate({"counter_trend": True, "action": "buy", "risk_reward": 2.6}, {})
     assert with_trend.passed is True
     assert rule.evaluate({"counter_trend": True, "action": "buy", "risk_reward": 2.5}, {}).passed is False
-    assert rule.evaluate({"counter_trend": True, "action": "open_short", "risk_reward": 1.0}, {}).passed is False
+    short = rule.evaluate({"counter_trend": True, "action": "open_short", "risk_reward": 1.0}, {})
+    assert short.passed is False
     missing = rule.evaluate({"counter_trend": True, "action": "buy", "risk_reward": None}, {})
     assert missing.passed is False and "unknown" in missing.message
     assert rule.evaluate({"counter_trend": True, "action": "hold"}, {}).passed is True  # opens no risk

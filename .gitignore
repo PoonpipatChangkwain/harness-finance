@@ -29,4 +29,5 @@ Thumbs.db
 notebook/data/*.csv
 notebook/models/**/*.txt
 notebook/models/**/*.joblib
+notebook/models/**/*.pt
 notebook/.ipynb_checkpoints/

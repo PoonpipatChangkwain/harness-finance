@@ -33,6 +33,7 @@ from ulid import ULID
 
 from app.domain.agents.library import get_role, role_profile
 from app.domain.agents.schemas import PortfolioDecision, TradeResearchPlan, TraderProposal
+from app.domain.compute.ml import bull_bear
 from app.domain.models.decision import Decision, Rating, Verdict, route_decision
 from app.domain.models.horizon import INTERVAL_MINUTES, horizon
 from app.domain.models.symbol import AssetType, Market, normalize_symbol, safe_path_component
@@ -107,6 +108,7 @@ class TradeRunInput(BaseModel):
     portfolio_id: str | None = Field(default=None, max_length=40)  # (P12) None = the default book
     horizon: Literal["intraday", "swing", "position"] = "swing"
     language: Literal["th", "en"] = "th"
+    use_ml: bool = True  # add the bull/bear ML signal (only where a validated model exists)
     # (P15) set only by the backtest runner: auto-approval, no live decision log, own threads
     backtest_id: str | None = Field(default=None, max_length=64)
 
@@ -124,6 +126,7 @@ class TradingState(TypedDict, total=False):
     instrument: dict[str, Any]
     market_snapshot: dict[str, Any]
     event_risk: dict[str, Any]
+    ml_signal: dict[str, Any]
     portfolio_ctx: dict[str, Any]
     past_lessons: list[str]
     reports: dict[str, Any]
@@ -249,7 +252,37 @@ def _snapshot_text(state: dict[str, Any]) -> str:
         )
     elif snap.get("high_52w") is not None:
         text += f"; 52w {snap.get('low_52w')}-{snap.get('high_52w')}"
-    return f"{text}\n{_event_text(state)}"
+    return f"{text}\n{_event_text(state)}{_ml_text(state)}"
+
+
+def _pct(x: Any) -> str:
+    return f"{100 * x:.0f}%" if isinstance(x, int | float) else "n/a"
+
+
+def _ml_text(state: dict[str, Any]) -> str:
+    """The ML block every desk role reads with the snapshot ('' when no model applies)."""
+    ml = state.get("ml_signal") or {}
+    if not ml:
+        return ""
+    if not ml.get("available"):
+        return f"\nML MODEL: unavailable this run ({ml.get('error')}) — do not assume a signal"
+    tr = ml.get("track_record") or {}
+    m, al = tr.get("model") or {}, tr.get("always_long") or {}
+    return (
+        f"\nML MODEL ({ml['model']} {ml['version']}, LightGBM bull/bear pair on {ml['timeframe']} bars, "
+        f"computed by code at bar {ml['bar_ts']}):\n"
+        f"- P(long wins) = {ml['p_bull']:.2f}: a long entered at the next bar reaches "
+        f"+{ml['tp_r_long']}R before -1R (stop {ml['stop']}) within {ml['time_stop_bars']} bars\n"
+        f"- P(short wins) = {ml['p_bear']:.2f}: the same for a short (+{ml['tp_r_short']}R target)\n"
+        f"- model signal: {str(ml['signal']).upper()} (a side needs P >= {ml['tau']} and above the "
+        f"other side); daily trend as the model reads it: {ml['daily_trend']}\n"
+        f"- track record ({tr.get('period')}): {m.get('trades')} trades, win {_pct(m.get('win_rate'))}, "
+        f"PF {m.get('profit_factor') or 0:.2f}, {_pct(m.get('long_share'))} longs; always-long: win "
+        f"{_pct(al.get('win_rate'))}, PF {al.get('profit_factor') or 0:.2f}. It rarely signals short, "
+        "so a low P(short) is weak evidence against a short, not proof.\n"
+        "Treat it as one quantitative input next to the analysts: say whether you agree and why; "
+        "it gives no price levels."
+    )
 
 
 def _reports_text(state: dict[str, Any]) -> str:
@@ -374,6 +407,23 @@ async def _event_risk(state: dict[str, Any], ctx: NodeContext) -> dict[str, Any]
     }
 
 
+async def _ml_signal(state: dict[str, Any], ctx: NodeContext, snapshot: dict[str, Any]) -> dict[str, Any]:
+    """{} when no validated model covers this symbol/horizon (or the run opted out)."""
+    inst = state["instrument"]
+    spec = horizon(state["input"].get("horizon"))
+    if not state["input"].get("use_ml", True) or bull_bear.model_for(inst["canonical"], spec.name) is None:
+        return {}
+    if not snapshot.get("available") or snapshot.get("interval") != spec.interval:
+        return {"available": False, "error": f"{spec.interval} bars unavailable"}
+    args: dict[str, Any] = {"symbol": inst["canonical"], "horizon": spec.name, "purpose": "load_context"}
+    if inst.get("analysis_date"):
+        args["as_of"] = inst["analysis_date"]
+    res = await _tool(ctx, "trade_ml_signal", args)
+    if not res.ok or not isinstance(res.data, dict):
+        return {"available": False, "error": res.summary}
+    return {"available": True, **res.data, "provenance_ids": list(res.provenance_ids)}
+
+
 async def load_context(state: dict[str, Any], ctx: NodeContext) -> dict[str, Any]:
     inst = state["instrument"]
     spec = horizon(state["input"].get("horizon"))
@@ -397,6 +447,7 @@ async def load_context(state: dict[str, Any], ctx: NodeContext) -> dict[str, Any
     else:
         snapshot = {"available": False, "error": res.summary}
     event_risk = await _event_risk(state, ctx) if snapshot["available"] else {"available": False}
+    ml_signal = await _ml_signal(state, ctx, snapshot)
 
     # (P12) the harness reads the saved book: {state, equity, cash, symbol_weight, ...} in the
     # instrument's currency; use_portfolio=false (or no book) is "not_provided", never "flat"
@@ -423,6 +474,7 @@ async def load_context(state: dict[str, Any], ctx: NodeContext) -> dict[str, Any
     return {
         "market_snapshot": snapshot,
         "event_risk": event_risk,
+        "ml_signal": ml_signal,
         "portfolio_ctx": portfolio,
         "past_lessons": lessons,
         "invest_debate": {"history": [], "count": 0, "latest_speaker": None},
@@ -1469,7 +1521,9 @@ _RISK_MAP = {
 
 TRADING_WORKFLOW = WorkflowSpec(
     id="trading",
-    version="3",  # 2: refresh_price node; 3: horizon bars + event_risk (old checkpoints must not resume)
+    # 2: refresh_price node; 3: horizon bars + event_risk; 4: ml_signal (old checkpoints must not
+    # resume; the version is in the backtest cache key, so no decision made without ML is reused)
+    version="4",
     input_model=TradeRunInput,
     output_model=TradeRunOutput,
     state_model=TradingState,
@@ -1484,7 +1538,7 @@ TRADING_WORKFLOW = WorkflowSpec(
             NodeKind.COMPUTE,
             "retrieve",
             load_context,
-            {"market_snapshot", "event_risk", "portfolio_ctx", "past_lessons", "invest_debate"},
+            {"market_snapshot", "event_risk", "ml_signal", "portfolio_ctx", "past_lessons", "invest_debate"},
         ),
         _node("analysts", "Analysts", NodeKind.AGENT, "analyze", analysts, {"reports"}),
         _node("bull_researcher", "Bull", NodeKind.AGENT, "analyze", bull_researcher, {"invest_debate"}),

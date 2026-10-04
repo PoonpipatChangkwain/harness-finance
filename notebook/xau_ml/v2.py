@@ -139,8 +139,7 @@ def run_oof(exp: Experiment, fr: pd.DataFrame, folds: list[Fold], cols: list[str
 def nested_trading(fr: pd.DataFrame, oof: pd.DataFrame, fold_names: list[str], burn_in: int, min_trades: int):
     """Trade fold k with a Platt calibrator and τ/m fitted on the OOF rows of folds < k only."""
     sig = np.zeros(len(oof), dtype="int8")
-    cal = oof[["p_bull_raw", "p_bear_raw"]].copy().rename(columns=lambda c: c.replace("_raw", ""))
-    cal[:] = np.nan
+    cal = pd.DataFrame(np.nan, index=oof.index, columns=["p_bull", "p_bear"], dtype="float64")
     log = []
     for k, name in enumerate(fold_names):
         cur = (oof["fold"] == name).to_numpy()

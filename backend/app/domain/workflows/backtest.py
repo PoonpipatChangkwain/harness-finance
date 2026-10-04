@@ -45,6 +45,7 @@ class BacktestConfig(BaseModel):
     debate_rounds: int = Field(default=1, ge=1, le=3)
     risk_rounds: int = Field(default=1, ge=1, le=3)
     language: Literal["th", "en"] = "th"
+    use_ml: bool = True  # feed the bull/bear ML signal to the desk where a model exists
     llm: LLMPick | None = None
     concurrency: int = Field(default=2, ge=1, le=4)
     budget_usd: float | None = Field(default=None, gt=0)
@@ -88,6 +89,7 @@ class BacktestConfig(BaseModel):
             "use_portfolio": False,
             "horizon": self.horizon,
             "language": self.language,
+            "use_ml": self.use_ml,
             "backtest_id": backtest_id,
         }
         if self.llm is not None:
@@ -102,6 +104,7 @@ class BacktestConfig(BaseModel):
             "debate_rounds": self.debate_rounds,
             "risk_rounds": self.risk_rounds,
             "language": self.language,
+            "use_ml": self.use_ml,
             "llm": self.llm.model_dump() if self.llm else None,
         }
 

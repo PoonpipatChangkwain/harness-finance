@@ -11,6 +11,8 @@ results land in the scratchpad and every number gets a provenance record — but
   before approval and again when the human approves (the run takes minutes).
 - ``trade_event_risk``: the economic calendar over the holding period (ForexFactory),
   the same data as ``get_economic_calendar`` under its own call budget.
+- ``trade_ml_signal``: the deterministic bull/bear model's probabilities at the last
+  closed bar (``compute/ml/bull_bear.py``) — evidence for the desk, never an order.
 - ``size_trade``: turns the trader's *basis* (ATR multiple or a level) into a
   stop price, targets' risk/reward, units, notional and position weight. The
   LLM never supplies any of these numbers.
@@ -22,16 +24,17 @@ repeated query.
 
 from __future__ import annotations
 
-from datetime import date, datetime
+from datetime import UTC, date, datetime, timedelta
 from decimal import ROUND_DOWN, Decimal
 from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
 from app.domain.compute.base import compute_record
+from app.domain.compute.ml import bull_bear
 from app.domain.compute.risk import OrderType, pending_order, position_size, risk_reward, stop_from_atr
 from app.domain.data.base import Capability
-from app.domain.models.horizon import time_stop_at
+from app.domain.models.horizon import INTERVAL_MINUTES, INTERVAL_RANGE, time_stop_at
 from app.domain.models.market import Quote
 from app.domain.tools.base import ToolContext, ToolOutput, ToolSpec
 from app.domain.tools.calendar import CalendarArgs, calendar_window
@@ -84,6 +87,42 @@ async def trade_quote(args: TradeQuoteArgs, ctx: ToolContext) -> ToolOutput:
         summary=f"{sym.canonical} live {quote.price} {quote.currency}",
         records=[*result.records, derived_record(result, value, tool="trade_quote", unit=quote.currency)],
         status=result.status,
+    )
+
+
+class TradeMlSignalArgs(BaseModel):
+    symbol: str = Field(min_length=1)
+    horizon: str = "intraday"
+    as_of: date | None = None
+    purpose: str = "load_context"
+
+
+async def trade_ml_signal(args: TradeMlSignalArgs, ctx: ToolContext) -> ToolOutput:
+    sym = to_symbol(args.symbol)
+    stem = bull_bear.model_for(sym.canonical, args.horizon)
+    if stem is None:
+        raise ValueError(f"no validated ML model for {sym.canonical} {args.horizon}")
+    tf = bull_bear.load(stem)[0]["timeframe"]
+    main_res = await fetch(Capability.PRICES, sym, as_of=args.as_of, range=INTERVAL_RANGE[tf], interval=tf)
+    daily_res = await fetch(Capability.PRICES, sym, as_of=args.as_of, range="2y", interval="1d")
+    main_frame, daily_frame = main_res.data, daily_res.data
+    if args.as_of is not None:
+        main_frame, daily_frame = main_frame.as_of(args.as_of), daily_frame.as_of(args.as_of)
+    # only CLOSED bars: a live feed's last bar may still be forming
+    now = datetime.now(UTC)
+    step = timedelta(minutes=INTERVAL_MINUTES[tf])
+    main = [b for b in main_frame.bars if b.ts + step <= now]
+    result = bull_bear.predict(
+        stem, main, list(daily_frame.bars), inputs=[r.id for r in (*main_res.records, *daily_res.records)]
+    )
+    v = result.value
+    return ToolOutput(
+        data=v,
+        summary=(
+            f"{sym.canonical} {stem} @ {v['bar_ts']}: P(bull) {v['p_bull']:.2f} · "
+            f"P(bear) {v['p_bear']:.2f} → {v['signal']}"
+        ),
+        records=[*main_res.records, *daily_res.records, *result.records],
     )
 
 
@@ -361,6 +400,16 @@ TRADING_TOOLS: list[ToolSpec] = [
         limit_by="purpose",
         internal=True,
         fn=trade_event_risk,
+    ),
+    ToolSpec(
+        name="trade_ml_signal",
+        description="(internal) bull/bear ML model probabilities at the last closed bar",
+        args_model=TradeMlSignalArgs,
+        category="compute",
+        requires=frozenset({Capability.PRICES}),
+        limit_by="purpose",
+        internal=True,
+        fn=trade_ml_signal,
     ),
     ToolSpec(
         name="size_trade",
