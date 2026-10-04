@@ -259,6 +259,55 @@ class MinRiskReward:
 
 
 @dataclass
+class CounterTrendRiskReward:
+    """A trade against the daily trend (``proposal.counter_trend``) needs a stricter R:R floor.
+
+    Evidence (2026-10, XAUUSD intraday backtest): fading an RSI/Bollinger extreme against an
+    established daily trend loses far more often than a with-trend trade at the same R:R
+    (23% win rate in a trending month vs ~50% in a ranging one) — the higher timeframe running
+    through the position is a real, distinct risk that the base ``min_risk_reward`` floor
+    does not price in on its own. Not counter-trend, or an action that opens no risk: passes.
+    """
+
+    limit: float = 2.5
+    id: str = "counter_trend_risk_reward"
+    description: str = "A counter-trend trade's R:R at the first target must clear a stricter minimum."
+    severity: Severity = "block"
+
+    def evaluate(self, proposal: dict[str, Any], context: dict[str, Any]) -> PolicyResult:
+        if not _get(proposal, "counter_trend"):
+            return PolicyResult(
+                rule_id=self.id, passed=True, severity=self.severity, message="not counter-trend"
+            )
+        action = str(_get(proposal, "action") or "").lower()
+        if action not in _OPEN_ACTIONS:
+            return PolicyResult(
+                rule_id=self.id,
+                passed=True,
+                severity=self.severity,
+                message=f"action {action!r} does not open risk; R:R not required",
+            )
+        rr = _get(proposal, "risk_reward")
+        if rr is None:
+            return PolicyResult(
+                rule_id=self.id,
+                passed=False,
+                severity=self.severity,
+                message="counter-trend trade with no target beyond entry: R:R unknown",
+                values={"limit": self.limit},
+            )
+        passed = rr > self.limit
+        return PolicyResult(
+            rule_id=self.id,
+            passed=passed,
+            severity=self.severity,
+            message=f"counter-trend R:R {rr:.2f} {'exceeds' if passed else 'does not exceed'} "
+            f"the stricter minimum {self.limit:.2f}",
+            values={"risk_reward": rr, "limit": self.limit},
+        )
+
+
+@dataclass
 class ValidPendingOrder:
     """A limit/stop entry must pass its computed check (``proposal.order_error`` is ``None``).
 

@@ -6,6 +6,7 @@ from app.domain.policy.base import PolicyEvaluation, PolicyResult, PolicyRule, P
 from app.domain.policy.rules import (
     DEFAULT_RULES,
     CashSufficient,
+    CounterTrendRiskReward,
     MaxPositionWeight,
     MaxRiskPerTrade,
     MaxSectorWeight,
@@ -24,6 +25,7 @@ from app.domain.policy.rules import (
 __all__ = [
     "DEFAULT_RULES",
     "CashSufficient",
+    "CounterTrendRiskReward",
     "MaxPositionWeight",
     "MaxRiskPerTrade",
     "MaxSectorWeight",

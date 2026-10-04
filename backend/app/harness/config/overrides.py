@@ -67,6 +67,7 @@ class PolicyOverrides(_Section):
     min_confidence: float | None = Field(default=None, ge=0, le=1)
     block_on_low_confidence: bool | None = None
     min_risk_reward: float | None = Field(default=None, ge=0, le=10)
+    min_counter_trend_risk_reward: float | None = Field(default=None, ge=0, le=10)
     require_stop_loss: bool | None = None
     max_turnover: float | None = Field(default=None, gt=0, le=2)
 
@@ -170,7 +171,13 @@ def trading_policy_config(settings: Settings) -> dict[str, Any]:
         "require_stop_loss": settings.policy_require_stop_loss,
         "block_on_low_confidence": settings.policy_block_on_low_confidence,
     }
-    for key in ("max_position_weight", "max_risk_per_trade", "min_confidence", "min_risk_reward"):
+    for key in (
+        "max_position_weight",
+        "max_risk_per_trade",
+        "min_confidence",
+        "min_risk_reward",
+        "min_counter_trend_risk_reward",
+    ):
         value = getattr(settings, f"policy_{key}")
         if value is not None:
             out[key] = value

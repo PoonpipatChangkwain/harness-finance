@@ -81,6 +81,7 @@ class Settings(BaseSettings):
     policy_min_confidence: float | None = None
     policy_block_on_low_confidence: bool = True  # trading: below min_confidence = no trade (False = warn)
     policy_min_risk_reward: float | None = None  # trading: R:R at the first target must exceed it (0 = off)
+    policy_min_counter_trend_risk_reward: float | None = None  # trading: stricter R:R vs the daily trend
     policy_require_stop_loss: bool = True
     policy_max_turnover: float | None = None
 

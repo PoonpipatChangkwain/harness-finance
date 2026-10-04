@@ -38,6 +38,7 @@ from app.domain.models.horizon import INTERVAL_MINUTES, horizon
 from app.domain.models.symbol import AssetType, Market, normalize_symbol, safe_path_component
 from app.domain.policy import (
     CashSufficient,
+    CounterTrendRiskReward,
     MaxPositionWeight,
     MaxRiskPerTrade,
     MinConfidence,
@@ -84,6 +85,9 @@ DEFAULT_MIN_CONFIDENCE = 0.7  # below it the PM's call is not traded (block) unl
 DEFAULT_MIN_RISK_REWARD = 1.5  # R:R at the first target must exceed it; 0 = rule off
 # (raised from 1.0: backtests + live showed frequent stop-outs — at a realistic ~30-40% win
 # rate, a 1:1 floor is a losing expectancy; 1.5 forces the trader to find a better entry/stop)
+DEFAULT_MIN_COUNTER_TREND_RISK_REWARD = 2.5  # stricter R:R floor for a trade against the daily
+# trend; 0 = rule off (2026-10: a 2-month XAUUSD backtest found counter-trend fades of an
+# RSI/Bollinger extreme win far less often in a trending month than the base floor assumes)
 # a trader retry cannot fix these (confidence is the PM's own call; retrying invites inflating it)
 NO_RETRY_RULES = frozenset({"min_confidence"})
 LESSONS_SAME_SYMBOL = 3
@@ -899,15 +903,28 @@ def _min_risk_reward(config: Any) -> float:
     return float(config.get("min_risk_reward", DEFAULT_MIN_RISK_REWARD))
 
 
+def _min_counter_trend_rr(config: Any) -> float:
+    return float(config.get("min_counter_trend_risk_reward", DEFAULT_MIN_COUNTER_TREND_RISK_REWARD))
+
+
 def _limits_text(ctx: NodeContext) -> str:
     """Gate limits the plan is built against. The confidence floor is left out on purpose: a model
     told the bar tends to report a confidence just above it."""
     rr = _min_risk_reward(ctx.config)
+    ct_rr = _min_counter_trend_rr(ctx.config)
     reach = float(ctx.config.get("max_order_distance_atr", DEFAULT_MAX_ORDER_DISTANCE_ATR))
     lines = [
         f"- A limit/stop entry must be on the right side of the current price and within {reach:g} x ATR "
         "of it; R:R is then measured from the order price.\n"
     ]
+    if ct_rr > 0:
+        lines.insert(
+            0,
+            f"- A trade against the daily trend (price on the trend's side of both daily SMA50 and "
+            f"SMA200) needs R:R above {ct_rr:g} at the first target, not just the normal minimum — "
+            "fading an extreme into a trend that disagrees needs to pay better, because it works less "
+            "often.\n",
+        )
     if rr > 0:
         lines.insert(
             0,
@@ -921,11 +938,13 @@ def _limits_text(ctx: NodeContext) -> str:
 def trading_policy(asset_type: str, config: Any, horizon_name: str | None = None) -> PolicySet:
     """Rule set of the gate; ``horizon_name`` (live runs only) adds the event-risk guard."""
     min_rr = _min_risk_reward(config)
+    min_ct_rr = _min_counter_trend_rr(config)
     rules: list[Any] = [
         ValidSymbol(),
         ValidPendingOrder(),
         *([RequireStopLoss()] if config.get("require_stop_loss", True) else []),
         *([MinRiskReward(min_rr)] if min_rr > 0 else []),
+        *([CounterTrendRiskReward(min_ct_rr)] if min_ct_rr > 0 else []),
         MaxRiskPerTrade(float(config.get("max_risk_per_trade", 0.02))),
         MinConfidence(
             float(config.get("min_confidence", DEFAULT_MIN_CONFIDENCE)),
@@ -950,6 +969,29 @@ def _state_policy(state: dict[str, Any], ctx: NodeContext) -> PolicySet:
         ctx.config,
         None if backtest else state["input"].get("horizon", "swing"),
     )
+
+
+def _counter_trend(state: dict[str, Any], side: str | None) -> bool:
+    """``side`` fades the daily trend: price sits on the same side of BOTH daily SMA50 and
+    SMA200 that the trade bets against (e.g. a short while the daily close is above both).
+
+    Unknown data (no higher-timeframe snapshot, missing SMAs) never counts as counter-trend —
+    this only fires when the daily trend is clearly established against the trade.
+    """
+    if side not in ("long", "short"):
+        return False
+    snap = state.get("market_snapshot") or {}
+    htf = snap.get("higher_tf") or (snap if snap.get("interval") == "1d" else None)
+    if not htf:
+        return False
+    close = htf.get("close")
+    ind = htf.get("indicators") or {}
+    sma50, sma200 = ind.get("sma50"), ind.get("sma200")
+    if close is None or sma50 is None or sma200 is None:
+        return False
+    if side == "short":
+        return bool(close > sma50 and close > sma200)
+    return bool(close < sma50 and close < sma200)
 
 
 def _policy_inputs(
@@ -977,6 +1019,7 @@ def _policy_inputs(
         "quantity": -units if side == "short" else units,
         "event_calendar_available": bool((state.get("event_risk") or {}).get("available")),
         "hours_to_next_high_impact": (state.get("event_risk") or {}).get("next_high_impact_hours"),
+        "counter_trend": _counter_trend(state, side),
     }
     cash = pf.get("cash")
     context = {
