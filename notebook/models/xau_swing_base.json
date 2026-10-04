@@ -1,0 +1,360 @@
+{
+  "version": "xau-bullbear-0.1.0",
+  "symbol": "XAUUSD",
+  "created_utc": "2026-10-04T08:40:02+00:00",
+  "horizon": "swing",
+  "timeframe": "1h",
+  "context_timeframes": [
+    "1d"
+  ],
+  "label": {
+    "type": "triple_barrier",
+    "entry": "open of the next bar",
+    "stop_r": 1.0,
+    "risk": "2.0 x ATR14 (Wilder) of the decision bar",
+    "tp_r": 1.5,
+    "counter_trend_tp_r": null,
+    "counter_trend_rule": "last closed daily close on the trend side of both SMA50 and SMA200, against the trade",
+    "time_stop_bars": 48,
+    "time_stop_semantics": "bars held after the entry bar (engine.py bars_held); exit at close",
+    "intrabar_rule": "stop_first",
+    "gap_rule": "open beyond a level exits at that open"
+  },
+  "features": [
+    "logret_1",
+    "ret_atr_4",
+    "ret_atr_16",
+    "ret_atr_48",
+    "atr_pct",
+    "atr_regime",
+    "rv_32",
+    "rsi14",
+    "rsi14_chg4",
+    "macd_atr",
+    "macd_hist_atr",
+    "macd_hist_chg",
+    "bb_pctb",
+    "bb_width",
+    "dist_sma20_atr",
+    "dist_sma50_atr",
+    "dist_sma200_atr",
+    "sma20_slope_atr",
+    "sma50_slope_atr",
+    "range_pos_16",
+    "range_pos_48",
+    "range_pos_96",
+    "vol_ratio_48",
+    "body_atr",
+    "upper_wick_atr",
+    "lower_wick_atr",
+    "adx14",
+    "di_diff",
+    "day_move_atr",
+    "hour",
+    "dow",
+    "d1_rsi14",
+    "d1_adx14",
+    "d1_di_diff",
+    "d1_dist_sma50_atr",
+    "d1_dist_sma200_atr",
+    "d1_macd_hist_atr",
+    "d1_ret_atr_5",
+    "d1_range_pos_20",
+    "d1_atr_pct",
+    "d1_above_sma50",
+    "d1_above_sma200",
+    "d1_trend",
+    "d1_prev_range_pos"
+  ],
+  "feature_code": {
+    "module": "notebook/xau_ml/features.py",
+    "sha256_16": "1ac91b379c692357"
+  },
+  "htf_merge": "merge_asof backward on bar close time <= decision bar close time",
+  "splits": {
+    "train": [
+      "2025-01-01",
+      "2025-07-31 23:59"
+    ],
+    "validation": [
+      "2025-08-01",
+      "2025-09-30 23:59"
+    ],
+    "test": [
+      "2025-10-01",
+      "2026-01-30 23:59"
+    ],
+    "purge_bars": 49,
+    "embargo_bars": 48,
+    "warmup_from": {
+      "15m": "2024-10-01",
+      "1h": "2024-06-01",
+      "1d": "2023-06-01"
+    },
+    "reserved_never_used": "2026-08-01 .. 2026-09-30"
+  },
+  "model": {
+    "library": "lightgbm 4.7.0",
+    "params": {
+      "objective": "binary",
+      "learning_rate": 0.03,
+      "num_leaves": 15,
+      "max_depth": 5,
+      "min_child_samples": 150,
+      "feature_fraction": 0.7,
+      "bagging_fraction": 0.8,
+      "bagging_freq": 1,
+      "lambda_l2": 5.0,
+      "verbose": -1,
+      "seed": 42,
+      "deterministic": true,
+      "num_threads": 4
+    },
+    "rounds": {
+      "bull": 20,
+      "bear": 20
+    },
+    "scaler": "none (tree model)"
+  },
+  "signal_rule": {
+    "tau": 0.45,
+    "m": 0.2,
+    "no_trade": false,
+    "rule": "long if p_bull>=tau and p_bull-p_bear>=m; short mirrored; else flat",
+    "selected_on": "validation only"
+  },
+  "costs": {
+    "round_trip_usd_per_oz": 0.3,
+    "risk_pct": 0.01
+  },
+  "metrics": {
+    "validation_ml": {
+      "bull": {
+        "rounds": 20,
+        "auc_train": 0.8591623977232303,
+        "auc_val": 0.3422971400510286,
+        "base_rate_val": 0.4609120521172638,
+        "brier_val_raw": 0.2676327232326319,
+        "brier_val_climatology": 0.24873899335143188,
+        "brier_crossfit_iso": 0.5624050984507171,
+        "brier_crossfit_platt": 0.4168561964467511,
+        "calibrator": "platt"
+      },
+      "bear": {
+        "rounds": 20,
+        "auc_train": 0.8542509364653246,
+        "auc_val": 0.42460432649111896,
+        "base_rate_val": 0.25895765472312704,
+        "brier_val_raw": 0.20625207802661116,
+        "brier_val_climatology": 0.20201015229171218,
+        "brier_crossfit_iso": 0.2951630631478065,
+        "brier_crossfit_platt": 0.26107730264670725,
+        "calibrator": "platt"
+      }
+    },
+    "validation_trading": [
+      {
+        "horizon": "swing",
+        "labels": "base",
+        "engine": "replica (harness rules)",
+        "trades": 24,
+        "win_rate": 0.625,
+        "profit_factor": 2.3765928419002833,
+        "expectancy_r": 0.525937018074873,
+        "total_r": 12.622488433796953,
+        "max_dd_pct": 3.024081914517185,
+        "long_share": 1.0,
+        "longs": 24,
+        "shorts": 0
+      },
+      {
+        "horizon": "swing",
+        "labels": "base",
+        "engine": "pybroker",
+        "trades": 24,
+        "win_rate": 0.625,
+        "profit_factor": 2.3765931033007726,
+        "expectancy_r": 0.5259370497249414,
+        "total_r": 12.622489193398593,
+        "max_dd_pct": 3.8637978108686966,
+        "return_pct": 13.221839999999997,
+        "long_share": 1.0,
+        "longs": 24,
+        "shorts": 0
+      }
+    ],
+    "walkforward_pybroker": {
+      "oos_auc_bull": 0.4270102899985974,
+      "oos_auc_bear": 0.4867105414971658,
+      "trades": 147,
+      "win_rate": 0.40816326530612246,
+      "profit_factor": 0.9545115321717504,
+      "expectancy_r": -0.027395036363358386,
+      "total_r": -4.027070345413683,
+      "max_dd_pct": 10.277836341506042,
+      "return_pct": -4.964270000000004,
+      "long_share": 0.5918367346938775,
+      "longs": 87,
+      "shorts": 60
+    },
+    "test": {
+      "ml": [
+        {
+          "side": "bull",
+          "rows": 1178,
+          "base_rate": 0.46434634974533107,
+          "mean_pred": 0.6196271856520607,
+          "auc": 0.46499998551383864,
+          "brier": 0.2944493822863738,
+          "brier_climatology(train rate)": 0.2491196772023202
+        },
+        {
+          "side": "bear",
+          "rows": 1178,
+          "base_rate": 0.28183361629881154,
+          "mean_pred": 0.23909987572920632,
+          "auc": 0.470732219658777,
+          "brier": 0.2127625341253295,
+          "brier_climatology(train rate)": 0.20843766016774923
+        }
+      ],
+      "trading": [
+        {
+          "strategy": "ML bull/bear",
+          "engine": "replica",
+          "trades": 68,
+          "win_rate": 0.4264705882352941,
+          "profit_factor": 1.1167459552626118,
+          "expectancy_r": 0.06437733715586681,
+          "total_r": 4.377658926598944,
+          "max_dd_pct": 5.106043446405661,
+          "long_share": 1.0,
+          "longs": 68,
+          "shorts": 0,
+          "return_pct": NaN
+        },
+        {
+          "strategy": "ML bull/bear",
+          "engine": "pybroker",
+          "trades": 66,
+          "win_rate": 0.4393939393939394,
+          "profit_factor": 1.150096632472089,
+          "expectancy_r": 0.08280773821074924,
+          "total_r": 5.46531072190945,
+          "max_dd_pct": 5.264084225817999,
+          "long_share": 1.0,
+          "longs": 66,
+          "shorts": 0,
+          "return_pct": 5.090970000000006
+        },
+        {
+          "strategy": "always_short",
+          "engine": "replica",
+          "trades": 88,
+          "win_rate": 0.32954545454545453,
+          "profit_factor": 0.6643793973362689,
+          "expectancy_r": -0.22604438992521309,
+          "total_r": -19.89190631341875,
+          "max_dd_pct": 20.348102490441654,
+          "long_share": 0.0,
+          "longs": 0,
+          "shorts": 88,
+          "return_pct": NaN
+        },
+        {
+          "strategy": "always_short",
+          "engine": "pybroker",
+          "trades": 87,
+          "win_rate": 0.3218390804597701,
+          "profit_factor": 0.6442028092772292,
+          "expectancy_r": -0.24054217969039943,
+          "total_r": -20.92716963306475,
+          "max_dd_pct": 19.962749999999996,
+          "long_share": 0.0,
+          "longs": 0,
+          "shorts": 87,
+          "return_pct": -19.32686
+        },
+        {
+          "strategy": "always_long",
+          "engine": "replica",
+          "trades": 81,
+          "win_rate": 0.48148148148148145,
+          "profit_factor": 1.3662186318587346,
+          "expectancy_r": 0.18323228136603906,
+          "total_r": 14.841814790649163,
+          "max_dd_pct": 5.541841051791685,
+          "long_share": 1.0,
+          "longs": 81,
+          "shorts": 0,
+          "return_pct": NaN
+        },
+        {
+          "strategy": "always_long",
+          "engine": "pybroker",
+          "trades": 78,
+          "win_rate": 0.5,
+          "profit_factor": 1.4412018946843521,
+          "expectancy_r": 0.21745350962994522,
+          "total_r": 16.961373751135728,
+          "max_dd_pct": 5.805377474838814,
+          "long_share": 1.0,
+          "longs": 78,
+          "shorts": 0,
+          "return_pct": 17.73491999999999
+        },
+        {
+          "strategy": "sma20_50_cross",
+          "engine": "replica",
+          "trades": 20,
+          "win_rate": 0.55,
+          "profit_factor": 1.8050212999435287,
+          "expectancy_r": 0.3654737001389656,
+          "total_r": 7.309474002779312,
+          "max_dd_pct": 2.9893431046838614,
+          "long_share": 0.5,
+          "longs": 10,
+          "shorts": 10,
+          "return_pct": NaN
+        },
+        {
+          "strategy": "sma20_50_cross",
+          "engine": "pybroker",
+          "trades": 19,
+          "win_rate": 0.5789473684210527,
+          "profit_factor": 2.0300211131684542,
+          "expectancy_r": 0.43767717680912266,
+          "total_r": 8.31586635937333,
+          "max_dd_pct": 2.3437328047795636,
+          "long_share": 0.47368421052631576,
+          "longs": 9,
+          "shorts": 10,
+          "return_pct": 8.496689999999996
+        }
+      ],
+      "test_lock": "16a70a7e6bc9bc4bbda2a0bf"
+    }
+  },
+  "files": {
+    "bull": {
+      "file": "xau_swing_base.bull.txt",
+      "sha256_16": "13b57b3cce15f5f3"
+    },
+    "bear": {
+      "file": "xau_swing_base.bear.txt",
+      "sha256_16": "29674d9e8772ef05"
+    }
+  },
+  "calibrators": {
+    "bull": {
+      "kind": "platt",
+      "a": -2.32925117157925,
+      "b": -0.4248089319358276
+    },
+    "bear": {
+      "kind": "platt",
+      "a": -1.7273312259513165,
+      "b": -2.073951140074747
+    }
+  }
+}

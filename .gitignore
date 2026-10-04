@@ -24,3 +24,9 @@ frontend/lib/api-types.ts
 Thumbs.db
 
 .claude/
+
+# notebook research: raw broker data and trained model binaries (metadata JSON stays tracked)
+notebook/data/*.csv
+notebook/models/**/*.txt
+notebook/models/**/*.joblib
+notebook/.ipynb_checkpoints/

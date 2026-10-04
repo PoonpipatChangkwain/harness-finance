@@ -1,0 +1,337 @@
+{
+  "version": "xau-bullbear-0.2.0",
+  "symbol": "XAUUSD",
+  "created_utc": "2026-10-04T10:15:28+00:00",
+  "horizon": "swing",
+  "timeframe": "1h",
+  "context_timeframes": [
+    "1d"
+  ],
+  "extras": false,
+  "experiment": {
+    "id": "E3",
+    "name": "LightGBM pair + weights, reduced features",
+    "model": "lgbm",
+    "weights": true,
+    "features": "reduced"
+  },
+  "label": {
+    "type": "triple_barrier",
+    "entry": "open of the next bar",
+    "stop_r": 1.0,
+    "risk": "2.0 x ATR14 (Wilder)",
+    "tp_r": 1.5,
+    "counter_trend_tp_r": 2.5,
+    "time_stop_bars": 48,
+    "intrabar_rule": "stop_first"
+  },
+  "features": [
+    "atr_pct",
+    "atr_regime",
+    "rv_32",
+    "bb_width",
+    "adx14",
+    "hour",
+    "dow",
+    "d1_rsi14",
+    "d1_adx14",
+    "d1_di_diff",
+    "d1_dist_sma50_atr",
+    "d1_dist_sma200_atr",
+    "d1_macd_hist_atr",
+    "d1_ret_atr_5",
+    "d1_range_pos_20",
+    "d1_atr_pct",
+    "d1_above_sma50",
+    "d1_above_sma200",
+    "d1_trend",
+    "d1_prev_range_pos"
+  ],
+  "feature_code_sha256_16": "d6a8d4820538ae8d",
+  "training": {
+    "rows_from": "2025-01-02 01:00:00",
+    "rows_to": "2026-01-09 11:00:00",
+    "rows": 5263,
+    "weights": "label uniqueness",
+    "data_holes_excluded": true
+  },
+  "evaluation": {
+    "protocol": "expanding monthly walk-forward, nested calibration + tau/m",
+    "folds": [
+      "2025-04",
+      "2025-05",
+      "2025-06",
+      "2025-07",
+      "2025-08",
+      "2025-09",
+      "2025-10",
+      "2025-11",
+      "2025-12",
+      "2026-01"
+    ],
+    "burn_in_folds": 2,
+    "clean_holdout": false,
+    "note": "2025-10..2026-01 was v0.1's test window (already seen); final verdict = harness backtest Aug-Sep 2026"
+  },
+  "model": {
+    "params": {
+      "objective": "binary",
+      "learning_rate": 0.03,
+      "num_leaves": 15,
+      "max_depth": 5,
+      "min_child_samples": 150,
+      "feature_fraction": 0.7,
+      "bagging_fraction": 0.8,
+      "bagging_freq": 1,
+      "lambda_l2": 5.0,
+      "verbose": -1,
+      "seed": 42,
+      "deterministic": true,
+      "num_threads": 4
+    },
+    "kind": "lgbm_pair"
+  },
+  "signal_rule": {
+    "tau": 0.4,
+    "m": 0.0,
+    "no_trade": false,
+    "rule": "long if p_bull>=tau and p_bull-p_bear>=m; short mirrored; else flat",
+    "selected_on": "nested OOF 2025-06..2026-01"
+  },
+  "metrics": {
+    "walkforward_ml": [
+      {
+        "exp": "E3",
+        "name": "LightGBM pair + weights, reduced features",
+        "features": 20,
+        "auc_bull": 0.571506437497731,
+        "auc_bear": 0.5977083009639059,
+        "auc_mean": 0.5846073692308184,
+        "auc_bull_min_fold": 0.34988776655443315,
+        "auc_bear_min_fold": 0.22644628099173553,
+        "logloss_gain_bull": -0.014151121463116822,
+        "logloss_gain_bear": -0.06160045112452632
+      }
+    ],
+    "walkforward_trading": [
+      {
+        "strategy": "E3",
+        "trades": 134,
+        "win_rate": 0.4925373134328358,
+        "profit_factor": 1.4680619469202416,
+        "expectancy_r": 0.228421507633203,
+        "total_r": 30.608482022849206,
+        "max_dd_pct": 11.205244042663875,
+        "long_share": 1.0,
+        "longs": 134,
+        "shorts": 0,
+        "exp_ci90_lo": 0.06097510325326508,
+        "exp_ci90_hi": 0.40104453711663374,
+        "vs_long_ci90_lo": -0.19246999982653543,
+        "vs_long_ci90_hi": 0.27160685568371223,
+        "beats_always_long": false
+      },
+      {
+        "strategy": "always_long",
+        "trades": 158,
+        "win_rate": 0.4810126582278481,
+        "profit_factor": 1.3758813514306896,
+        "expectancy_r": 0.18934520955169168,
+        "total_r": 29.916543109167286,
+        "max_dd_pct": 11.205244042663832,
+        "long_share": 1.0,
+        "longs": 158,
+        "shorts": 0,
+        "exp_ci90_lo": 0.026210744246183533,
+        "exp_ci90_hi": 0.34965346228238964,
+        "vs_long_ci90_lo": -0.23540977920383888,
+        "vs_long_ci90_hi": 0.22556286969171196,
+        "beats_always_long": false
+      },
+      {
+        "strategy": "always_short",
+        "trades": 124,
+        "win_rate": 0.25806451612903225,
+        "profit_factor": 0.7324236479834833,
+        "expectancy_r": -0.18919088046595348,
+        "total_r": -23.45966917777823,
+        "max_dd_pct": 27.966179321108243,
+        "long_share": 0.0,
+        "longs": 0,
+        "shorts": 124,
+        "exp_ci90_lo": -0.387892264044366,
+        "exp_ci90_hi": 0.016090044583813693,
+        "vs_long_ci90_lo": -0.6385766415614433,
+        "vs_long_ci90_hi": -0.12429173997162883,
+        "beats_always_long": false
+      },
+      {
+        "strategy": "sma20_50_cross",
+        "trades": 44,
+        "win_rate": 0.45454545454545453,
+        "profit_factor": 1.3767489415025467,
+        "expectancy_r": 0.19381870225388678,
+        "total_r": 8.528022899171019,
+        "max_dd_pct": 13.345236681728224,
+        "long_share": 0.4318181818181818,
+        "longs": 19,
+        "shorts": 25,
+        "exp_ci90_lo": -0.13796440551564154,
+        "exp_ci90_hi": 0.5301835011434526,
+        "vs_long_ci90_lo": -0.37096979603064756,
+        "vs_long_ci90_hi": 0.37783742380628405,
+        "beats_always_long": false
+      }
+    ],
+    "pybroker": [
+      {
+        "strategy": "E3",
+        "engine": "pybroker",
+        "trades": 134,
+        "win_rate": 0.5,
+        "profit_factor": 1.4955244338387623,
+        "expectancy_r": 0.23819762914026266,
+        "total_r": 31.918482304795194,
+        "max_dd_pct": 11.426101675561496,
+        "return_pct": 36.11947,
+        "long_share": 1.0,
+        "longs": 134,
+        "shorts": 0
+      },
+      {
+        "strategy": "E3",
+        "engine": "replica",
+        "trades": 134,
+        "win_rate": 0.4925373134328358,
+        "profit_factor": 1.4680619469202416,
+        "expectancy_r": 0.228421507633203,
+        "total_r": 30.608482022849206,
+        "max_dd_pct": 11.205244042663875,
+        "return_pct": NaN,
+        "long_share": 1.0,
+        "longs": 134,
+        "shorts": 0
+      },
+      {
+        "strategy": "always_long",
+        "engine": "pybroker",
+        "trades": 180,
+        "win_rate": 0.48333333333333334,
+        "profit_factor": 1.3615027896129004,
+        "expectancy_r": 0.18324969523746223,
+        "total_r": 32.9849451427432,
+        "max_dd_pct": 9.497487044389585,
+        "return_pct": 36.96979,
+        "long_share": 1.0,
+        "longs": 180,
+        "shorts": 0
+      },
+      {
+        "strategy": "always_long",
+        "engine": "replica",
+        "trades": 158,
+        "win_rate": 0.4810126582278481,
+        "profit_factor": 1.3758813514306896,
+        "expectancy_r": 0.18934520955169168,
+        "total_r": 29.916543109167286,
+        "max_dd_pct": 11.205244042663832,
+        "return_pct": NaN,
+        "long_share": 1.0,
+        "longs": 158,
+        "shorts": 0
+      },
+      {
+        "strategy": "always_short",
+        "engine": "pybroker",
+        "trades": 139,
+        "win_rate": 0.2589928057553957,
+        "profit_factor": 0.6804962072322833,
+        "expectancy_r": -0.23043521578610504,
+        "total_r": -32.0304949942686,
+        "max_dd_pct": 31.45673566745376,
+        "return_pct": -28.01469999999999,
+        "long_share": 0.0,
+        "longs": 0,
+        "shorts": 139
+      },
+      {
+        "strategy": "always_short",
+        "engine": "replica",
+        "trades": 124,
+        "win_rate": 0.25806451612903225,
+        "profit_factor": 0.7324236479834833,
+        "expectancy_r": -0.18919088046595348,
+        "total_r": -23.45966917777823,
+        "max_dd_pct": 27.966179321108243,
+        "return_pct": NaN,
+        "long_share": 0.0,
+        "longs": 0,
+        "shorts": 124
+      },
+      {
+        "strategy": "buy_and_hold",
+        "engine": "pybroker",
+        "trades": 1,
+        "win_rate": 1.0,
+        "profit_factor": Infinity,
+        "expectancy_r": 64.48252709701838,
+        "total_r": 64.48252709701838,
+        "max_dd_pct": 10.979969466349859,
+        "return_pct": 33.4511,
+        "long_share": 1.0,
+        "longs": 1,
+        "shorts": 0
+      },
+      {
+        "strategy": "sma20_50_cross",
+        "engine": "pybroker",
+        "trades": 47,
+        "win_rate": 0.48936170212765956,
+        "profit_factor": 1.6291444980509453,
+        "expectancy_r": 0.28551022556618044,
+        "total_r": 13.418980601610482,
+        "max_dd_pct": 12.284229255983325,
+        "return_pct": 14.542619999999996,
+        "long_share": 0.44680851063829785,
+        "longs": 21,
+        "shorts": 26
+      },
+      {
+        "strategy": "sma20_50_cross",
+        "engine": "replica",
+        "trades": 44,
+        "win_rate": 0.45454545454545453,
+        "profit_factor": 1.3767489415025467,
+        "expectancy_r": 0.19381870225388678,
+        "total_r": 8.528022899171019,
+        "max_dd_pct": 13.345236681728224,
+        "return_pct": NaN,
+        "long_share": 0.4318181818181818,
+        "longs": 19,
+        "shorts": 25
+      }
+    ]
+  },
+  "files": {
+    "bull": {
+      "file": "xau_swing_ct25.bull.txt",
+      "sha256_16": "fe035d7dab52734b"
+    },
+    "bear": {
+      "file": "xau_swing_ct25.bear.txt",
+      "sha256_16": "9861b4d9d343e00f"
+    }
+  },
+  "calibrators": {
+    "bull": {
+      "kind": "platt",
+      "a": -0.0782913104477872,
+      "b": -0.365483004406071
+    },
+    "bear": {
+      "kind": "platt",
+      "a": -0.16710675498334135,
+      "b": -1.7013314146986849
+    }
+  }
+}

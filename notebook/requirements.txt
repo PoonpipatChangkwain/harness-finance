@@ -1,0 +1,17 @@
+# Notebook-only research environment (kept apart from backend/ — rule F2).
+# setup (venv kept OUTSIDE OneDrive — OneDrive locks files mid-install):
+#   uv venv --python 3.12 %USERPROFILE%\.venvs\xau-ml
+#   set UV_LINK_MODE=copy && uv pip install --python %USERPROFILE%\.venvs\xau-ml\Scripts\python.exe -r requirements.txt
+#   %USERPROFILE%\.venvs\xau-ml\Scripts\python -m ipykernel install --user --name xau-ml
+# LightGBM's pip wheel is CPU-only (no GPU learner); the data is small enough for CPU.
+numpy>=1.26,<3
+pandas>=2.2
+lib-pybroker>=1.2
+lightgbm>=4.3
+scikit-learn>=1.5
+shap>=0.46
+matplotlib>=3.8
+joblib>=1.4
+jupyter>=1.0
+ipykernel>=6.29
+nbconvert>=7.16
