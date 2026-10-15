@@ -108,3 +108,15 @@ SEEN_FROM = "2025-10-01"  # v0.1's test window — already looked at, reported s
 TAU_GRID =[round(0.30 + 0.025 * i, 3) for i in range(17)]  # 0.30 … 0.70
 MARGIN_GRID = [0.0, 0.05, 0.10, 0.15, 0.20]
 MIN_VAL_TRADES = {"15m": 40, "1h": 15}
+
+# --- v0.3 (calendar/market features + training from 2024 for noise/regime diversity) ------
+VERSION_V3 = "xau-bullbear-0.3.0"
+MODEL_DIR_V3 = MODEL_DIR / "v3"
+# Extend training to 2024-01-01 for more regime diversity (noise, outliers, full year)
+# The warm-up already loads from 2024-10 (15m) / 2024-06 (1h) / 2023-06 (1d);
+# for v3 we load 15m from 2023-10-01, 1h from 2023-06-01 to warm up indicators for 2024
+V3_WARMUP_START = {"15m": "2023-10-01", "1h": "2023-06-01", "1d": "2023-06-01"}
+V3_TRAIN_FROM = "2024-01-01"  # start of usable rows (was 2025-01-01 in v0.2)
+V3_WF_FIRST_FOLD = "2024-04"  # first test month (Jan-Mar = initial training only)
+V3_WF_LAST_FOLD = "2026-01"
+V3_WF_BURN_IN = 2  # folds that seed the nested calibrator/τ/m; trading scored from fold 3+

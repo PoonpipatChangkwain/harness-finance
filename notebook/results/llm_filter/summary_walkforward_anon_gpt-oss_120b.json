@@ -1,0 +1,143 @@
+{
+  "generated_utc": "2026-10-05T04:52:37.275319+00:00",
+  "window": "walk-forward OOF 2025-06..2026-01 (exp C)",
+  "llm_model": "gpt-oss:120b",
+  "llm_provider": "ollama_cloud",
+  "mode": "anon",
+  "reference_C_from_notebook_pipeline": {
+    "trades": 758,
+    "win_rate": 0.39841688654353563,
+    "profit_factor": 0.9247765679531571,
+    "expectancy_r": -0.04455503437987176,
+    "total_r": -33.772716059942795,
+    "max_dd_pct": 48.16266950242333,
+    "long_share": 0.600263852242744,
+    "longs": 455,
+    "shorts": 303
+  },
+  "llm_calls_new": 951,
+  "llm_parse_failures": 0,
+  "candidates": 951,
+  "arms": [
+    {
+      "arm": "ml_only",
+      "trades": 758,
+      "win_rate": 0.39841688654353563,
+      "profit_factor": 0.9247765679531571,
+      "expectancy_r": -0.04455503437987176,
+      "total_r": -33.772716059942795,
+      "max_dd_pct": 48.16266950242333,
+      "long_share": 0.600263852242744,
+      "longs": 455,
+      "shorts": 303
+    },
+    {
+      "arm": "calendar_rule",
+      "trades": 738,
+      "win_rate": 0.4065040650406504,
+      "profit_factor": 0.9586263039176572,
+      "expectancy_r": -0.024122996669456397,
+      "total_r": -17.80277154205882,
+      "max_dd_pct": 40.78638385556622,
+      "long_share": 0.6002710027100271,
+      "longs": 443,
+      "shorts": 295
+    },
+    {
+      "arm": "llm_veto(half=0.5R)",
+      "trades": 730,
+      "win_rate": 0.4,
+      "profit_factor": 1.0002091382459266,
+      "expectancy_r": 8.112942704353328e-05,
+      "total_r": 0.0592244817417793,
+      "max_dd_pct": 24.29737508051747,
+      "long_share": 0.6164383561643836,
+      "longs": 450,
+      "shorts": 280
+    },
+    {
+      "arm": "llm_binary(half=take)",
+      "trades": 730,
+      "win_rate": 0.4,
+      "profit_factor": 0.9651026535561579,
+      "expectancy_r": -0.02044857955814203,
+      "total_r": -14.927463077443683,
+      "max_dd_pct": 39.421093780664954,
+      "long_share": 0.6164383561643836,
+      "longs": 450,
+      "shorts": 280
+    }
+  ],
+  "llm_verdict_on_ml_trades": [
+    {
+      "action": "half",
+      "n": 395,
+      "win_rate": 0.369620253164557,
+      "mean_r": -0.07521850739913624,
+      "total_r": -29.711310422658816
+    },
+    {
+      "action": "skip",
+      "n": 108,
+      "win_rate": 0.3425925925925926,
+      "mean_r": -0.16778995407437894,
+      "total_r": -18.121315040032925
+    },
+    {
+      "action": "take",
+      "n": 255,
+      "win_rate": 0.4666666666666667,
+      "mean_r": 0.0551368996186233,
+      "total_r": 14.059909402748941
+    }
+  ],
+  "actions": {
+    "half": 511,
+    "take": 273,
+    "skip": 167
+  },
+  "random_control": {
+    "win_rate": {
+      "random_bin_5_95": [
+        0.3850288882676358,
+        0.4046639231824417
+      ],
+      "llm_binary": 0.4,
+      "llm_binary_pct": 82.33333333333334,
+      "random_half_5_95": [
+        0.3838694658191145,
+        0.4038098154954152
+      ],
+      "llm_half": 0.4,
+      "llm_half_pct": 84.0
+    },
+    "profit_factor": {
+      "random_bin_5_95": [
+        0.8740956271648904,
+        0.9427325948292713
+      ],
+      "llm_binary": 0.9651026535561579,
+      "llm_binary_pct": 99.0,
+      "random_half_5_95": [
+        0.8579063035352981,
+        0.9754406087952114
+      ],
+      "llm_half": 1.0002091382459266,
+      "llm_half_pct": 98.0
+    },
+    "total_r": {
+      "random_bin_5_95": [
+        -55.880427305092425,
+        -24.304261925213115
+      ],
+      "llm_binary": -14.927463077443683,
+      "llm_binary_pct": 99.0,
+      "random_half_5_95": [
+        -43.402811169846444,
+        -7.013999352573665
+      ],
+      "llm_half": 0.0592244817417793,
+      "llm_half_pct": 98.0
+    }
+  }
+}

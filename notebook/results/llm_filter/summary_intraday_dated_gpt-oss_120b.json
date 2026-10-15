@@ -1,0 +1,196 @@
+{
+  "generated_utc": "2026-10-05T03:50:36.636990+00:00",
+  "horizon": "intraday",
+  "model_stem": "xau_intraday_ct25",
+  "model_version": "xau-bullbear-0.5.0",
+  "llm_model": "gpt-oss:120b",
+  "llm_provider": "ollama_cloud",
+  "mode": "dated",
+  "min_conf": 0.4,
+  "event_window_h": {
+    "before": 2.0,
+    "after": 1.0
+  },
+  "bars": {
+    "15m": [
+      "2026-07-27 01:00:00",
+      "2026-10-05 06:15:00",
+      4509
+    ],
+    "1h": [
+      "2025-01-02 07:00:00",
+      "2026-10-05 06:00:00",
+      10069
+    ],
+    "1d": [
+      "2025-01-02 00:00:00",
+      "2026-10-05 00:00:00",
+      451
+    ]
+  },
+  "holdout_rows": 3843,
+  "signals": 1269,
+  "llm_calls_new": 218,
+  "llm_parse_failures": 0,
+  "arms": [
+    {
+      "arm": "ml_only",
+      "trades": 199,
+      "win_rate": 0.45226130653266333,
+      "profit_factor": 1.1455015303765053,
+      "expectancy_r": 0.0783170677811841,
+      "total_r": 15.585096488455635,
+      "max_dd_pct": 13.152374809021438,
+      "long_share": 0.8844221105527639,
+      "longs": 176,
+      "shorts": 23
+    },
+    {
+      "arm": "calendar_rule",
+      "trades": 195,
+      "win_rate": 0.4564102564102564,
+      "profit_factor": 1.167937910502453,
+      "expectancy_r": 0.08960832259079127,
+      "total_r": 17.473622905204298,
+      "max_dd_pct": 11.948149591450507,
+      "long_share": 0.882051282051282,
+      "longs": 172,
+      "shorts": 23
+    },
+    {
+      "arm": "llm_veto(half=0.5R)",
+      "trades": 198,
+      "win_rate": 0.4494949494949495,
+      "profit_factor": 1.1317210648671585,
+      "expectancy_r": 0.04892292001694433,
+      "total_r": 9.686738163354978,
+      "max_dd_pct": 10.936706445510014,
+      "long_share": 0.8888888888888888,
+      "longs": 176,
+      "shorts": 22
+    },
+    {
+      "arm": "llm_binary(half=take)",
+      "trades": 198,
+      "win_rate": 0.4494949494949495,
+      "profit_factor": 1.1342862409138907,
+      "expectancy_r": 0.07285859747975708,
+      "total_r": 14.4260023009919,
+      "max_dd_pct": 14.364958250422866,
+      "long_share": 0.8888888888888888,
+      "longs": 176,
+      "shorts": 22
+    }
+  ],
+  "by_month": {
+    "ml_only": [
+      {
+        "month": "2026-08",
+        "trades": 100.0,
+        "win_rate": 0.51,
+        "profit_factor": 1.4324402535380463,
+        "expectancy_r": 0.21406484142143556,
+        "total_r": 21.406484142143555
+      },
+      {
+        "month": "2026-09",
+        "trades": 99.0,
+        "win_rate": 0.3939393939393939,
+        "profit_factor": 0.8989541343279048,
+        "expectancy_r": -0.05880189549179715,
+        "total_r": -5.821387653687918
+      }
+    ],
+    "calendar_rule": [
+      {
+        "month": "2026-08",
+        "trades": 100.0,
+        "win_rate": 0.51,
+        "profit_factor": 1.4324402535380463,
+        "expectancy_r": 0.21406484142143556,
+        "total_r": 21.406484142143555
+      },
+      {
+        "month": "2026-09",
+        "trades": 95.0,
+        "win_rate": 0.4,
+        "profit_factor": 0.9278989457675213,
+        "expectancy_r": -0.04139853933620266,
+        "total_r": -3.9328612369392526
+      }
+    ],
+    "llm_veto(half=0.5R)": [
+      {
+        "month": "2026-08",
+        "trades": 100.0,
+        "win_rate": 0.51,
+        "profit_factor": 1.4198995936171719,
+        "expectancy_r": 0.1453945578136968,
+        "total_r": 14.53945578136968
+      },
+      {
+        "month": "2026-09",
+        "trades": 98.0,
+        "win_rate": 0.3877551020408163,
+        "profit_factor": 0.875295556320956,
+        "expectancy_r": -0.04951752671443575,
+        "total_r": -4.852717618014704
+      }
+    ],
+    "llm_binary(half=take)": [
+      {
+        "month": "2026-08",
+        "trades": 100.0,
+        "win_rate": 0.51,
+        "profit_factor": 1.437418659913847,
+        "expectancy_r": 0.21652493323665462,
+        "total_r": 21.65249332366546
+      },
+      {
+        "month": "2026-09",
+        "trades": 98.0,
+        "win_rate": 0.3877551020408163,
+        "profit_factor": 0.8752475345481225,
+        "expectancy_r": -0.07373970431299548,
+        "total_r": -7.226491022673557
+      }
+    ]
+  },
+  "llm_verdict_on_ml_trades": [
+    {
+      "action": "half",
+      "n": 110,
+      "win_rate": 0.4636363636363636,
+      "mean_r": 0.10539825865512362,
+      "total_r": 11.593808452063598
+    },
+    {
+      "action": "skip",
+      "n": 13,
+      "win_rate": 0.38461538461538464,
+      "mean_r": 0.005044877311262916,
+      "total_r": 0.06558340504641791
+    },
+    {
+      "action": "take",
+      "n": 76,
+      "win_rate": 0.4473684210526316,
+      "mean_r": 0.051654008307179235,
+      "total_r": 3.9257046313456216
+    }
+  ],
+  "risk_flags_top": {
+    "daily_downtrend": 27,
+    "counter_trend": 18,
+    "limited_upside": 13,
+    "overbought_rsi": 11,
+    "thin_liquidity": 11,
+    "price_near_daily_low": 10,
+    "daily_regime_down": 8,
+    "price_near_daily_high": 8,
+    "daily_regime_contradiction": 8,
+    "intraday_downtrend": 7,
+    "overbought_RSI": 6,
+    "limited_target_room": 6
+  }
+}

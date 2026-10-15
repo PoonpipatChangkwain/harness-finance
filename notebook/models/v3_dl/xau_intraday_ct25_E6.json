@@ -1,0 +1,308 @@
+{
+  "version": "xau-bullbear-0.3.0-dl",
+  "symbol": "XAUUSD",
+  "created_utc": "2026-10-04T10:40:24+00:00",
+  "horizon": "intraday",
+  "timeframe": "15m",
+  "context_timeframes": [
+    "1h",
+    "1d"
+  ],
+  "experiment": {
+    "id": "E6",
+    "name": "MLP on E3 features + weights"
+  },
+  "selected_over_lightgbm_E3": false,
+  "features": [
+    "atr_pct",
+    "atr_regime",
+    "rv_32",
+    "bb_width",
+    "adx14",
+    "hour",
+    "dow",
+    "d1_rsi14",
+    "d1_adx14",
+    "d1_di_diff",
+    "d1_dist_sma50_atr",
+    "d1_dist_sma200_atr",
+    "d1_macd_hist_atr",
+    "d1_ret_atr_5",
+    "d1_range_pos_20",
+    "d1_atr_pct",
+    "d1_above_sma50",
+    "d1_above_sma200",
+    "d1_trend",
+    "d1_prev_range_pos"
+  ],
+  "label": {
+    "set": "ct25",
+    "tp_r": 1.5,
+    "counter_trend_tp_r": 2.5,
+    "time_stop_bars": 16,
+    "intrabar_rule": "stop_first"
+  },
+  "training": {
+    "rows": 22328,
+    "from": "2025-01-02 01:00:00",
+    "to": "2026-01-30 19:30:00",
+    "epochs_per_seed": [
+      1,
+      1,
+      1
+    ],
+    "device": "cuda"
+  },
+  "calibrators": {
+    "bull": {
+      "kind": "platt",
+      "a": 0.38541163757835023,
+      "b": -0.5002276658093281
+    },
+    "bear": {
+      "kind": "platt",
+      "a": 0.5814364991320635,
+      "b": -0.6377849560574166
+    }
+  },
+  "signal_rule": {
+    "tau": 0.325,
+    "m": 0.2,
+    "no_trade": false
+  },
+  "metrics": {
+    "walkforward_ml": [
+      {
+        "exp": "E3",
+        "auc_bull": 0.5725355974833946,
+        "auc_bear": 0.6170097738477278,
+        "auc_mean": 0.5947726856655613,
+        "auc_bull_min_fold": 0.4884519857942017,
+        "auc_bear_min_fold": 0.5791272577996717,
+        "logloss_gain_bull": 0.004895703393817785,
+        "logloss_gain_bear": 0.004014478125247712,
+        "train_seconds": 5.4
+      },
+      {
+        "exp": "E6",
+        "auc_bull": 0.5461710406375273,
+        "auc_bear": 0.5877699102168066,
+        "auc_mean": 0.5669704754271669,
+        "auc_bull_min_fold": 0.47420916293228965,
+        "auc_bear_min_fold": 0.5168866164582325,
+        "logloss_gain_bull": -0.0007838501331735026,
+        "logloss_gain_bear": 0.003908660788516161,
+        "train_seconds": 30.3
+      },
+      {
+        "exp": "E7",
+        "auc_bull": 0.5417980640207429,
+        "auc_bear": 0.5851905292860351,
+        "auc_mean": 0.5634942966533891,
+        "auc_bull_min_fold": 0.49078696087885487,
+        "auc_bear_min_fold": 0.4684913286809922,
+        "logloss_gain_bull": -0.0007498267917657508,
+        "logloss_gain_bear": 0.0049205428813256956,
+        "train_seconds": 63.1
+      }
+    ],
+    "walkforward_trading": [
+      {
+        "strategy": "E3",
+        "trades": 79,
+        "win_rate": 0.4810126582278481,
+        "profit_factor": 1.0772088422796318,
+        "expectancy_r": 0.0382542637512945,
+        "total_r": 3.0220868363522655,
+        "max_dd_pct": 13.608503608428713,
+        "long_share": 0.8481012658227848,
+        "longs": 67,
+        "shorts": 12,
+        "exp_ci90_lo": -0.15727965380684716,
+        "exp_ci90_hi": 0.24939613967497032,
+        "vs_long_ci90_lo": -0.15391082662104436,
+        "vs_long_ci90_hi": 0.2637322768195713,
+        "beats_always_long": false
+      },
+      {
+        "strategy": "E6",
+        "trades": 0,
+        "win_rate": NaN,
+        "profit_factor": NaN,
+        "expectancy_r": NaN,
+        "total_r": 0.0,
+        "max_dd_pct": 0.0,
+        "long_share": NaN,
+        "longs": 0,
+        "shorts": 0,
+        "exp_ci90_lo": NaN,
+        "exp_ci90_hi": NaN,
+        "vs_long_ci90_lo": NaN,
+        "vs_long_ci90_hi": NaN,
+        "beats_always_long": false
+      },
+      {
+        "strategy": "E7",
+        "trades": 262,
+        "win_rate": 0.38549618320610685,
+        "profit_factor": 0.7946122643332608,
+        "expectancy_r": -0.12581815981932679,
+        "total_r": -32.96435787266362,
+        "max_dd_pct": 39.80086088484892,
+        "long_share": 1.0,
+        "longs": 262,
+        "shorts": 0,
+        "exp_ci90_lo": -0.23859640391526843,
+        "exp_ci90_hi": -0.00868243427135644,
+        "vs_long_ci90_lo": -0.23914515533590908,
+        "vs_long_ci90_hi": 0.010096630035131691,
+        "beats_always_long": false
+      },
+      {
+        "strategy": "always_long",
+        "trades": 1608,
+        "win_rate": 0.43345771144278605,
+        "profit_factor": 0.9841031639675288,
+        "expectancy_r": -0.00876702657183879,
+        "total_r": -14.097378727516777,
+        "max_dd_pct": 53.337924752627096,
+        "long_share": 1.0,
+        "longs": 1608,
+        "shorts": 0,
+        "exp_ci90_lo": -0.05798713202417698,
+        "exp_ci90_hi": 0.03841160102993651,
+        "vs_long_ci90_lo": -0.0680426767305247,
+        "vs_long_ci90_hi": 0.0678632772762035,
+        "beats_always_long": false
+      },
+      {
+        "strategy": "always_short",
+        "trades": 1374,
+        "win_rate": 0.36026200873362446,
+        "profit_factor": 0.851218824279969,
+        "expectancy_r": -0.0917576347821315,
+        "total_r": -126.07499019064869,
+        "max_dd_pct": 78.93224151599327,
+        "long_share": 0.0,
+        "longs": 0,
+        "shorts": 1374,
+        "exp_ci90_lo": -0.1483439726324553,
+        "exp_ci90_hi": -0.03461493535265978,
+        "vs_long_ci90_lo": -0.15770134465623106,
+        "vs_long_ci90_hi": -0.008884079812519773,
+        "beats_always_long": false
+      },
+      {
+        "strategy": "sma20_50_cross",
+        "trades": 262,
+        "win_rate": 0.4351145038167939,
+        "profit_factor": 1.1538550451780674,
+        "expectancy_r": 0.08356505473224735,
+        "total_r": 21.894044339848804,
+        "max_dd_pct": 14.556452472409841,
+        "long_share": 0.48854961832061067,
+        "longs": 128,
+        "shorts": 134,
+        "exp_ci90_lo": -0.048456743895631864,
+        "exp_ci90_hi": 0.21894707691979012,
+        "vs_long_ci90_lo": -0.047148534157166265,
+        "vs_long_ci90_hi": 0.23542052585226592,
+        "beats_always_long": false
+      }
+    ]
+  },
+  "weights_files": [
+    "xau_intraday_ct25_E6.seed0.pt",
+    "xau_intraday_ct25_E6.seed1.pt",
+    "xau_intraday_ct25_E6.seed2.pt"
+  ],
+  "scaler": {
+    "median": [
+      0.0014459225385683662,
+      0.9622887436829286,
+      0.0009484089734186515,
+      0.005710295491436365,
+      23.716262295793378,
+      12.0,
+      2.0,
+      59.569305762842255,
+      27.93372798893281,
+      9.048055685736553,
+      2.8894395922663785,
+      7.943654731219831,
+      0.011648213169072788,
+      0.6917220926588145,
+      0.7266268452490606,
+      0.01613614679158977,
+      1.0,
+      1.0,
+      1.0,
+      0.6536000000000058
+    ],
+    "mean": [
+      0.0016630065280355381,
+      1.0077535837257239,
+      0.0011124092767104932,
+      0.007315355101004323,
+      25.96961909643715,
+      11.877552848441418,
+      1.9927893228233609,
+      61.172573513654015,
+      25.822246704573725,
+      11.478293974208775,
+      2.6947866613991254,
+      8.486183054275944,
+      0.04714923733242105,
+      0.7463307157882559,
+      0.6945719920136167,
+      0.01728331938304599,
+      0.9059029021855965,
+      1.0,
+      0.9059029021855965,
+      0.67971215457605
+    ],
+    "std": [
+      0.0009297176637670163,
+      0.24354436400796883,
+      0.0007071525443896411,
+      0.006228256648054908,
+      10.892659944060982,
+      6.619337048500205,
+      1.4142426830564396,
+      10.07638970902578,
+      11.835249017758908,
+      11.834756374530741,
+      2.016062013121992,
+      2.0924397897105207,
+      0.22032935931867714,
+      1.665683407599275,
+      0.22735962922584618,
+      0.004992162666232336,
+      0.29196375459516577,
+      1.0,
+      0.29196375459516577,
+      0.6174101415310612
+    ]
+  },
+  "arch": {
+    "kind": "mlp",
+    "hidden": 128,
+    "dropout": 0.2,
+    "lr": 0.001,
+    "weight_decay": 0.001,
+    "batch": 512,
+    "max_epochs": 40,
+    "patience": 5,
+    "inner_val_frac": 0.2,
+    "conv": 32,
+    "gru": 48,
+    "seq_len": 64,
+    "seq_channels": [
+      "open",
+      "high",
+      "low",
+      "close"
+    ],
+    "seq_norm": "(price - close_t) / ATR14_t, clip \u00b120, /5"
+  }
+}

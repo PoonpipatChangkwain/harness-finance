@@ -17,3 +17,6 @@ joblib>=1.4
 jupyter>=1.0
 ipykernel>=6.29
 nbconvert>=7.16
+# xau_ml/smc_ind.py imports backend/app/domain/compute (indicators, smc, smc_setup), which needs:
+pydantic>=2.7
+python-ulid>=2.7

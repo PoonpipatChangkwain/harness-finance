@@ -1,0 +1,304 @@
+{
+  "version": "xau-bullbear-0.3.0",
+  "symbol": "XAUUSD",
+  "created_utc": "2026-10-04T17:37:02+00:00",
+  "horizon": "swing",
+  "timeframe": "1h",
+  "context_timeframes": [
+    "1d"
+  ],
+  "extras": true,
+  "v3_features": true,
+  "experiment": {
+    "id": "F4",
+    "name": "v0.2 E3 + calendar + market + session",
+    "model": "lgbm",
+    "weights": true,
+    "features": "v3_reduced_all"
+  },
+  "label": {
+    "type": "triple_barrier",
+    "entry": "open of the next bar",
+    "stop_r": 1.0,
+    "risk": "2.0 x ATR14 (Wilder)",
+    "tp_r": 1.5,
+    "counter_trend_tp_r": 2.5,
+    "time_stop_bars": 48,
+    "intrabar_rule": "stop_first"
+  },
+  "features": [
+    "atr_pct",
+    "atr_regime",
+    "rv_32",
+    "bb_width",
+    "adx14",
+    "hour",
+    "dow",
+    "d1_rsi14",
+    "d1_adx14",
+    "d1_di_diff",
+    "d1_dist_sma50_atr",
+    "d1_dist_sma200_atr",
+    "d1_macd_hist_atr",
+    "d1_ret_atr_5",
+    "d1_range_pos_20",
+    "d1_atr_pct",
+    "d1_above_sma50",
+    "d1_above_sma200",
+    "d1_trend",
+    "d1_prev_range_pos",
+    "session",
+    "cal_high_today",
+    "cal_event_count",
+    "cal_is_nfp_day",
+    "cal_is_fomc_day",
+    "cal_hours_to_next",
+    "cal_hours_since_last",
+    "vix",
+    "vix_ret_5",
+    "vix_dist_sma20",
+    "vix_level",
+    "dxy",
+    "dxy_ret_5",
+    "dxy_dist_sma20",
+    "us10y",
+    "us10y_ret_5",
+    "us10y_dist_sma20",
+    "us10y_chg_5"
+  ],
+  "feature_groups": {
+    "base": [
+      "atr_pct",
+      "atr_regime",
+      "rv_32",
+      "bb_width",
+      "adx14",
+      "hour",
+      "dow",
+      "d1_rsi14",
+      "d1_adx14",
+      "d1_di_diff",
+      "d1_dist_sma50_atr",
+      "d1_dist_sma200_atr",
+      "d1_macd_hist_atr",
+      "d1_ret_atr_5",
+      "d1_range_pos_20",
+      "d1_atr_pct",
+      "d1_above_sma50",
+      "d1_above_sma200",
+      "d1_trend",
+      "d1_prev_range_pos"
+    ],
+    "calendar": [
+      "cal_high_today",
+      "cal_event_count",
+      "cal_is_nfp_day",
+      "cal_is_fomc_day",
+      "cal_hours_to_next",
+      "cal_hours_since_last"
+    ],
+    "market": [
+      "vix",
+      "vix_ret_5",
+      "vix_dist_sma20",
+      "vix_level",
+      "dxy",
+      "dxy_ret_5",
+      "dxy_dist_sma20",
+      "us10y",
+      "us10y_ret_5",
+      "us10y_dist_sma20",
+      "us10y_chg_5"
+    ],
+    "session": [
+      "session"
+    ]
+  },
+  "feature_code_sha256_16": "d6a8d4820538ae8d",
+  "training": {
+    "rows_from": "2024-01-02 01:00:00",
+    "rows_to": "2026-01-09 11:00:00",
+    "rows": 11201,
+    "weights": "label uniqueness",
+    "data_holes_excluded": true
+  },
+  "evaluation": {
+    "protocol": "expanding monthly walk-forward, nested calibration + tau/m",
+    "folds": [
+      "2024-04",
+      "2024-05",
+      "2024-06",
+      "2024-07",
+      "2024-08",
+      "2024-09",
+      "2024-10",
+      "2024-11",
+      "2024-12",
+      "2025-01",
+      "2025-02",
+      "2025-03",
+      "2025-04",
+      "2025-05",
+      "2025-06",
+      "2025-07",
+      "2025-08",
+      "2025-09",
+      "2025-10",
+      "2025-11",
+      "2025-12",
+      "2026-01"
+    ],
+    "burn_in_folds": 2,
+    "note": "v0.3: training from 2024, calendar+market+session features"
+  },
+  "model": {
+    "params": {
+      "objective": "binary",
+      "learning_rate": 0.03,
+      "num_leaves": 15,
+      "max_depth": 5,
+      "min_child_samples": 150,
+      "feature_fraction": 0.7,
+      "bagging_fraction": 0.8,
+      "bagging_freq": 1,
+      "lambda_l2": 5.0,
+      "verbose": -1,
+      "seed": 42,
+      "deterministic": true,
+      "num_threads": 4
+    },
+    "kind": "lgbm_pair"
+  },
+  "signal_rule": {
+    "tau": 0.425,
+    "m": 0.2,
+    "no_trade": false,
+    "rule": "long if p_bull>=tau and p_bull-p_bear>=m; short mirrored; else flat",
+    "selected_on": "nested OOF 2024-04..2026-01"
+  },
+  "metrics": {
+    "walkforward_ml": [
+      {
+        "exp": "F4",
+        "name": "v0.2 E3 + calendar + market + session",
+        "features": 38,
+        "auc_bull": 0.5886391938251742,
+        "auc_bear": 0.6269460762831616,
+        "auc_mean": 0.607792635054168,
+        "auc_bull_min_fold": 0.34649595687331536,
+        "auc_bear_min_fold": 0.34745236122618056,
+        "logloss_gain_bull": -0.0030801895320338724,
+        "logloss_gain_bear": 0.0010386686285386532
+      }
+    ],
+    "walkforward_trading": [
+      {
+        "strategy": "F0",
+        "trades": 386,
+        "win_rate": 0.5,
+        "profit_factor": 1.4438358468790078,
+        "expectancy_r": 0.22171086716990596,
+        "total_r": 85.5803947275837,
+        "max_dd_pct": 11.71681533810106,
+        "long_share": 1.0,
+        "longs": 386,
+        "shorts": 0,
+        "exp_ci90_lo": 0.1179403543434228,
+        "exp_ci90_hi": 0.32540952821632796,
+        "vs_long_ci90_lo": -0.0881471305870988,
+        "vs_long_ci90_hi": 0.18416532255638862,
+        "beats_always_long": false
+      },
+      {
+        "strategy": "F4",
+        "trades": 445,
+        "win_rate": 0.47191011235955055,
+        "profit_factor": 1.2865257664321128,
+        "expectancy_r": 0.15089624512983624,
+        "total_r": 67.14882908277713,
+        "max_dd_pct": 11.205244042663853,
+        "long_share": 1.0,
+        "longs": 445,
+        "shorts": 0,
+        "exp_ci90_lo": 0.05093585504975537,
+        "exp_ci90_hi": 0.2482337489653995,
+        "vs_long_ci90_lo": -0.15667641231030877,
+        "vs_long_ci90_hi": 0.10343601514096985,
+        "beats_always_long": false
+      },
+      {
+        "strategy": "always_long",
+        "trades": 544,
+        "win_rate": 0.4797794117647059,
+        "profit_factor": 1.3344988763625147,
+        "expectancy_r": 0.17356636830961356,
+        "total_r": 94.42010436042978,
+        "max_dd_pct": 11.205244042663853,
+        "long_share": 1.0,
+        "longs": 544,
+        "shorts": 0,
+        "exp_ci90_lo": 0.08580658344181895,
+        "exp_ci90_hi": 0.2612669713754457,
+        "vs_long_ci90_lo": -0.12296617194993015,
+        "vs_long_ci90_hi": 0.12203518494963102,
+        "beats_always_long": false
+      },
+      {
+        "strategy": "always_short",
+        "trades": 448,
+        "win_rate": 0.26339285714285715,
+        "profit_factor": 0.6871340270452996,
+        "expectancy_r": -0.23023291831657738,
+        "total_r": -103.14434740582666,
+        "max_dd_pct": 67.41192722302989,
+        "long_share": 0.0,
+        "longs": 0,
+        "shorts": 448,
+        "exp_ci90_lo": -0.3316851732585833,
+        "exp_ci90_hi": -0.12017247488024334,
+        "vs_long_ci90_lo": -0.5396048007843556,
+        "vs_long_ci90_hi": -0.26621993990882853,
+        "beats_always_long": false
+      },
+      {
+        "strategy": "sma20_50_cross",
+        "trades": 142,
+        "win_rate": 0.45774647887323944,
+        "profit_factor": 1.3377476572541536,
+        "expectancy_r": 0.18256220760845454,
+        "total_r": 25.923833480400546,
+        "max_dd_pct": 13.345236681728178,
+        "long_share": 0.45774647887323944,
+        "longs": 65,
+        "shorts": 77,
+        "exp_ci90_lo": -0.00459782198751917,
+        "exp_ci90_hi": 0.3733170293047908,
+        "vs_long_ci90_lo": -0.19738310701979692,
+        "vs_long_ci90_hi": 0.21620523694757185,
+        "beats_always_long": false
+      }
+    ]
+  },
+  "files": {
+    "bull": {
+      "file": "xau_swing_ct25.bull.txt",
+      "sha256_16": "13452e5fccd2d6b3"
+    },
+    "bear": {
+      "file": "xau_swing_ct25.bear.txt",
+      "sha256_16": "f14661ccde5189be"
+    }
+  },
+  "calibrators": {
+    "bull": {
+      "kind": "platt",
+      "a": 0.2369549574731288,
+      "b": -0.1213362915136201
+    },
+    "bear": {
+      "kind": "platt",
+      "a": 0.29709550536548507,
+      "b": -0.9594858255128692
+    }
+  }
+}

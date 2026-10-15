@@ -1,0 +1,150 @@
+{
+  "walkforward": {
+    "table": [
+      {
+        "arm": "ml_only",
+        "trades": 758,
+        "win_rate": 0.39841688654353563,
+        "profit_factor": 0.9247765679531571,
+        "expectancy_r": -0.04455503437987176,
+        "total_r": -33.772716059942795,
+        "max_dd_pct": 48.16266950242333,
+        "long_share": 0.600263852242744,
+        "longs": 455,
+        "shorts": 303
+      },
+      {
+        "arm": "trend_rule",
+        "trades": 509,
+        "win_rate": 0.4361493123772102,
+        "profit_factor": 0.9822964156512044,
+        "expectancy_r": -0.009934183430259919,
+        "total_r": -5.056499366002298,
+        "max_dd_pct": 22.90787071047372,
+        "long_share": 0.9469548133595285,
+        "longs": 482,
+        "shorts": 27
+      },
+      {
+        "arm": "llm_binary",
+        "trades": 730,
+        "win_rate": 0.4,
+        "profit_factor": 0.9651026535561579,
+        "expectancy_r": -0.02044857955814203,
+        "total_r": -14.927463077443683,
+        "max_dd_pct": 39.421093780664954,
+        "long_share": 0.6164383561643836,
+        "longs": 450,
+        "shorts": 280
+      },
+      {
+        "arm": "trend+llm_binary",
+        "trades": 507,
+        "win_rate": 0.43984220907297833,
+        "profit_factor": 1.0045787812183664,
+        "expectancy_r": 0.0025515286430994465,
+        "total_r": 1.2936250220514194,
+        "max_dd_pct": 19.191870521806354,
+        "long_share": 0.9467455621301775,
+        "longs": 480,
+        "shorts": 27
+      },
+      {
+        "arm": "trend+llm_half",
+        "trades": 507,
+        "win_rate": 0.43984220907297833,
+        "profit_factor": 1.0393998723965436,
+        "expectancy_r": 0.016108417270884887,
+        "total_r": 8.166967556338637,
+        "max_dd_pct": 13.219700769771237,
+        "long_share": 0.9467455621301775,
+        "longs": 480,
+        "shorts": 27
+      }
+    ],
+    "counter_n": 276,
+    "aligned_n": 482,
+    "llm_on_top": {
+      "take_n": 229,
+      "rest_n": 225,
+      "dwin": 0.07613779718583208,
+      "p_win": 0.1094,
+      "dmeanr": 0.1603477384977519,
+      "p_meanr": 0.1438
+    }
+  },
+  "holdout": {
+    "table": [
+      {
+        "arm": "ml_only",
+        "trades": 199,
+        "win_rate": 0.45226130653266333,
+        "profit_factor": 1.1455015303765053,
+        "expectancy_r": 0.0783170677811841,
+        "total_r": 15.585096488455635,
+        "max_dd_pct": 13.152374809021438,
+        "long_share": 0.8844221105527639,
+        "longs": 176,
+        "shorts": 23
+      },
+      {
+        "arm": "trend_rule",
+        "trades": 140,
+        "win_rate": 0.4642857142857143,
+        "profit_factor": 1.1225714012500663,
+        "expectancy_r": 0.06485350244382973,
+        "total_r": 9.079490342136163,
+        "max_dd_pct": 10.46311921331956,
+        "long_share": 0.7857142857142857,
+        "longs": 110,
+        "shorts": 30
+      },
+      {
+        "arm": "llm_binary",
+        "trades": 194,
+        "win_rate": 0.4587628865979381,
+        "profit_factor": 1.2016238478274093,
+        "expectancy_r": 0.10601377999397076,
+        "total_r": 20.566673318830325,
+        "max_dd_pct": 11.580874550565657,
+        "long_share": 0.8865979381443299,
+        "longs": 172,
+        "shorts": 22
+      },
+      {
+        "arm": "trend+llm_binary",
+        "trades": 138,
+        "win_rate": 0.47101449275362317,
+        "profit_factor": 1.1544721486464735,
+        "expectancy_r": 0.08062418114967664,
+        "total_r": 11.126136998655376,
+        "max_dd_pct": 10.463119213319516,
+        "long_share": 0.7898550724637681,
+        "longs": 109,
+        "shorts": 29
+      },
+      {
+        "arm": "trend+llm_half",
+        "trades": 138,
+        "win_rate": 0.47101449275362317,
+        "profit_factor": 1.2565482846634624,
+        "expectancy_r": 0.08664294043853461,
+        "total_r": 11.956725780517777,
+        "max_dd_pct": 4.678585826636694,
+        "long_share": 0.7898550724637681,
+        "longs": 109,
+        "shorts": 29
+      }
+    ],
+    "counter_n": 66,
+    "aligned_n": 133,
+    "llm_on_top": {
+      "take_n": 43,
+      "rest_n": 88,
+      "dwin": 0.10306553911205069,
+      "p_win": 0.3554,
+      "dmeanr": 0.29153486455532446,
+      "p_meanr": 0.1834
+    }
+  }
+}

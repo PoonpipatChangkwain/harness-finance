@@ -1,0 +1,180 @@
+{
+  "version": "xau-bullbear-0.4.0",
+  "symbol": "XAUUSD",
+  "created_utc": "2026-10-05T01:23:46+00:00",
+  "horizon": "intraday",
+  "timeframe": "15m",
+  "context_timeframes": [
+    "1h",
+    "1d"
+  ],
+  "extras": true,
+  "v3_features": true,
+  "v4_features": true,
+  "experiment": {
+    "winner": "A(2024-26)",
+    "base_exp": "F3",
+    "balanced": true,
+    "regime_cols": [
+      "regime",
+      "regime_trend_str",
+      "regime_sma50_slope"
+    ]
+  },
+  "label": {
+    "type": "triple_barrier",
+    "entry": "open of the next bar",
+    "stop_r": 1.0,
+    "risk": "1.5 x ATR14 (Wilder)",
+    "tp_r": 1.5,
+    "counter_trend_tp_r": 2.5,
+    "time_stop_bars": 16,
+    "intrabar_rule": "stop_first"
+  },
+  "features": [
+    "atr_pct",
+    "atr_regime",
+    "rv_32",
+    "bb_width",
+    "adx14",
+    "hour",
+    "dow",
+    "d1_rsi14",
+    "d1_adx14",
+    "d1_di_diff",
+    "d1_dist_sma50_atr",
+    "d1_dist_sma200_atr",
+    "d1_macd_hist_atr",
+    "d1_ret_atr_5",
+    "d1_range_pos_20",
+    "d1_atr_pct",
+    "d1_above_sma50",
+    "d1_above_sma200",
+    "d1_trend",
+    "d1_prev_range_pos",
+    "vix",
+    "vix_ret_5",
+    "vix_dist_sma20",
+    "vix_level",
+    "dxy",
+    "dxy_ret_5",
+    "dxy_dist_sma20",
+    "us10y",
+    "us10y_ret_5",
+    "us10y_dist_sma20",
+    "us10y_chg_5",
+    "regime",
+    "regime_trend_str",
+    "regime_sma50_slope"
+  ],
+  "feature_groups": {
+    "base": [
+      "atr_pct",
+      "atr_regime",
+      "rv_32",
+      "bb_width",
+      "adx14",
+      "hour",
+      "dow",
+      "d1_rsi14",
+      "d1_adx14",
+      "d1_di_diff",
+      "d1_dist_sma50_atr",
+      "d1_dist_sma200_atr",
+      "d1_macd_hist_atr",
+      "d1_ret_atr_5",
+      "d1_range_pos_20",
+      "d1_atr_pct",
+      "d1_above_sma50",
+      "d1_above_sma200",
+      "d1_trend",
+      "d1_prev_range_pos"
+    ],
+    "calendar": [],
+    "market": [
+      "vix",
+      "vix_ret_5",
+      "vix_dist_sma20",
+      "vix_level",
+      "dxy",
+      "dxy_ret_5",
+      "dxy_dist_sma20",
+      "us10y",
+      "us10y_ret_5",
+      "us10y_dist_sma20",
+      "us10y_chg_5"
+    ],
+    "session": [],
+    "regime": [
+      "regime",
+      "regime_trend_str",
+      "regime_sma50_slope"
+    ]
+  },
+  "feature_code_sha256_16": "d6a8d4820538ae8d",
+  "training": {
+    "rows_from": "2024-01-01",
+    "balanced": true,
+    "scale_pos_weight": "auto (1-rate)/rate per side",
+    "weights": "label uniqueness"
+  },
+  "model": {
+    "params": {
+      "objective": "binary",
+      "learning_rate": 0.03,
+      "num_leaves": 15,
+      "max_depth": 5,
+      "min_child_samples": 150,
+      "feature_fraction": 0.7,
+      "bagging_fraction": 0.8,
+      "bagging_freq": 1,
+      "lambda_l2": 5.0,
+      "verbose": -1,
+      "seed": 42,
+      "deterministic": true,
+      "num_threads": 4
+    },
+    "kind": "lgbm_pair"
+  },
+  "signal_rule": {
+    "tau": 0.3,
+    "m": 0.05,
+    "no_trade": false,
+    "rule": "long if p_bull>=tau and p_bull-p_bear>=m; short mirrored; else flat"
+  },
+  "holdout_metrics": {
+    "tau": 0.3,
+    "m": 0.05,
+    "trades": 300.0,
+    "win_rate": 0.46,
+    "profit_factor": 1.1685429941176382,
+    "expectancy_r": 0.08935595827797768,
+    "total_r": 26.806787483393304,
+    "max_dd_pct": 20.70712267224506,
+    "long_share": 0.8566666666666667,
+    "longs": 257.0,
+    "shorts": 43.0
+  },
+  "files": {
+    "bull": {
+      "file": "xau_intraday_ct25.bull.txt",
+      "sha256_16": "a6fa199db51c4d42"
+    },
+    "bear": {
+      "file": "xau_intraday_ct25.bear.txt",
+      "sha256_16": "640de47120f10ea0"
+    }
+  },
+  "calibrators": {
+    "bull": {
+      "kind": "platt",
+      "a": 4.651808237491336,
+      "b": 0.8633525865851372
+    },
+    "bear": {
+      "kind": "platt",
+      "a": 3.4996653907256245,
+      "b": 0.9680677395762255
+    }
+  }
+}

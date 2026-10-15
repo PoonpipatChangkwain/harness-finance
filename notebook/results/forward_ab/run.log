@@ -1,0 +1,1457 @@
+===== Mon 10/05/2026 11:07:56.48 ===== 
+[1/5] bars (server now 2026-10-05 07:08, start 2026-10-05 00:00) ...
+      15m 2026-07-27 01:00:00 .. 2026-10-05 06:45:00 (4510 bars)
+[2/5] frame + v5 signals ...
+      decision rows since start 23, signal rows 17
+[3/5] candidates (gpt-oss:120b via ollama_cloud, anon) ...
+      new 0 (LLM calls 0, parse failures 0); total 17
+[4/5] replay
+               resolved  pending  skipped  win_rate  profit_factor  expectancy_r  total_r  max_dd_pct  r_per_unit_risk
+ml_only             1.0      1.0      0.0       1.0            NaN         1.363    1.363         0.0            1.363
+calendar_rule       1.0      1.0      0.0       1.0            NaN         1.363    1.363         0.0            1.363
+llm_veto            1.0      1.0      0.0       1.0            NaN         0.682    0.682         0.0            1.363
+llm_binary          1.0      1.0      0.0       1.0            NaN         1.363    1.363         0.0            1.363
+[5/5] report
+      C:\Users\acer\OneDrive\Desktop\Project\HarnessFinance\Product\notebook\results\forward_ab\report.md  (5s)
+===== Mon 10/05/2026 11:18:12.70 ===== 
+[1/5] bars (server now 2026-10-05 07:18, start 2026-10-05 00:00) ...
+      15m 2026-07-27 01:00:00 .. 2026-10-05 07:00:00 (4511 bars)
+[2/5] frame + v5 signals ...
+      decision rows since start 24, signal rows 18
+[3/5] candidates (gpt-oss:120b via ollama_cloud, anon) ...
+      new 1 (LLM calls 1, parse failures 0); total 18; decided 3..3 min after bar close
+[4/5] replay
+               resolved  pending  skipped  win_rate  profit_factor  expectancy_r  total_r  max_dd_pct  r_per_unit_risk
+ml_only             1.0      1.0      0.0       1.0            NaN         1.363    1.363         0.0            1.363
+calendar_rule       1.0      1.0      0.0       1.0            NaN         1.363    1.363         0.0            1.363
+llm_veto            1.0      1.0      0.0       1.0            NaN         0.682    0.682         0.0            1.363
+llm_binary          1.0      1.0      0.0       1.0            NaN         1.363    1.363         0.0            1.363
+[5/5] report
+      C:\Users\acer\OneDrive\Desktop\Project\HarnessFinance\Product\notebook\results\forward_ab\report.md  (8s)
+===== Mon 10/05/2026 11:19:10.38 ===== 
+[1/5] bars (server now 2026-10-05 07:19, start 2026-10-05 00:00) ...
+      15m 2026-07-27 01:00:00 .. 2026-10-05 07:00:00 (4511 bars)
+[2/5] frame + v5 signals ...
+      decision rows since start 24, signal rows 18
+[3/5] candidates (gpt-oss:120b via ollama_cloud, anon) ...
+      new 0 (LLM calls 0, parse failures 0); total 18
+[4/5] replay
+               resolved  pending  skipped  win_rate  profit_factor  expectancy_r  total_r  max_dd_pct  r_per_unit_risk
+ml_only             1.0      1.0      0.0       1.0            NaN         1.363    1.363         0.0            1.363
+calendar_rule       1.0      1.0      0.0       1.0            NaN         1.363    1.363         0.0            1.363
+llm_veto            1.0      1.0      0.0       1.0            NaN         0.682    0.682         0.0            1.363
+llm_binary          1.0      1.0      0.0       1.0            NaN         1.363    1.363         0.0            1.363
+[5/5] report
+      C:\Users\acer\OneDrive\Desktop\Project\HarnessFinance\Product\notebook\results\forward_ab\report.md  (6s)
+===== Mon 10/05/2026 12:19:11.90 ===== 
+[1/5] bars (server now 2026-10-05 08:19, start 2026-10-05 00:00) ...
+      15m 2026-07-27 01:00:00 .. 2026-10-05 08:00:00 (4515 bars)
+[2/5] frame + v5 signals ...
+      decision rows since start 28, signal rows 22
+[3/5] candidates (gpt-oss:120b via ollama_cloud, anon) ...
+      new 1 (LLM calls 1, parse failures 0); total 22; decided 4..4 min after bar close
+[4/5] replay
+               resolved  pending  skipped  win_rate  profit_factor  expectancy_r  total_r  max_dd_pct  r_per_unit_risk
+ml_only             1.0      1.0      0.0       1.0            NaN         1.363    1.363         0.0            1.363
+calendar_rule       1.0      1.0      0.0       1.0            NaN         1.363    1.363         0.0            1.363
+trend_rule          0.0      0.0     22.0       NaN            NaN           NaN      NaN         NaN              NaN
+llm_veto            1.0      1.0      0.0       1.0            NaN         0.682    0.682         0.0            1.363
+llm_binary          1.0      1.0      0.0       1.0            NaN         1.363    1.363         0.0            1.363
+[5/5] report
+      C:\Users\acer\OneDrive\Desktop\Project\HarnessFinance\Product\notebook\results\forward_ab\report.md  (10s)
+===== Mon 10/05/2026 13:19:11.77 ===== 
+[1/5] bars (server now 2026-10-05 09:19, start 2026-10-05 00:00) ...
+      15m 2026-07-27 01:00:00 .. 2026-10-05 09:00:00 (4520 bars)
+[2/5] frame + v5 signals ...
+      decision rows since start 33, signal rows 27
+[3/5] candidates (gpt-oss:120b via ollama_cloud, anon) ...
+      new 5 (LLM calls 5, parse failures 0); total 27; decided 4..154 min after bar close
+[4/5] replay
+               resolved  pending  skipped  win_rate  profit_factor  expectancy_r  total_r  max_dd_pct  r_per_unit_risk
+ml_only             1.0      1.0      0.0       1.0            NaN         1.363    1.363         0.0            1.363
+calendar_rule       1.0      1.0      0.0       1.0            NaN         1.363    1.363         0.0            1.363
+trend_rule          0.0      1.0     26.0       NaN            NaN           NaN      NaN         NaN              NaN
+llm_veto            1.0      1.0      0.0       1.0            NaN         0.682    0.682         0.0            1.363
+llm_binary          1.0      1.0      0.0       1.0            NaN         1.363    1.363         0.0            1.363
+[5/5] report
+      C:\Users\acer\OneDrive\Desktop\Project\HarnessFinance\Product\notebook\results\forward_ab\report.md  (10s)
+===== Mon 10/05/2026 14:19:11.99 ===== 
+[1/5] bars (server now 2026-10-05 10:19, start 2026-10-05 00:00) ...
+      15m 2026-07-27 01:00:00 .. 2026-10-05 10:00:00 (4524 bars)
+[2/5] frame + v5 signals ...
+      decision rows since start 37, signal rows 29
+[3/5] candidates (gpt-oss:120b via ollama_cloud, anon) ...
+      new 2 (LLM calls 2, parse failures 0); total 29; decided 34..49 min after bar close
+[4/5] replay
+               resolved  pending  skipped  win_rate  profit_factor  expectancy_r  total_r  max_dd_pct  r_per_unit_risk
+ml_only             3.0      1.0      0.0     0.333          0.663        -0.231   -0.693       2.046           -0.231
+calendar_rule       3.0      1.0      0.0     0.333          0.663        -0.231   -0.693       2.046           -0.231
+trend_rule          0.0      1.0     26.0       NaN            NaN           NaN      NaN         NaN              NaN
+llm_veto            3.0      1.0      0.0     0.333          0.663        -0.115   -0.346       1.025           -0.231
+llm_binary          3.0      1.0      0.0     0.333          0.663        -0.231   -0.693       2.046           -0.231
+[5/5] report
+      C:\Users\acer\OneDrive\Desktop\Project\HarnessFinance\Product\notebook\results\forward_ab\report.md  (10s)
+===== Mon 10/05/2026 15:19:12.04 ===== 
+[1/5] bars (server now 2026-10-05 11:19, start 2026-10-05 00:00) ...
+      15m 2026-07-27 01:00:00 .. 2026-10-05 11:00:00 (4528 bars)
+[2/5] frame + v5 signals ...
+      decision rows since start 41, signal rows 32
+[3/5] candidates (gpt-oss:120b via ollama_cloud, anon) ...
+      new 3 (LLM calls 3, parse failures 0); total 32; decided 19..49 min after bar close
+[4/5] replay
+               resolved  pending  skipped  win_rate  profit_factor  expectancy_r  total_r  max_dd_pct  r_per_unit_risk
+ml_only             3.0      1.0      0.0     0.333          0.663        -0.231   -0.693       2.046           -0.231
+calendar_rule       3.0      1.0      0.0     0.333          0.663        -0.231   -0.693       2.046           -0.231
+trend_rule          0.0      1.0     26.0       NaN            NaN           NaN      NaN         NaN              NaN
+llm_veto            3.0      1.0      0.0     0.333          0.663        -0.115   -0.346       1.025           -0.231
+llm_binary          3.0      1.0      0.0     0.333          0.663        -0.231   -0.693       2.046           -0.231
+[5/5] report
+      C:\Users\acer\OneDrive\Desktop\Project\HarnessFinance\Product\notebook\results\forward_ab\report.md  (14s)
+===== Mon 10/05/2026 16:19:11.95 ===== 
+[1/5] bars (server now 2026-10-05 12:19, start 2026-10-05 00:00) ...
+      15m 2026-07-27 01:00:00 .. 2026-10-05 12:00:00 (4532 bars)
+[2/5] frame + v5 signals ...
+      decision rows since start 45, signal rows 34
+[3/5] candidates (gpt-oss:120b via ollama_cloud, anon) ...
+      new 2 (LLM calls 2, parse failures 0); total 34; decided 4..19 min after bar close
+[4/5] replay
+               resolved  pending  skipped  win_rate  profit_factor  expectancy_r  total_r  max_dd_pct  r_per_unit_risk
+ml_only             4.0      1.0      0.0       0.5          1.866         0.445     1.78       2.046            0.445
+calendar_rule       4.0      1.0      0.0       0.5          1.866         0.445     1.78       2.046            0.445
+trend_rule          0.0      1.0     26.0       NaN            NaN           NaN      NaN         NaN              NaN
+llm_veto            4.0      1.0      0.0       0.5          1.866         0.223     0.89       1.025            0.445
+llm_binary          4.0      1.0      0.0       0.5          1.866         0.445     1.78       2.046            0.445
+[5/5] report
+      C:\Users\acer\OneDrive\Desktop\Project\HarnessFinance\Product\notebook\results\forward_ab\report.md  (25s)
+===== Mon 10/05/2026 17:19:11.97 ===== 
+[1/5] bars (server now 2026-10-05 13:19, start 2026-10-05 00:00) ...
+      15m 2026-07-27 01:00:00 .. 2026-10-05 13:00:00 (4536 bars)
+[2/5] frame + v5 signals ...
+      decision rows since start 49, signal rows 36
+[3/5] candidates (gpt-oss:120b via ollama_cloud, anon) ...
+      new 2 (LLM calls 2, parse failures 0); total 36; decided 34..49 min after bar close
+[4/5] replay
+               resolved  pending  skipped  win_rate  profit_factor  expectancy_r  total_r  max_dd_pct  r_per_unit_risk
+ml_only             4.0      1.0      0.0       0.5          1.866         0.445     1.78       2.046            0.445
+calendar_rule       4.0      1.0      0.0       0.5          1.866         0.445     1.78       2.046            0.445
+trend_rule          0.0      1.0     26.0       NaN            NaN           NaN      NaN         NaN              NaN
+llm_veto            4.0      1.0      0.0       0.5          1.866         0.223     0.89       1.025            0.445
+llm_binary          4.0      1.0      0.0       0.5          1.866         0.445     1.78       2.046            0.445
+[5/5] report
+      C:\Users\acer\OneDrive\Desktop\Project\HarnessFinance\Product\notebook\results\forward_ab\report.md  (10s)
+===== Mon 10/05/2026 18:19:11.94 ===== 
+[1/5] bars (server now 2026-10-05 14:19, start 2026-10-05 00:00) ...
+      15m 2026-07-27 01:00:00 .. 2026-10-05 14:00:00 (4540 bars)
+[2/5] frame + v5 signals ...
+      decision rows since start 53, signal rows 39
+[3/5] candidates (gpt-oss:120b via ollama_cloud, anon) ...
+      new 3 (LLM calls 3, parse failures 0); total 39; decided 4..49 min after bar close
+[4/5] replay
+               resolved  pending  skipped  win_rate  profit_factor  expectancy_r  total_r  max_dd_pct  r_per_unit_risk
+ml_only             5.0      1.0      0.0       0.4          1.246         0.151    0.757       2.046            0.151
+calendar_rule       5.0      1.0      0.0       0.4          1.246         0.151    0.757       2.046            0.151
+trend_rule          1.0      1.0     27.0       0.0          0.000        -1.024   -1.024       1.024           -1.024
+llm_veto            5.0      1.0      0.0       0.4          1.246         0.076    0.378       1.025            0.151
+llm_binary          5.0      1.0      0.0       0.4          1.246         0.151    0.757       2.046            0.151
+[5/5] report
+      C:\Users\acer\OneDrive\Desktop\Project\HarnessFinance\Product\notebook\results\forward_ab\report.md  (7s)
+===== Mon 10/05/2026 19:19:12.43 ===== 
+[1/5] bars (server now 2026-10-05 15:19, start 2026-10-05 00:00) ...
+      15m 2026-07-27 01:00:00 .. 2026-10-05 15:00:00 (4544 bars)
+[2/5] frame + v5 signals ...
+      decision rows since start 57, signal rows 43
+[3/5] candidates (gpt-oss:120b via ollama_cloud, anon) ...
+      new 4 (LLM calls 4, parse failures 0); total 43; decided 4..49 min after bar close
+[4/5] replay
+               resolved  pending  skipped  win_rate  profit_factor  expectancy_r  total_r  max_dd_pct  r_per_unit_risk
+ml_only             5.0      1.0      0.0       0.4          1.246         0.151    0.757       2.046            0.151
+calendar_rule       5.0      1.0      0.0       0.4          1.246         0.151    0.757       2.046            0.151
+trend_rule          1.0      1.0     27.0       0.0          0.000        -1.024   -1.024       1.024           -1.024
+llm_veto            5.0      1.0      0.0       0.4          1.246         0.076    0.378       1.025            0.151
+llm_binary          5.0      1.0      0.0       0.4          1.246         0.151    0.757       2.046            0.151
+[5/5] report
+      C:\Users\acer\OneDrive\Desktop\Project\HarnessFinance\Product\notebook\results\forward_ab\report.md  (22s)
+===== Mon 10/05/2026 21:41:53.05 ===== 
+[1/5] bars (server now 2026-10-05 17:42, start 2026-10-05 00:00) ...
+      15m 2026-07-27 01:00:00 .. 2026-10-05 17:15:00 (4553 bars)
+[2/5] frame + v5 signals ...
+      decision rows since start 66, signal rows 52
+[3/5] candidates (gpt-oss:120b via ollama_cloud, anon) ...
+      new 9 (LLM calls 9, parse failures 0); total 52; decided 12..132 min after bar close
+[4/5] replay
+               resolved  pending  skipped  win_rate  profit_factor  expectancy_r  total_r  max_dd_pct  r_per_unit_risk
+ml_only             6.0      1.0      0.0       0.5          1.725         0.372    2.233       2.046            0.372
+calendar_rule       6.0      1.0      0.0       0.5          1.725         0.372    2.233       2.046            0.372
+trend_rule          2.0      0.0     33.0       0.5          1.442         0.226    0.452       1.024            0.226
+llm_veto            6.0      1.0      0.0       0.5          2.204         0.309    1.854       1.025            0.530
+llm_binary          6.0      1.0      0.0       0.5          1.725         0.372    2.233       2.046            0.372
+[5/5] report
+      C:\Users\acer\OneDrive\Desktop\Project\HarnessFinance\Product\notebook\results\forward_ab\report.md  (25s)
+===== Mon 10/05/2026 22:19:12.82 ===== 
+[1/5] bars (server now 2026-10-05 18:19, start 2026-10-05 00:00) ...
+      15m 2026-07-27 01:00:00 .. 2026-10-05 18:00:00 (4556 bars)
+[2/5] frame + v5 signals ...
+      decision rows since start 69, signal rows 53
+[3/5] candidates (gpt-oss:120b via ollama_cloud, anon) ...
+      new 1 (LLM calls 1, parse failures 0); total 53; decided 34..34 min after bar close
+[4/5] replay
+               resolved  pending  skipped  win_rate  profit_factor  expectancy_r  total_r  max_dd_pct  r_per_unit_risk
+ml_only             6.0      1.0      0.0       0.5          1.725         0.372    2.233       2.046            0.372
+calendar_rule       6.0      1.0      0.0       0.5          1.725         0.372    2.233       2.046            0.372
+trend_rule          2.0      0.0     34.0       0.5          1.442         0.226    0.452       1.024            0.226
+llm_veto            6.0      1.0      0.0       0.5          2.204         0.309    1.854       1.025            0.530
+llm_binary          6.0      1.0      0.0       0.5          1.725         0.372    2.233       2.046            0.372
+[5/5] report
+      C:\Users\acer\OneDrive\Desktop\Project\HarnessFinance\Product\notebook\results\forward_ab\report.md  (9s)
+===== Tue 10/06/2026  1:32:20.44 ===== 
+[1/5] bars (server now 2026-10-06 07:25, start 2026-10-05 00:00) ...
+      15m 2026-07-27 01:00:00 .. 2026-10-06 07:00:00 (4598 bars)
+[2/5] frame + v5 signals ...
+      decision rows since start 111, signal rows 73
+[3/5] candidates (gpt-oss:120b via ollama_cloud, anon) ...
+      new 20 (LLM calls 20, parse failures 0); total 73; decided 10..760 min after bar close
+[4/5] replay
+               resolved  pending  skipped  win_rate  profit_factor  expectancy_r  total_r  max_dd_pct  r_per_unit_risk
+ml_only            10.0      1.0      0.0       0.4          0.904        -0.059   -0.591       2.800           -0.059
+calendar_rule      10.0      1.0      0.0       0.4          0.904        -0.059   -0.591       2.800           -0.059
+trend_rule          2.0      0.0     54.0       0.5          1.442         0.226    0.452       1.024            0.226
+llm_veto           10.0      1.0      1.0       0.4          1.144         0.044    0.443       1.405            0.081
+llm_binary         10.0      1.0      1.0       0.4          0.904        -0.059   -0.589       2.798           -0.059
+[5/5] report
+      C:\Users\acer\OneDrive\Desktop\Project\HarnessFinance\Product\notebook\results\forward_ab\report.md  (48s)
+===== Tue 10/06/2026 11:29:37.55 ===== 
+[1/5] bars (server now 2026-10-06 07:29, start 2026-10-05 00:00) ...
+      15m 2026-07-27 01:00:00 .. 2026-10-06 07:00:00 (4598 bars)
+[2/5] frame + v5 signals ...
+      decision rows since start 111, signal rows 73
+[3/5] candidates (gpt-oss:120b via ollama_cloud, anon) ...
+      new 0 (LLM calls 0, parse failures 0); total 73
+[4/5] replay
+               resolved  pending  skipped  win_rate  profit_factor  expectancy_r  total_r  max_dd_pct  r_per_unit_risk
+ml_only            10.0      1.0      0.0       0.4          0.904        -0.059   -0.591       2.800           -0.059
+calendar_rule      10.0      1.0      0.0       0.4          0.904        -0.059   -0.591       2.800           -0.059
+trend_rule          2.0      0.0     54.0       0.5          1.442         0.226    0.452       1.024            0.226
+llm_veto           10.0      1.0      1.0       0.4          1.144         0.044    0.443       1.405            0.081
+llm_binary         10.0      1.0      1.0       0.4          0.904        -0.059   -0.589       2.798           -0.059
+[5/5] report
+      C:\Users\acer\OneDrive\Desktop\Project\HarnessFinance\Product\notebook\results\forward_ab\report.md  (8s)
+===== Tue 10/06/2026 12:19:11.87 ===== 
+[1/5] bars (server now 2026-10-06 08:19, start 2026-10-05 00:00) ...
+      15m 2026-07-27 01:00:00 .. 2026-10-06 08:00:00 (4602 bars)
+[2/5] frame + v5 signals ...
+      decision rows since start 115, signal rows 77
+[3/5] candidates (gpt-oss:120b via ollama_cloud, anon) ...
+      new 4 (LLM calls 4, parse failures 0); total 77; decided 4..49 min after bar close
+[4/5] replay
+               resolved  pending  skipped  win_rate  profit_factor  expectancy_r  total_r  max_dd_pct  r_per_unit_risk
+ml_only            10.0      1.0      0.0       0.4          0.904        -0.059   -0.591       2.800           -0.059
+calendar_rule      10.0      1.0      0.0       0.4          0.904        -0.059   -0.591       2.800           -0.059
+trend_rule          2.0      0.0     58.0       0.5          1.442         0.226    0.452       1.024            0.226
+llm_veto           10.0      1.0      1.0       0.4          1.144         0.044    0.443       1.405            0.081
+llm_binary         10.0      1.0      1.0       0.4          0.904        -0.059   -0.589       2.798           -0.059
+[5/5] report
+      C:\Users\acer\OneDrive\Desktop\Project\HarnessFinance\Product\notebook\results\forward_ab\report.md  (13s)
+===== Tue 10/06/2026 13:19:11.83 ===== 
+[1/5] bars (server now 2026-10-06 09:19, start 2026-10-05 00:00) ...
+      15m 2026-07-27 01:00:00 .. 2026-10-06 09:00:00 (4606 bars)
+[2/5] frame + v5 signals ...
+      decision rows since start 119, signal rows 81
+[3/5] candidates (gpt-oss:120b via ollama_cloud, anon) ...
+      new 4 (LLM calls 4, parse failures 0); total 81; decided 4..49 min after bar close
+[4/5] replay
+               resolved  pending  skipped  win_rate  profit_factor  expectancy_r  total_r  max_dd_pct  r_per_unit_risk
+ml_only            11.0      1.0      0.0     0.455          1.302         0.169    1.863       2.800            0.169
+calendar_rule      11.0      1.0      0.0     0.455          1.302         0.169    1.863       2.800            0.169
+trend_rule          2.0      0.0     62.0     0.500          1.442         0.226    0.452       1.024            0.226
+llm_veto           11.0      1.0      1.0     0.455          1.541         0.152    1.670       1.405            0.278
+llm_binary         11.0      1.0      1.0     0.455          1.302         0.169    1.864       2.798            0.169
+[5/5] report
+      C:\Users\acer\OneDrive\Desktop\Project\HarnessFinance\Product\notebook\results\forward_ab\report.md  (11s)
+===== Tue 10/06/2026 15:00:05.12 ===== 
+[1/5] bars (server now 2026-10-06 11:00, start 2026-10-05 00:00) ...
+      15m 2026-07-27 01:00:00 .. 2026-10-06 10:45:00 (4620 bars)
+[2/5] frame + v5 signals ...
+      decision rows since start 133, signal rows 95
+[3/5] candidates (gpt-oss:120b via ollama_cloud, anon) ...
+      new 14 (LLM calls 14, parse failures 0); total 95; decided 0..330 min after bar close
+[4/5] replay
+               resolved  pending  skipped  win_rate  profit_factor  expectancy_r  total_r  max_dd_pct  r_per_unit_risk
+ml_only            15.0      1.0      0.0       0.4          0.965        -0.021   -0.322       3.474           -0.021
+calendar_rule      15.0      1.0      0.0       0.4          0.965        -0.021   -0.322       3.474           -0.021
+trend_rule          2.0      0.0     76.0       0.5          1.442         0.226    0.452       1.024            0.226
+llm_veto           15.0      1.0      1.0       0.4          1.124         0.038    0.577       1.736            0.072
+llm_binary         15.0      1.0      1.0       0.4          0.965        -0.021   -0.321       3.472           -0.021
+[5/5] report
+      C:\Users\acer\OneDrive\Desktop\Project\HarnessFinance\Product\notebook\results\forward_ab\report.md  (24s)
+===== Tue 10/06/2026 15:19:12.54 ===== 
+===== Tue 10/06/2026 16:53:13.68 ===== 
+[1/5] bars (server now 2026-10-06 12:53, start 2026-10-05 00:00) ...
+      15m 2026-07-27 01:00:00 .. 2026-10-06 12:30:00 (4627 bars)
+[2/5] frame + v5 signals ...
+      decision rows since start 140, signal rows 102
+[3/5] candidates (gpt-oss:120b via ollama_cloud, anon) ...
+      new 7 (LLM calls 7, parse failures 0); total 102; decided 8..98 min after bar close
+[4/5] replay
+               resolved  pending  skipped  win_rate  profit_factor  expectancy_r  total_r  max_dd_pct  r_per_unit_risk
+ml_only            15.0      1.0      0.0       0.4          0.965        -0.021   -0.322       3.474           -0.021
+calendar_rule      15.0      1.0      0.0       0.4          0.965        -0.021   -0.322       3.474           -0.021
+trend_rule          2.0      1.0     78.0       0.5          1.442         0.226    0.452       1.024            0.226
+llm_veto           15.0      1.0      1.0       0.4          1.124         0.038    0.577       1.736            0.072
+llm_binary         15.0      1.0      1.0       0.4          0.965        -0.021   -0.321       3.472           -0.021
+[5/5] report
+      C:\Users\acer\OneDrive\Desktop\Project\HarnessFinance\Product\notebook\results\forward_ab\report.md  (14s)
+===== Tue 10/06/2026 17:19:12.16 ===== 
+[1/5] bars (server now 2026-10-06 13:19, start 2026-10-05 00:00) ...
+      15m 2026-07-27 01:00:00 .. 2026-10-06 13:00:00 (4629 bars)
+[2/5] frame + v5 signals ...
+      decision rows since start 142, signal rows 104
+[3/5] candidates (gpt-oss:120b via ollama_cloud, anon) ...
+      new 2 (LLM calls 2, parse failures 0); total 104; decided 4..19 min after bar close
+[4/5] replay
+               resolved  pending  skipped  win_rate  profit_factor  expectancy_r  total_r  max_dd_pct  r_per_unit_risk
+ml_only            15.0      1.0      0.0       0.4          0.965        -0.021   -0.322       3.474           -0.021
+calendar_rule      15.0      1.0      0.0       0.4          0.965        -0.021   -0.322       3.474           -0.021
+trend_rule          2.0      1.0     78.0       0.5          1.442         0.226    0.452       1.024            0.226
+llm_veto           15.0      1.0      1.0       0.4          1.124         0.038    0.577       1.736            0.072
+llm_binary         15.0      1.0      1.0       0.4          0.965        -0.021   -0.321       3.472           -0.021
+[5/5] report
+      C:\Users\acer\OneDrive\Desktop\Project\HarnessFinance\Product\notebook\results\forward_ab\report.md  (9s)
+===== Tue 10/06/2026 18:19:12.02 ===== 
+[1/5] bars (server now 2026-10-06 14:19, start 2026-10-05 00:00) ...
+      15m 2026-07-27 01:00:00 .. 2026-10-06 14:00:00 (4633 bars)
+[2/5] frame + v5 signals ...
+      decision rows since start 146, signal rows 108
+[3/5] candidates (gpt-oss:120b via ollama_cloud, anon) ...
+      new 4 (LLM calls 4, parse failures 0); total 108; decided 4..49 min after bar close
+[4/5] replay
+               resolved  pending  skipped  win_rate  profit_factor  expectancy_r  total_r  max_dd_pct  r_per_unit_risk
+ml_only            16.0      1.0      0.0     0.438          1.232         0.134    2.149       3.474            0.134
+calendar_rule      16.0      1.0      0.0     0.438          1.232         0.134    2.149       3.474            0.134
+trend_rule          2.0      1.0     78.0     0.500          1.442         0.226    0.452       1.024            0.226
+llm_veto           16.0      1.0      1.0     0.438          1.391         0.113    1.813       1.736            0.213
+llm_binary         16.0      1.0      1.0     0.438          1.232         0.134    2.151       3.472            0.134
+[5/5] report
+      C:\Users\acer\OneDrive\Desktop\Project\HarnessFinance\Product\notebook\results\forward_ab\report.md  (12s)
+===== Tue 10/06/2026 19:19:12.17 ===== 
+[1/5] bars (server now 2026-10-06 15:19, start 2026-10-05 00:00) ...
+      15m 2026-07-27 01:00:00 .. 2026-10-06 15:00:00 (4637 bars)
+[2/5] frame + v5 signals ...
+      decision rows since start 150, signal rows 112
+[3/5] candidates (gpt-oss:120b via ollama_cloud, anon) ...
+      new 4 (LLM calls 4, parse failures 0); total 112; decided 4..49 min after bar close
+[4/5] replay
+               resolved  pending  skipped  win_rate  profit_factor  expectancy_r  total_r  max_dd_pct  r_per_unit_risk
+ml_only            16.0      1.0      0.0     0.438          1.232         0.134    2.149       3.474            0.134
+calendar_rule      16.0      1.0      0.0     0.438          1.232         0.134    2.149       3.474            0.134
+trend_rule          2.0      1.0     78.0     0.500          1.442         0.226    0.452       1.024            0.226
+llm_veto           16.0      1.0      1.0     0.438          1.391         0.113    1.813       1.736            0.213
+llm_binary         16.0      1.0      1.0     0.438          1.232         0.134    2.151       3.472            0.134
+[5/5] report
+      C:\Users\acer\OneDrive\Desktop\Project\HarnessFinance\Product\notebook\results\forward_ab\report.md  (15s)
+===== Tue 10/06/2026 20:19:12.18 ===== 
+[1/5] bars (server now 2026-10-06 16:19, start 2026-10-05 00:00) ...
+      15m 2026-07-27 01:00:00 .. 2026-10-06 16:00:00 (4641 bars)
+[2/5] frame + v5 signals ...
+      decision rows since start 154, signal rows 116
+[3/5] candidates (gpt-oss:120b via ollama_cloud, anon) ...
+      new 4 (LLM calls 4, parse failures 0); total 116; decided 4..49 min after bar close
+[4/5] replay
+               resolved  pending  skipped  win_rate  profit_factor  expectancy_r  total_r  max_dd_pct  r_per_unit_risk
+ml_only            16.0      1.0      0.0     0.438          1.232         0.134    2.149       3.474            0.134
+calendar_rule      16.0      1.0      0.0     0.438          1.232         0.134    2.149       3.474            0.134
+trend_rule          3.0      0.0     86.0     0.333          0.719        -0.192   -0.575       1.027           -0.192
+llm_veto           16.0      1.0      1.0     0.438          1.391         0.113    1.813       1.736            0.213
+llm_binary         16.0      1.0      1.0     0.438          1.232         0.134    2.151       3.472            0.134
+[5/5] report
+      C:\Users\acer\OneDrive\Desktop\Project\HarnessFinance\Product\notebook\results\forward_ab\report.md  (11s)
+===== Wed 10/07/2026  0:02:31.10 ===== 
+^C===== Wed 10/07/2026 10:35:26.23 ===== 
+^C===== Wed 10/07/2026 11:19:12.80 ===== 
+[1/5] bars (server now 2026-10-07 07:19, start 2026-10-05 00:00) ...
+      15m 2026-07-27 01:00:00 .. 2026-10-07 07:00:00 (4695 bars)
+[2/5] frame + v5 signals ...
+      decision rows since start 208, signal rows 164
+[3/5] candidates (gpt-oss:120b via ollama_cloud, anon) ...
+      new 48 (LLM calls 48, parse failures 0); total 164; decided 5..889 min after bar close
+[4/5] replay
+               resolved  pending  skipped  win_rate  profit_factor  expectancy_r  total_r  max_dd_pct  r_per_unit_risk
+ml_only            22.0      1.0      0.0     0.409          1.250         0.146    3.219       3.474            0.146
+calendar_rule      22.0      1.0      0.0     0.409          1.250         0.146    3.219       3.474            0.146
+trend_rule          3.0      0.0    134.0     0.333          0.719        -0.192   -0.575       1.027           -0.192
+llm_veto           22.0      1.0      1.0     0.409          1.365         0.107    2.348       1.736            0.204
+llm_binary         22.0      1.0      1.0     0.409          1.250         0.146    3.220       3.472            0.146
+[5/5] report
+      C:\Users\acer\OneDrive\Desktop\Project\HarnessFinance\Product\notebook\results\forward_ab\report.md  (54s)
+===== Wed 10/07/2026 12:19:12.54 ===== 
+[1/5] bars (server now 2026-10-07 08:19, start 2026-10-05 00:00) ...
+      15m 2026-07-27 01:00:00 .. 2026-10-07 08:00:00 (4699 bars)
+[2/5] frame + v5 signals ...
+      decision rows since start 212, signal rows 168
+[3/5] candidates (gpt-oss:120b via ollama_cloud, anon) ...
+      new 4 (LLM calls 4, parse failures 0); total 168; decided 4..49 min after bar close
+[4/5] replay
+               resolved  pending  skipped  win_rate  profit_factor  expectancy_r  total_r  max_dd_pct  r_per_unit_risk
+ml_only            23.0      1.0      0.0     0.391          1.156         0.095    2.175       3.474            0.095
+calendar_rule      23.0      1.0      0.0     0.391          1.156         0.095    2.175       3.474            0.095
+trend_rule          3.0      0.0    138.0     0.333          0.719        -0.192   -0.575       1.027           -0.192
+llm_veto           23.0      1.0      1.0     0.391          1.263         0.079    1.826       1.736            0.152
+llm_binary         23.0      1.0      1.0     0.391          1.156         0.095    2.176       3.472            0.095
+[5/5] report
+      C:\Users\acer\OneDrive\Desktop\Project\HarnessFinance\Product\notebook\results\forward_ab\report.md  (8s)
+===== Wed 10/07/2026 13:19:12.49 ===== 
+[1/5] bars (server now 2026-10-07 09:19, start 2026-10-05 00:00) ...
+      15m 2026-07-27 01:00:00 .. 2026-10-07 09:00:00 (4703 bars)
+[2/5] frame + v5 signals ...
+      decision rows since start 216, signal rows 172
+[3/5] candidates (gpt-oss:120b via ollama_cloud, anon) ...
+      new 4 (LLM calls 4, parse failures 0); total 172; decided 4..49 min after bar close
+[4/5] replay
+               resolved  pending  skipped  win_rate  profit_factor  expectancy_r  total_r  max_dd_pct  r_per_unit_risk
+ml_only            25.0      1.0      0.0     0.360          1.006         0.004    0.099       4.475            0.004
+calendar_rule      25.0      1.0      0.0     0.360          1.006         0.004    0.099       4.475            0.004
+trend_rule          3.0      0.0    142.0     0.333          0.719        -0.192   -0.575       1.027           -0.192
+llm_veto           25.0      1.0      2.0     0.360          1.099         0.032    0.788       2.250            0.061
+llm_binary         25.0      1.0      2.0     0.360          1.006         0.004    0.100       4.476            0.004
+[5/5] report
+      C:\Users\acer\OneDrive\Desktop\Project\HarnessFinance\Product\notebook\results\forward_ab\report.md  (9s)
+===== Wed 10/07/2026 15:53:34.61 ===== 
+===== Wed 10/07/2026 17:50:32.82 ===== 
+[1/5] bars (server now 2026-10-07 13:51, start 2026-10-05 00:00) ...
+      15m 2026-07-27 01:00:00 .. 2026-10-07 13:30:00 (4723 bars)
+[2/5] frame + v5 signals ...
+      decision rows since start 236, signal rows 192
+[3/5] candidates (gpt-oss:120b via ollama_cloud, anon) ...
+      new 20 (LLM calls 20, parse failures 0); total 192; decided 6..426 min after bar close
+[4/5] replay
+               resolved  pending  skipped  win_rate  profit_factor  expectancy_r  total_r  max_dd_pct  r_per_unit_risk
+ml_only            27.0      1.0      0.0     0.333          0.891        -0.073   -1.977       6.449           -0.073
+calendar_rule      27.0      1.0      0.0     0.333          0.891        -0.073   -1.977       6.449           -0.073
+trend_rule          3.0      0.0    162.0     0.333          0.719        -0.192   -0.575       1.027           -0.192
+llm_veto           27.0      1.0      3.0     0.333          0.972        -0.009   -0.251       3.263           -0.018
+llm_binary         27.0      1.0      3.0     0.333          0.890        -0.073   -1.978       6.451           -0.073
+[5/5] report
+      C:\Users\acer\OneDrive\Desktop\Project\HarnessFinance\Product\notebook\results\forward_ab\report.md  (32s)
+===== Wed 10/07/2026 18:19:11.71 ===== 
+[1/5] bars (server now 2026-10-07 14:19, start 2026-10-05 00:00) ...
+      15m 2026-07-27 01:00:00 .. 2026-10-07 14:00:00 (4725 bars)
+[2/5] frame + v5 signals ...
+      decision rows since start 238, signal rows 194
+[3/5] candidates (gpt-oss:120b via ollama_cloud, anon) ...
+      new 2 (LLM calls 2, parse failures 0); total 194; decided 4..19 min after bar close
+[4/5] replay
+               resolved  pending  skipped  win_rate  profit_factor  expectancy_r  total_r  max_dd_pct  r_per_unit_risk
+ml_only            27.0      1.0      0.0     0.333          0.891        -0.073   -1.977       6.449           -0.073
+calendar_rule      27.0      1.0      0.0     0.333          0.891        -0.073   -1.977       6.449           -0.073
+trend_rule          3.0      0.0    164.0     0.333          0.719        -0.192   -0.575       1.027           -0.192
+llm_veto           27.0      1.0      3.0     0.333          0.972        -0.009   -0.251       3.263           -0.018
+llm_binary         27.0      1.0      3.0     0.333          0.890        -0.073   -1.978       6.451           -0.073
+[5/5] report
+      C:\Users\acer\OneDrive\Desktop\Project\HarnessFinance\Product\notebook\results\forward_ab\report.md  (8s)
+===== Wed 10/07/2026 19:19:11.83 ===== 
+[1/5] bars (server now 2026-10-07 15:19, start 2026-10-05 00:00) ...
+      15m 2026-07-27 01:00:00 .. 2026-10-07 15:00:00 (4729 bars)
+[2/5] frame + v5 signals ...
+      decision rows since start 242, signal rows 198
+[3/5] candidates (gpt-oss:120b via ollama_cloud, anon) ...
+      new 4 (LLM calls 4, parse failures 0); total 198; decided 4..49 min after bar close
+[4/5] replay
+               resolved  pending  skipped  win_rate  profit_factor  expectancy_r  total_r  max_dd_pct  r_per_unit_risk
+ml_only            27.0      1.0      0.0     0.333          0.891        -0.073   -1.977       6.449           -0.073
+calendar_rule      27.0      1.0      0.0     0.333          0.891        -0.073   -1.977       6.449           -0.073
+trend_rule          3.0      0.0    168.0     0.333          0.719        -0.192   -0.575       1.027           -0.192
+llm_veto           27.0      1.0      3.0     0.333          0.972        -0.009   -0.251       3.263           -0.018
+llm_binary         27.0      1.0      3.0     0.333          0.890        -0.073   -1.978       6.451           -0.073
+[5/5] report
+      C:\Users\acer\OneDrive\Desktop\Project\HarnessFinance\Product\notebook\results\forward_ab\report.md  (8s)
+===== Wed 10/07/2026 21:27:35.89 ===== 
+[1/5] bars (server now 2026-10-07 20:16, start 2026-10-05 00:00) ...
+      15m 2026-07-27 01:00:00 .. 2026-10-07 20:00:00 (4749 bars)
+[2/5] frame + v5 signals ...
+      decision rows since start 262, signal rows 209
+[3/5] candidates (gpt-oss:120b via ollama_cloud, anon) ...
+      new 11 (LLM calls 11, parse failures 0); total 209; decided 17..182 min after bar close
+[4/5] replay
+               resolved  pending  skipped  win_rate  profit_factor  expectancy_r  total_r  max_dd_pct  r_per_unit_risk
+ml_only            30.0      1.0      0.0     0.300          0.760        -0.169   -5.081       9.323           -0.169
+calendar_rule      30.0      1.0      0.0     0.300          0.760        -0.169   -5.081       9.323           -0.169
+trend_rule          3.0      0.0    179.0     0.333          0.719        -0.192   -0.575       1.027           -0.192
+llm_veto           30.0      1.0      3.0     0.300          0.830        -0.060   -1.803       4.756           -0.116
+llm_binary         30.0      1.0      3.0     0.300          0.760        -0.169   -5.082       9.325           -0.169
+[5/5] report
+      C:\Users\acer\OneDrive\Desktop\Project\HarnessFinance\Product\notebook\results\forward_ab\report.md  (24s)
+===== Thu 10/08/2026  0:19:12.15 ===== 
+===== Thu 10/08/2026  3:45:05.49 ===== 
+[1/5] bars (server now 2026-10-08 06:00, start 2026-10-05 00:00) ...
+      15m 2026-07-27 01:00:00 .. 2026-10-08 05:45:00 (4784 bars)
+[2/5] frame + v5 signals ...
+      decision rows since start 297, signal rows 242
+[3/5] candidates (gpt-oss:120b via ollama_cloud, anon) ...
+      new 33 (LLM calls 33, parse failures 0); total 242; decided 0..585 min after bar close
+[4/5] replay
+               resolved  pending  skipped  win_rate  profit_factor  expectancy_r  total_r  max_dd_pct  r_per_unit_risk
+ml_only            32.0      1.0      0.0     0.312          0.799        -0.134   -4.284       9.323           -0.134
+calendar_rule      32.0      1.0      0.0     0.312          0.799        -0.134   -4.284       9.323           -0.134
+trend_rule          3.0      0.0    212.0     0.333          0.719        -0.192   -0.575       1.027           -0.192
+llm_veto           32.0      1.0      3.0     0.312          0.868        -0.044   -1.404       4.756           -0.085
+llm_binary         32.0      1.0      3.0     0.312          0.799        -0.134   -4.284       9.325           -0.134
+[5/5] report
+      C:\Users\acer\OneDrive\Desktop\Project\HarnessFinance\Product\notebook\results\forward_ab\report.md  (40s)
+===== Thu 10/08/2026 10:05:25.18 ===== 
+[1/5] bars (server now 2026-10-08 06:05, start 2026-10-05 00:00) ...
+      15m 2026-07-27 01:00:00 .. 2026-10-08 05:45:00 (4784 bars)
+[2/5] frame + v5 signals ...
+      decision rows since start 297, signal rows 242
+[3/5] candidates (gpt-oss:120b via ollama_cloud, anon) ...
+      new 0 (LLM calls 0, parse failures 0); total 242
+[4/5] replay
+               resolved  pending  skipped  win_rate  profit_factor  expectancy_r  total_r  max_dd_pct  r_per_unit_risk
+ml_only            32.0      1.0      0.0     0.312          0.799        -0.134   -4.284       9.323           -0.134
+calendar_rule      32.0      1.0      0.0     0.312          0.799        -0.134   -4.284       9.323           -0.134
+trend_rule          3.0      0.0    212.0     0.333          0.719        -0.192   -0.575       1.027           -0.192
+llm_veto           32.0      1.0      3.0     0.312          0.868        -0.044   -1.404       4.756           -0.085
+llm_binary         32.0      1.0      3.0     0.312          0.799        -0.134   -4.284       9.325           -0.134
+[5/5] report
+      C:\Users\acer\OneDrive\Desktop\Project\HarnessFinance\Product\notebook\results\forward_ab\report.md  (5s)
+===== Thu 10/08/2026 10:19:11.82 ===== 
+[1/5] bars (server now 2026-10-08 06:19, start 2026-10-05 00:00) ...
+      15m 2026-07-27 01:00:00 .. 2026-10-08 06:00:00 (4785 bars)
+[2/5] frame + v5 signals ...
+      decision rows since start 298, signal rows 243
+[3/5] candidates (gpt-oss:120b via ollama_cloud, anon) ...
+      new 1 (LLM calls 1, parse failures 0); total 243; decided 4..4 min after bar close
+[4/5] replay
+               resolved  pending  skipped  win_rate  profit_factor  expectancy_r  total_r  max_dd_pct  r_per_unit_risk
+ml_only            32.0      1.0      0.0     0.312          0.799        -0.134   -4.284       9.323           -0.134
+calendar_rule      32.0      1.0      0.0     0.312          0.799        -0.134   -4.284       9.323           -0.134
+trend_rule          3.0      0.0    213.0     0.333          0.719        -0.192   -0.575       1.027           -0.192
+llm_veto           32.0      1.0      3.0     0.312          0.868        -0.044   -1.404       4.756           -0.085
+llm_binary         32.0      1.0      3.0     0.312          0.799        -0.134   -4.284       9.325           -0.134
+[5/5] report
+      C:\Users\acer\OneDrive\Desktop\Project\HarnessFinance\Product\notebook\results\forward_ab\report.md  (7s)
+===== Thu 10/08/2026 11:19:12.01 ===== 
+[1/5] bars (server now 2026-10-08 07:19, start 2026-10-05 00:00) ...
+      15m 2026-07-27 01:00:00 .. 2026-10-08 07:00:00 (4786 bars)
+[2/5] frame + v5 signals ...
+      decision rows since start 299, signal rows 244
+[3/5] candidates (gpt-oss:120b via ollama_cloud, anon) ...
+      new 1 (LLM calls 1, parse failures 0); total 244; decided 4..4 min after bar close
+[4/5] replay
+               resolved  pending  skipped  win_rate  profit_factor  expectancy_r  total_r  max_dd_pct  r_per_unit_risk
+ml_only            32.0      1.0      0.0     0.312          0.799        -0.134   -4.284       9.323           -0.134
+calendar_rule      32.0      1.0      0.0     0.312          0.799        -0.134   -4.284       9.323           -0.134
+trend_rule          3.0      0.0    214.0     0.333          0.719        -0.192   -0.575       1.027           -0.192
+llm_veto           32.0      1.0      3.0     0.312          0.868        -0.044   -1.404       4.756           -0.085
+llm_binary         32.0      1.0      3.0     0.312          0.799        -0.134   -4.284       9.325           -0.134
+[5/5] report
+      C:\Users\acer\OneDrive\Desktop\Project\HarnessFinance\Product\notebook\results\forward_ab\report.md  (10s)
+===== Thu 10/08/2026 12:19:11.97 ===== 
+[1/5] bars (server now 2026-10-08 08:19, start 2026-10-05 00:00) ...
+      15m 2026-07-27 01:00:00 .. 2026-10-08 08:00:00 (4793 bars)
+[2/5] frame + v5 signals ...
+      decision rows since start 306, signal rows 251
+[3/5] candidates (gpt-oss:120b via ollama_cloud, anon) ...
+      new 7 (LLM calls 7, parse failures 0); total 251; decided 4..109 min after bar close
+[4/5] replay
+               resolved  pending  skipped  win_rate  profit_factor  expectancy_r  total_r  max_dd_pct  r_per_unit_risk
+ml_only            33.0      1.0      0.0     0.333          0.915        -0.055   -1.816       9.323           -0.055
+calendar_rule      33.0      1.0      0.0     0.333          0.915        -0.055   -1.816       9.323           -0.055
+trend_rule          3.0      0.0    221.0     0.333          0.719        -0.192   -0.575       1.027           -0.192
+llm_veto           33.0      1.0      3.0     0.333          0.984        -0.005   -0.170       4.756           -0.010
+llm_binary         33.0      1.0      3.0     0.333          0.915        -0.055   -1.816       9.325           -0.055
+[5/5] report
+      C:\Users\acer\OneDrive\Desktop\Project\HarnessFinance\Product\notebook\results\forward_ab\report.md  (14s)
+===== Thu 10/08/2026 13:19:12.45 ===== 
+[1/5] bars (server now 2026-10-08 09:19, start 2026-10-05 00:00) ...
+      15m 2026-07-27 01:00:00 .. 2026-10-08 09:00:00 (4797 bars)
+[2/5] frame + v5 signals ...
+      decision rows since start 310, signal rows 255
+[3/5] candidates (gpt-oss:120b via ollama_cloud, anon) ...
+      new 4 (LLM calls 4, parse failures 0); total 255; decided 4..49 min after bar close
+[4/5] replay
+               resolved  pending  skipped  win_rate  profit_factor  expectancy_r  total_r  max_dd_pct  r_per_unit_risk
+ml_only            34.0      1.0      0.0     0.324          0.873        -0.084   -2.841       9.323           -0.084
+calendar_rule      34.0      1.0      0.0     0.324          0.873        -0.084   -2.841       9.323           -0.084
+trend_rule          3.0      0.0    225.0     0.333          0.719        -0.192   -0.575       1.027           -0.192
+llm_veto           34.0      1.0      3.0     0.324          0.939        -0.020   -0.683       4.756           -0.039
+llm_binary         34.0      1.0      3.0     0.324          0.873        -0.084   -2.842       9.325           -0.084
+[5/5] report
+      C:\Users\acer\OneDrive\Desktop\Project\HarnessFinance\Product\notebook\results\forward_ab\report.md  (17s)
+===== Thu 10/08/2026 14:19:11.81 ===== 
+[1/5] bars (server now 2026-10-08 10:19, start 2026-10-05 00:00) ...
+      15m 2026-07-27 01:00:00 .. 2026-10-08 10:00:00 (4801 bars)
+[2/5] frame + v5 signals ...
+      decision rows since start 314, signal rows 259
+[3/5] candidates (gpt-oss:120b via ollama_cloud, anon) ...
+      new 4 (LLM calls 4, parse failures 0); total 259; decided 4..49 min after bar close
+[4/5] replay
+               resolved  pending  skipped  win_rate  profit_factor  expectancy_r  total_r  max_dd_pct  r_per_unit_risk
+ml_only            34.0      1.0      0.0     0.324          0.873        -0.084   -2.841       9.323           -0.084
+calendar_rule      34.0      1.0      0.0     0.324          0.873        -0.084   -2.841       9.323           -0.084
+trend_rule          3.0      0.0    229.0     0.333          0.719        -0.192   -0.575       1.027           -0.192
+llm_veto           34.0      1.0      3.0     0.324          0.939        -0.020   -0.683       4.756           -0.039
+llm_binary         34.0      1.0      3.0     0.324          0.873        -0.084   -2.842       9.325           -0.084
+[5/5] report
+      C:\Users\acer\OneDrive\Desktop\Project\HarnessFinance\Product\notebook\results\forward_ab\report.md  (10s)
+===== Thu 10/08/2026 15:19:11.88 ===== 
+[1/5] bars (server now 2026-10-08 11:19, start 2026-10-05 00:00) ...
+      15m 2026-07-27 01:00:00 .. 2026-10-08 11:00:00 (4805 bars)
+[2/5] frame + v5 signals ...
+      decision rows since start 318, signal rows 263
+[3/5] candidates (gpt-oss:120b via ollama_cloud, anon) ...
+      new 4 (LLM calls 4, parse failures 0); total 263; decided 4..49 min after bar close
+[4/5] replay
+               resolved  pending  skipped  win_rate  profit_factor  expectancy_r  total_r  max_dd_pct  r_per_unit_risk
+ml_only            34.0      1.0      0.0     0.324          0.873        -0.084   -2.841       9.323           -0.084
+calendar_rule      34.0      1.0      0.0     0.324          0.873        -0.084   -2.841       9.323           -0.084
+trend_rule          3.0      0.0    233.0     0.333          0.719        -0.192   -0.575       1.027           -0.192
+llm_veto           34.0      1.0      3.0     0.324          0.939        -0.020   -0.683       4.756           -0.039
+llm_binary         34.0      1.0      3.0     0.324          0.873        -0.084   -2.842       9.325           -0.084
+[5/5] report
+      C:\Users\acer\OneDrive\Desktop\Project\HarnessFinance\Product\notebook\results\forward_ab\report.md  (11s)
+===== Thu 10/08/2026 19:50:55.03 ===== 
+[1/5] bars (server now 2026-10-08 15:51, start 2026-10-05 00:00) ...
+      15m 2026-07-27 01:00:00 .. 2026-10-08 15:30:00 (4823 bars)
+[2/5] frame + v5 signals ...
+      decision rows since start 336, signal rows 281
+[3/5] candidates (gpt-oss:120b via ollama_cloud, anon) ...
+      new 18 (LLM calls 18, parse failures 0); total 281; decided 7..262 min after bar close
+[4/5] replay
+               resolved  pending  skipped  win_rate  profit_factor  expectancy_r  total_r  max_dd_pct  r_per_unit_risk
+ml_only            35.0      1.0      0.0     0.343          0.896        -0.066   -2.325       9.323           -0.066
+calendar_rule      35.0      1.0      0.0     0.343          0.896        -0.066   -2.325       9.323           -0.066
+trend_rule          3.0      0.0    251.0     0.333          0.719        -0.192   -0.575       1.027           -0.192
+llm_veto           35.0      1.0      3.0     0.343          0.962        -0.012   -0.425       4.756           -0.024
+llm_binary         35.0      1.0      3.0     0.343          0.896        -0.066   -2.326       9.325           -0.066
+[5/5] report
+      C:\Users\acer\OneDrive\Desktop\Project\HarnessFinance\Product\notebook\results\forward_ab\report.md  (34s)
+===== Thu 10/08/2026 20:19:11.50 ===== 
+[1/5] bars (server now 2026-10-08 16:19, start 2026-10-05 00:00) ...
+      15m 2026-07-27 01:00:00 .. 2026-10-08 16:00:00 (4825 bars)
+[2/5] frame + v5 signals ...
+      decision rows since start 338, signal rows 283
+[3/5] candidates (gpt-oss:120b via ollama_cloud, anon) ...
+      new 2 (LLM calls 2, parse failures 0); total 283; decided 4..19 min after bar close
+[4/5] replay
+               resolved  pending  skipped  win_rate  profit_factor  expectancy_r  total_r  max_dd_pct  r_per_unit_risk
+ml_only            35.0      1.0      0.0     0.343          0.896        -0.066   -2.325       9.323           -0.066
+calendar_rule      35.0      1.0      0.0     0.343          0.896        -0.066   -2.325       9.323           -0.066
+trend_rule          3.0      0.0    253.0     0.333          0.719        -0.192   -0.575       1.027           -0.192
+llm_veto           35.0      1.0      3.0     0.343          0.962        -0.012   -0.425       4.756           -0.024
+llm_binary         35.0      1.0      3.0     0.343          0.896        -0.066   -2.326       9.325           -0.066
+[5/5] report
+      C:\Users\acer\OneDrive\Desktop\Project\HarnessFinance\Product\notebook\results\forward_ab\report.md  (10s)
+===== Thu 10/08/2026 21:19:11.67 ===== 
+[1/5] bars (server now 2026-10-08 17:19, start 2026-10-05 00:00) ...
+      15m 2026-07-27 01:00:00 .. 2026-10-08 17:00:00 (4829 bars)
+[2/5] frame + v5 signals ...
+      decision rows since start 342, signal rows 286
+[3/5] candidates (gpt-oss:120b via ollama_cloud, anon) ...
+      new 3 (LLM calls 3, parse failures 0); total 286; decided 19..49 min after bar close
+[4/5] replay
+               resolved  pending  skipped  win_rate  profit_factor  expectancy_r  total_r  max_dd_pct  r_per_unit_risk
+ml_only            35.0      1.0      0.0     0.343          0.896        -0.066   -2.325       9.323           -0.066
+calendar_rule      35.0      1.0      0.0     0.343          0.896        -0.066   -2.325       9.323           -0.066
+trend_rule          3.0      0.0    256.0     0.333          0.719        -0.192   -0.575       1.027           -0.192
+llm_veto           35.0      1.0      3.0     0.343          0.962        -0.012   -0.425       4.756           -0.024
+llm_binary         35.0      1.0      3.0     0.343          0.896        -0.066   -2.326       9.325           -0.066
+[5/5] report
+      C:\Users\acer\OneDrive\Desktop\Project\HarnessFinance\Product\notebook\results\forward_ab\report.md  (10s)
+===== Thu 10/08/2026 22:19:12.02 ===== 
+[1/5] bars (server now 2026-10-08 18:19, start 2026-10-05 00:00) ...
+      15m 2026-07-27 01:00:00 .. 2026-10-08 18:00:00 (4833 bars)
+[2/5] frame + v5 signals ...
+      decision rows since start 346, signal rows 289
+[3/5] candidates (gpt-oss:120b via ollama_cloud, anon) ...
+      new 3 (LLM calls 3, parse failures 0); total 289; decided 4..34 min after bar close
+[4/5] replay
+               resolved  pending  skipped  win_rate  profit_factor  expectancy_r  total_r  max_dd_pct  r_per_unit_risk
+ml_only            37.0      1.0      0.0     0.351          0.962        -0.024   -0.887       9.323           -0.024
+calendar_rule      37.0      1.0      0.0     0.351          0.962        -0.024   -0.887       9.323           -0.024
+trend_rule          3.0      0.0    259.0     0.333          0.719        -0.192   -0.575       1.027           -0.192
+llm_veto           37.0      1.0      3.0     0.351          1.025         0.008    0.294       4.756            0.015
+llm_binary         37.0      1.0      3.0     0.351          0.962        -0.024   -0.888       9.325           -0.024
+[5/5] report
+      C:\Users\acer\OneDrive\Desktop\Project\HarnessFinance\Product\notebook\results\forward_ab\report.md  (10s)
+===== Thu 10/08/2026 23:19:18.51 ===== 
+[1/5] bars (server now 2026-10-08 19:19, start 2026-10-05 00:00) ...
+      15m 2026-07-27 01:00:00 .. 2026-10-08 19:00:00 (4837 bars)
+[2/5] frame + v5 signals ...
+      decision rows since start 350, signal rows 293
+[3/5] candidates (gpt-oss:120b via ollama_cloud, anon) ...
+      new 4 (LLM calls 4, parse failures 0); total 293; decided 4..49 min after bar close
+[4/5] replay
+               resolved  pending  skipped  win_rate  profit_factor  expectancy_r  total_r  max_dd_pct  r_per_unit_risk
+ml_only            37.0      1.0      0.0     0.351          0.962        -0.024   -0.887       9.323           -0.024
+calendar_rule      37.0      1.0      0.0     0.351          0.962        -0.024   -0.887       9.323           -0.024
+trend_rule          3.0      0.0    263.0     0.333          0.719        -0.192   -0.575       1.027           -0.192
+llm_veto           37.0      1.0      3.0     0.351          1.025         0.008    0.294       4.756            0.015
+llm_binary         37.0      1.0      3.0     0.351          0.962        -0.024   -0.888       9.325           -0.024
+[5/5] report
+      C:\Users\acer\OneDrive\Desktop\Project\HarnessFinance\Product\notebook\results\forward_ab\report.md  (12s)
+===== Fri 10/09/2026  0:19:11.44 ===== 
+[1/5] bars (server now 2026-10-08 20:19, start 2026-10-05 00:00) ...
+      15m 2026-07-27 01:00:00 .. 2026-10-08 20:00:00 (4841 bars)
+[2/5] frame + v5 signals ...
+      decision rows since start 354, signal rows 297
+[3/5] candidates (gpt-oss:120b via ollama_cloud, anon) ...
+      new 4 (LLM calls 4, parse failures 0); total 297; decided 4..49 min after bar close
+[4/5] replay
+               resolved  pending  skipped  win_rate  profit_factor  expectancy_r  total_r  max_dd_pct  r_per_unit_risk
+ml_only            37.0      1.0      0.0     0.351          0.962        -0.024   -0.887       9.323           -0.024
+calendar_rule      37.0      1.0      0.0     0.351          0.962        -0.024   -0.887       9.323           -0.024
+trend_rule          3.0      0.0    267.0     0.333          0.719        -0.192   -0.575       1.027           -0.192
+llm_veto           37.0      1.0      3.0     0.351          1.025         0.008    0.294       4.756            0.015
+llm_binary         37.0      1.0      3.0     0.351          0.962        -0.024   -0.888       9.325           -0.024
+[5/5] report
+      C:\Users\acer\OneDrive\Desktop\Project\HarnessFinance\Product\notebook\results\forward_ab\report.md  (10s)
+===== Fri 10/09/2026  3:42:38.34 ===== 
+[1/5] bars (server now 2026-10-09 06:09, start 2026-10-05 00:00) ...
+      15m 2026-07-27 01:00:00 .. 2026-10-09 05:45:00 (4876 bars)
+[2/5] frame + v5 signals ...
+      decision rows since start 389, signal rows 326
+[3/5] candidates (gpt-oss:120b via ollama_cloud, anon) ...
+      new 29 (LLM calls 29, parse failures 0); total 326; decided 10..580 min after bar close
+[4/5] replay
+               resolved  pending  skipped  win_rate  profit_factor  expectancy_r  total_r  max_dd_pct  r_per_unit_risk
+ml_only            40.0      1.0      0.0     0.375          1.070         0.042    1.693       9.323            0.042
+calendar_rule      40.0      1.0      0.0     0.375          1.070         0.042    1.693       9.323            0.042
+trend_rule          3.0      0.0    296.0     0.333          0.719        -0.192   -0.575       1.027           -0.192
+llm_veto           40.0      1.0      3.0     0.375          1.130         0.040    1.584       4.756            0.077
+llm_binary         40.0      1.0      3.0     0.375          1.069         0.042    1.692       9.325            0.042
+[5/5] report
+      C:\Users\acer\OneDrive\Desktop\Project\HarnessFinance\Product\notebook\results\forward_ab\report.md  (34s)
+===== Fri 10/09/2026 10:15:21.13 ===== 
+[1/5] bars (server now 2026-10-09 06:15, start 2026-10-05 00:00) ...
+      15m 2026-07-27 01:00:00 .. 2026-10-09 06:00:00 (4877 bars)
+[2/5] frame + v5 signals ...
+      decision rows since start 390, signal rows 327
+[3/5] candidates (gpt-oss:120b via ollama_cloud, anon) ...
+      new 1 (LLM calls 1, parse failures 0); total 327; decided 0..0 min after bar close
+[4/5] replay
+               resolved  pending  skipped  win_rate  profit_factor  expectancy_r  total_r  max_dd_pct  r_per_unit_risk
+ml_only            40.0      1.0      0.0     0.375          1.070         0.042    1.693       9.323            0.042
+calendar_rule      40.0      1.0      0.0     0.375          1.070         0.042    1.693       9.323            0.042
+trend_rule          3.0      0.0    297.0     0.333          0.719        -0.192   -0.575       1.027           -0.192
+llm_veto           40.0      1.0      3.0     0.375          1.130         0.040    1.584       4.756            0.077
+llm_binary         40.0      1.0      3.0     0.375          1.069         0.042    1.692       9.325            0.042
+[5/5] report
+      C:\Users\acer\OneDrive\Desktop\Project\HarnessFinance\Product\notebook\results\forward_ab\report.md  (7s)
+===== Fri 10/09/2026 10:19:11.85 ===== 
+[1/5] bars (server now 2026-10-09 06:19, start 2026-10-05 00:00) ...
+      15m 2026-07-27 01:00:00 .. 2026-10-09 06:00:00 (4877 bars)
+[2/5] frame + v5 signals ...
+      decision rows since start 390, signal rows 327
+[3/5] candidates (gpt-oss:120b via ollama_cloud, anon) ...
+      new 0 (LLM calls 0, parse failures 0); total 327
+[4/5] replay
+               resolved  pending  skipped  win_rate  profit_factor  expectancy_r  total_r  max_dd_pct  r_per_unit_risk
+ml_only            40.0      1.0      0.0     0.375          1.070         0.042    1.693       9.323            0.042
+calendar_rule      40.0      1.0      0.0     0.375          1.070         0.042    1.693       9.323            0.042
+trend_rule          3.0      0.0    297.0     0.333          0.719        -0.192   -0.575       1.027           -0.192
+llm_veto           40.0      1.0      3.0     0.375          1.130         0.040    1.584       4.756            0.077
+llm_binary         40.0      1.0      3.0     0.375          1.069         0.042    1.692       9.325            0.042
+[5/5] report
+      C:\Users\acer\OneDrive\Desktop\Project\HarnessFinance\Product\notebook\results\forward_ab\report.md  (6s)
+===== Fri 10/09/2026 11:19:11.90 ===== 
+[1/5] bars (server now 2026-10-09 07:19, start 2026-10-05 00:00) ...
+      15m 2026-07-27 01:00:00 .. 2026-10-09 07:00:00 (4878 bars)
+[2/5] frame + v5 signals ...
+      decision rows since start 391, signal rows 328
+[3/5] candidates (gpt-oss:120b via ollama_cloud, anon) ...
+      new 1 (LLM calls 1, parse failures 0); total 328; decided 4..4 min after bar close
+[4/5] replay
+               resolved  pending  skipped  win_rate  profit_factor  expectancy_r  total_r  max_dd_pct  r_per_unit_risk
+ml_only            40.0      1.0      0.0     0.375          1.070         0.042    1.693       9.323            0.042
+calendar_rule      40.0      1.0      0.0     0.375          1.070         0.042    1.693       9.323            0.042
+trend_rule          3.0      0.0    298.0     0.333          0.719        -0.192   -0.575       1.027           -0.192
+llm_veto           40.0      1.0      3.0     0.375          1.130         0.040    1.584       4.756            0.077
+llm_binary         40.0      1.0      3.0     0.375          1.069         0.042    1.692       9.325            0.042
+[5/5] report
+      C:\Users\acer\OneDrive\Desktop\Project\HarnessFinance\Product\notebook\results\forward_ab\report.md  (13s)
+===== Fri 10/09/2026 12:19:11.79 ===== 
+[1/5] bars (server now 2026-10-09 08:19, start 2026-10-05 00:00) ...
+      15m 2026-07-27 01:00:00 .. 2026-10-09 08:00:00 (4882 bars)
+[2/5] frame + v5 signals ...
+      decision rows since start 395, signal rows 332
+[3/5] candidates (gpt-oss:120b via ollama_cloud, anon) ...
+      new 4 (LLM calls 4, parse failures 0); total 332; decided 4..49 min after bar close
+[4/5] replay
+               resolved  pending  skipped  win_rate  profit_factor  expectancy_r  total_r  max_dd_pct  r_per_unit_risk
+ml_only            40.0      1.0      0.0     0.375          1.070         0.042    1.693       9.323            0.042
+calendar_rule      40.0      1.0      0.0     0.375          1.070         0.042    1.693       9.323            0.042
+trend_rule          3.0      0.0    302.0     0.333          0.719        -0.192   -0.575       1.027           -0.192
+llm_veto           40.0      1.0      3.0     0.375          1.130         0.040    1.584       4.756            0.077
+llm_binary         40.0      1.0      3.0     0.375          1.069         0.042    1.692       9.325            0.042
+[5/5] report
+      C:\Users\acer\OneDrive\Desktop\Project\HarnessFinance\Product\notebook\results\forward_ab\report.md  (7s)
+===== Fri 10/09/2026 13:20:51.54 ===== 
+[1/5] bars (server now 2026-10-09 09:21, start 2026-10-05 00:00) ...
+      15m 2026-07-27 01:00:00 .. 2026-10-09 09:00:00 (4886 bars)
+[2/5] frame + v5 signals ...
+      decision rows since start 399, signal rows 334
+[3/5] candidates (gpt-oss:120b via ollama_cloud, anon) ...
+      new 2 (LLM calls 2, parse failures 0); total 334; decided 36..51 min after bar close
+[4/5] replay
+               resolved  pending  skipped  win_rate  profit_factor  expectancy_r  total_r  max_dd_pct  r_per_unit_risk
+ml_only            40.0      1.0      0.0     0.375          1.070         0.042    1.693       9.323            0.042
+calendar_rule      40.0      1.0      0.0     0.375          1.070         0.042    1.693       9.323            0.042
+trend_rule          3.0      0.0    304.0     0.333          0.719        -0.192   -0.575       1.027           -0.192
+llm_veto           40.0      1.0      3.0     0.375          1.130         0.040    1.584       4.756            0.077
+llm_binary         40.0      1.0      3.0     0.375          1.069         0.042    1.692       9.325            0.042
+[5/5] report
+      C:\Users\acer\OneDrive\Desktop\Project\HarnessFinance\Product\notebook\results\forward_ab\report.md  (11s)
+===== Fri 10/09/2026 14:19:12.02 ===== 
+[1/5] bars (server now 2026-10-09 10:19, start 2026-10-05 00:00) ...
+      15m 2026-07-27 01:00:00 .. 2026-10-09 10:00:00 (4893 bars)
+[2/5] frame + v5 signals ...
+      decision rows since start 406, signal rows 343
+[3/5] candidates (gpt-oss:120b via ollama_cloud, anon) ...
+      new 9 (LLM calls 9, parse failures 0); total 343; decided 4..229 min after bar close
+[4/5] replay
+               resolved  pending  skipped  win_rate  profit_factor  expectancy_r  total_r  max_dd_pct  r_per_unit_risk
+ml_only            41.0      1.0      0.0     0.390          1.171         0.102    4.163       9.323            0.102
+calendar_rule      41.0      1.0      0.0     0.390          1.171         0.102    4.163       9.323            0.102
+trend_rule          3.0      0.0    313.0     0.333          0.719        -0.192   -0.575       1.027           -0.192
+llm_veto           41.0      1.0      3.0     0.390          1.231         0.069    2.819       4.756            0.134
+llm_binary         41.0      1.0      3.0     0.390          1.171         0.102    4.162       9.325            0.102
+[5/5] report
+      C:\Users\acer\OneDrive\Desktop\Project\HarnessFinance\Product\notebook\results\forward_ab\report.md  (14s)
+===== Fri 10/09/2026 15:19:11.94 ===== 
+[1/5] bars (server now 2026-10-09 11:19, start 2026-10-05 00:00) ...
+      15m 2026-07-27 01:00:00 .. 2026-10-09 11:00:00 (4897 bars)
+[2/5] frame + v5 signals ...
+      decision rows since start 410, signal rows 346
+[3/5] candidates (gpt-oss:120b via ollama_cloud, anon) ...
+      new 3 (LLM calls 3, parse failures 0); total 346; decided 19..49 min after bar close
+[4/5] replay
+               resolved  pending  skipped  win_rate  profit_factor  expectancy_r  total_r  max_dd_pct  r_per_unit_risk
+ml_only            41.0      1.0      0.0     0.390          1.171         0.102    4.163       9.323            0.102
+calendar_rule      41.0      1.0      0.0     0.390          1.171         0.102    4.163       9.323            0.102
+trend_rule          3.0      0.0    316.0     0.333          0.719        -0.192   -0.575       1.027           -0.192
+llm_veto           41.0      1.0      3.0     0.390          1.231         0.069    2.819       4.756            0.134
+llm_binary         41.0      1.0      3.0     0.390          1.171         0.102    4.162       9.325            0.102
+[5/5] report
+      C:\Users\acer\OneDrive\Desktop\Project\HarnessFinance\Product\notebook\results\forward_ab\report.md  (12s)
+===== Fri 10/09/2026 16:53:19.32 ===== 
+[1/5] bars (server now 2026-10-09 12:53, start 2026-10-05 00:00) ...
+      15m 2026-07-27 01:00:00 .. 2026-10-09 12:30:00 (4903 bars)
+[2/5] frame + v5 signals ...
+      decision rows since start 416, signal rows 351
+[3/5] candidates (gpt-oss:120b via ollama_cloud, anon) ...
+      new 5 (LLM calls 5, parse failures 0); total 351; decided 9..69 min after bar close
+[4/5] replay
+               resolved  pending  skipped  win_rate  profit_factor  expectancy_r  total_r  max_dd_pct  r_per_unit_risk
+ml_only            42.0      1.0      0.0     0.381          1.164         0.096    4.024       9.323            0.096
+calendar_rule      42.0      1.0      0.0     0.381          1.164         0.096    4.024       9.323            0.096
+trend_rule          3.0      0.0    321.0     0.333          0.719        -0.192   -0.575       1.027           -0.192
+llm_veto           42.0      1.0      3.0     0.381          1.224         0.065    2.749       4.756            0.128
+llm_binary         42.0      1.0      3.0     0.381          1.164         0.096    4.023       9.325            0.096
+[5/5] report
+      C:\Users\acer\OneDrive\Desktop\Project\HarnessFinance\Product\notebook\results\forward_ab\report.md  (20s)
+===== Fri 10/09/2026 17:19:11.58 ===== 
+[1/5] bars (server now 2026-10-09 13:19, start 2026-10-05 00:00) ...
+      15m 2026-07-27 01:00:00 .. 2026-10-09 13:00:00 (4905 bars)
+[2/5] frame + v5 signals ...
+      decision rows since start 418, signal rows 353
+[3/5] candidates (gpt-oss:120b via ollama_cloud, anon) ...
+      new 2 (LLM calls 2, parse failures 0); total 353; decided 4..19 min after bar close
+[4/5] replay
+               resolved  pending  skipped  win_rate  profit_factor  expectancy_r  total_r  max_dd_pct  r_per_unit_risk
+ml_only            42.0      1.0      0.0     0.381          1.164         0.096    4.024       9.323            0.096
+calendar_rule      42.0      1.0      0.0     0.381          1.164         0.096    4.024       9.323            0.096
+trend_rule          3.0      0.0    323.0     0.333          0.719        -0.192   -0.575       1.027           -0.192
+llm_veto           42.0      1.0      3.0     0.381          1.224         0.065    2.749       4.756            0.128
+llm_binary         42.0      1.0      3.0     0.381          1.164         0.096    4.023       9.325            0.096
+[5/5] report
+      C:\Users\acer\OneDrive\Desktop\Project\HarnessFinance\Product\notebook\results\forward_ab\report.md  (10s)
+===== Fri 10/09/2026 18:19:12.26 ===== 
+[1/5] bars (server now 2026-10-09 14:19, start 2026-10-05 00:00) ...
+      15m 2026-07-27 01:00:00 .. 2026-10-09 14:00:00 (4909 bars)
+[2/5] frame + v5 signals ...
+      decision rows since start 422, signal rows 357
+[3/5] candidates (gpt-oss:120b via ollama_cloud, anon) ...
+      new 4 (LLM calls 4, parse failures 0); total 357; decided 4..49 min after bar close
+[4/5] replay
+               resolved  pending  skipped  win_rate  profit_factor  expectancy_r  total_r  max_dd_pct  r_per_unit_risk
+ml_only            42.0      1.0      0.0     0.381          1.164         0.096    4.024       9.323            0.096
+calendar_rule      42.0      1.0      0.0     0.381          1.164         0.096    4.024       9.323            0.096
+trend_rule          3.0      0.0    327.0     0.333          0.719        -0.192   -0.575       1.027           -0.192
+llm_veto           42.0      1.0      3.0     0.381          1.224         0.065    2.749       4.756            0.128
+llm_binary         42.0      1.0      3.0     0.381          1.164         0.096    4.023       9.325            0.096
+[5/5] report
+      C:\Users\acer\OneDrive\Desktop\Project\HarnessFinance\Product\notebook\results\forward_ab\report.md  (17s)
+===== Fri 10/09/2026 20:40:48.23 ===== 
+$GC=F: possibly delisted; no price data found  (1h 2025-01-01 -> 2026-10-09 09:41:00-04:00)
+
+1 Failed download:
+['GC=F']: possibly delisted; no price data found  (1h 2025-01-01 -> 2026-10-09 09:41:00-04:00)
+$^VIX: possibly delisted; no price data found  (1d 2023-06-01 -> 2026-10-09)
+
+1 Failed download:
+['^VIX']: possibly delisted; no price data found  (1d 2023-06-01 -> 2026-10-09)
+$DX-Y.NYB: possibly delisted; no price data found  (1d 2023-06-01 -> 2026-10-09)
+
+1 Failed download:
+['DX-Y.NYB']: possibly delisted; no price data found  (1d 2023-06-01 -> 2026-10-09)
+$^TNX: possibly delisted; no price data found  (1d 2023-06-01 -> 2026-10-09)
+
+1 Failed download:
+['^TNX']: possibly delisted; no price data found  (1d 2023-06-01 -> 2026-10-09)
+[1/5] bars (server now 2026-10-09 16:40, start 2026-10-05 00:00) ...
+      WARN 1h fetch failed (TypeError('Cannot convert tz-naive timestamps, use tz_localize to localize')); using the store as is
+      15m 2026-07-27 01:00:00 .. 2026-10-09 16:15:00 (4918 bars)
+[2/5] frame + v5 signals ...
+Traceback (most recent call last):
+  File "C:\Users\acer\OneDrive\Desktop\Project\HarnessFinance\Product\notebook\forward_ab.py", line 332, in <module>
+    main()
+  File "C:\Users\acer\OneDrive\Desktop\Project\HarnessFinance\Product\notebook\forward_ab.py", line 328, in main
+    asyncio.run(main_async(ap.parse_args()))
+  File "C:\Users\acer\AppData\Local\Programs\Python\Python312\Lib\asyncio\runners.py", line 195, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "C:\Users\acer\AppData\Local\Programs\Python\Python312\Lib\asyncio\runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\acer\AppData\Local\Programs\Python\Python312\Lib\asyncio\base_events.py", line 691, in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "C:\Users\acer\OneDrive\Desktop\Project\HarnessFinance\Product\notebook\forward_ab.py", line 231, in main_async
+    fr = build_frame(bars)
+         ^^^^^^^^^^^^^^^^^
+  File "C:\Users\acer\OneDrive\Desktop\Project\HarnessFinance\Product\notebook\forward_ab.py", line 120, in build_frame
+    fr = add_v3_features(fr, use_cache=True)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\acer\OneDrive\Desktop\Project\HarnessFinance\Product\notebook\xau_ml\v3.py", line 91, in add_v3_features
+    out = add_market_features(out, use_cache=use_cache)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\acer\OneDrive\Desktop\Project\HarnessFinance\Product\notebook\xau_ml\market_data.py", line 95, in add_market_features
+    feat = _daily_features(raw, prefix)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\acer\OneDrive\Desktop\Project\HarnessFinance\Product\notebook\xau_ml\market_data.py", line 61, in _daily_features
+    out[f"{prefix}_ret_5"] = (c / np.r_[np.full(5, np.nan), c[:-5]]) - 1
+                              ~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ValueError: operands could not be broadcast together with shapes (0,) (5,) 
+===== Sat 10/10/2026 20:30:03.85 ===== 
+===== Sat 10/10/2026 22:47:46.41 ===== 
+[1/5] bars (server now 2026-10-10 19:26, start 2026-10-05 00:00) ...
+      15m 2026-07-27 01:00:00 .. 2026-10-09 23:45:00 (4948 bars)
+[2/5] frame + v5 signals ...
+      decision rows since start 461, signal rows 394
+[3/5] candidates (gpt-oss:120b via ollama_cloud, anon) ...
+      new 37 (LLM calls 37, parse failures 0); total 394; decided 1167..1736 min after bar close
+[4/5] replay
+               resolved  pending  skipped  win_rate  profit_factor  expectancy_r  total_r  max_dd_pct  r_per_unit_risk
+ml_only            45.0      1.0      0.0     0.378          1.135         0.080    3.583       9.323            0.080
+calendar_rule      45.0      1.0      0.0     0.378          1.135         0.080    3.583       9.323            0.080
+trend_rule          3.0      0.0    364.0     0.333          0.719        -0.192   -0.575       1.027           -0.192
+llm_veto           45.0      1.0      3.0     0.378          1.190         0.056    2.529       4.756            0.110
+llm_binary         45.0      1.0      3.0     0.378          1.135         0.080    3.582       9.325            0.080
+[5/5] report
+      C:\Users\acer\OneDrive\Desktop\Project\HarnessFinance\Product\notebook\results\forward_ab\report.md  (46s)
+===== Sun 10/11/2026  0:19:12.71 ===== 
+[1/5] bars (server now 2026-10-10 20:19, start 2026-10-05 00:00) ...
+      15m 2026-07-27 01:00:00 .. 2026-10-09 23:45:00 (4948 bars)
+[2/5] frame + v5 signals ...
+      decision rows since start 461, signal rows 394
+[3/5] candidates (gpt-oss:120b via ollama_cloud, anon) ...
+      new 0 (LLM calls 0, parse failures 0); total 394
+[4/5] replay
+               resolved  pending  skipped  win_rate  profit_factor  expectancy_r  total_r  max_dd_pct  r_per_unit_risk
+ml_only            45.0      1.0      0.0     0.378          1.135         0.080    3.583       9.323            0.080
+calendar_rule      45.0      1.0      0.0     0.378          1.135         0.080    3.583       9.323            0.080
+trend_rule          3.0      0.0    364.0     0.333          0.719        -0.192   -0.575       1.027           -0.192
+llm_veto           45.0      1.0      3.0     0.378          1.190         0.056    2.529       4.756            0.110
+llm_binary         45.0      1.0      3.0     0.378          1.135         0.080    3.582       9.325            0.080
+[5/5] report
+      C:\Users\acer\OneDrive\Desktop\Project\HarnessFinance\Product\notebook\results\forward_ab\report.md  (5s)
+===== Sun 10/11/2026  4:12:03.68 ===== 
+[1/5] bars (server now 2026-10-11 05:45, start 2026-10-05 00:00) ...
+      15m 2026-07-27 01:00:00 .. 2026-10-09 23:45:00 (4948 bars)
+[2/5] frame + v5 signals ...
+      decision rows since start 461, signal rows 394
+[3/5] candidates (gpt-oss:120b via ollama_cloud, anon) ...
+      new 0 (LLM calls 0, parse failures 0); total 394
+[4/5] replay
+               resolved  pending  skipped  win_rate  profit_factor  expectancy_r  total_r  max_dd_pct  r_per_unit_risk
+ml_only            45.0      1.0      0.0     0.378          1.135         0.080    3.583       9.323            0.080
+calendar_rule      45.0      1.0      0.0     0.378          1.135         0.080    3.583       9.323            0.080
+trend_rule          3.0      0.0    364.0     0.333          0.719        -0.192   -0.575       1.027           -0.192
+llm_veto           45.0      1.0      3.0     0.378          1.190         0.056    2.529       4.756            0.110
+llm_binary         45.0      1.0      3.0     0.378          1.135         0.080    3.582       9.325            0.080
+[5/5] report
+      C:\Users\acer\OneDrive\Desktop\Project\HarnessFinance\Product\notebook\results\forward_ab\report.md  (6s)
+===== Sun 10/11/2026  9:51:26.56 ===== 
+[1/5] bars (server now 2026-10-11 05:51, start 2026-10-05 00:00) ...
+      15m 2026-07-27 01:00:00 .. 2026-10-09 23:45:00 (4948 bars)
+[2/5] frame + v5 signals ...
+      decision rows since start 461, signal rows 394
+[3/5] candidates (gpt-oss:120b via ollama_cloud, anon) ...
+      new 0 (LLM calls 0, parse failures 0); total 394
+[4/5] replay
+               resolved  pending  skipped  win_rate  profit_factor  expectancy_r  total_r  max_dd_pct  r_per_unit_risk
+ml_only            45.0      1.0      0.0     0.378          1.135         0.080    3.583       9.323            0.080
+calendar_rule      45.0      1.0      0.0     0.378          1.135         0.080    3.583       9.323            0.080
+trend_rule          3.0      0.0    364.0     0.333          0.719        -0.192   -0.575       1.027           -0.192
+llm_veto           45.0      1.0      3.0     0.378          1.190         0.056    2.529       4.756            0.110
+llm_binary         45.0      1.0      3.0     0.378          1.135         0.080    3.582       9.325            0.080
+[5/5] report
+      C:\Users\acer\OneDrive\Desktop\Project\HarnessFinance\Product\notebook\results\forward_ab\report.md  (5s)
+===== Sun 10/11/2026 11:54:22.99 ===== 
+[1/5] bars (server now 2026-10-11 07:54, start 2026-10-05 00:00) ...
+      15m 2026-07-27 01:00:00 .. 2026-10-09 23:45:00 (4948 bars)
+[2/5] frame + v5 signals ...
+      decision rows since start 461, signal rows 394
+[3/5] candidates (gpt-oss:120b via ollama_cloud, anon) ...
+      new 0 (LLM calls 0, parse failures 0); total 394
+[4/5] replay
+               resolved  pending  skipped  win_rate  profit_factor  expectancy_r  total_r  max_dd_pct  r_per_unit_risk
+ml_only            45.0      1.0      0.0     0.378          1.135         0.080    3.583       9.323            0.080
+calendar_rule      45.0      1.0      0.0     0.378          1.135         0.080    3.583       9.323            0.080
+trend_rule          3.0      0.0    364.0     0.333          0.719        -0.192   -0.575       1.027           -0.192
+llm_veto           45.0      1.0      3.0     0.378          1.190         0.056    2.529       4.756            0.110
+llm_binary         45.0      1.0      3.0     0.378          1.135         0.080    3.582       9.325            0.080
+[5/5] report
+      C:\Users\acer\OneDrive\Desktop\Project\HarnessFinance\Product\notebook\results\forward_ab\report.md  (5s)
+===== Sun 10/11/2026 12:19:12.13 ===== 
+===== Sun 10/11/2026 15:47:49.57 ===== 
+===== Sun 10/11/2026 17:30:11.39 ===== 
+===== Sun 10/11/2026 20:39:20.36 ===== 
+===== Sun 10/11/2026 22:50:14.37 ===== 
+^C===== Sun 10/11/2026 23:19:12.25 ===== 
+[1/5] bars (server now 2026-10-11 19:19, start 2026-10-05 00:00) ...
+      15m 2026-07-27 01:00:00 .. 2026-10-09 23:45:00 (4948 bars)
+[2/5] frame + v5 signals ...
+      decision rows since start 461, signal rows 394
+[3/5] candidates (gpt-oss:120b via ollama_cloud, anon) ...
+      new 0 (LLM calls 0, parse failures 0); total 394
+[4/5] replay
+               resolved  pending  skipped  win_rate  profit_factor  expectancy_r  total_r  max_dd_pct  r_per_unit_risk
+ml_only            45.0      1.0      0.0     0.378          1.135         0.080    3.583       9.323            0.080
+calendar_rule      45.0      1.0      0.0     0.378          1.135         0.080    3.583       9.323            0.080
+trend_rule          3.0      0.0    364.0     0.333          0.719        -0.192   -0.575       1.027           -0.192
+llm_veto           45.0      1.0      3.0     0.378          1.190         0.056    2.529       4.756            0.110
+llm_binary         45.0      1.0      3.0     0.378          1.135         0.080    3.582       9.325            0.080
+[5/5] report
+      C:\Users\acer\OneDrive\Desktop\Project\HarnessFinance\Product\notebook\results\forward_ab\report.md  (10s)
+===== Mon 10/12/2026  2:27:20.46 ===== 
+[1/5] bars (server now 2026-10-12 07:08, start 2026-10-05 00:00) ...
+      15m 2026-07-27 01:00:00 .. 2026-10-12 06:45:00 (4959 bars)
+[2/5] frame + v5 signals ...
+      decision rows since start 472, signal rows 405
+[3/5] candidates (gpt-oss:120b via ollama_cloud, anon) ...
+      new 11 (LLM calls 11, parse failures 0); total 405; decided 8..353 min after bar close
+[4/5] replay
+               resolved  pending  skipped  win_rate  profit_factor  expectancy_r  total_r  max_dd_pct  r_per_unit_risk
+ml_only            46.0      1.0      0.0     0.370          1.118         0.069    3.192       9.323            0.069
+calendar_rule      46.0      1.0      0.0     0.370          1.118         0.069    3.192       9.323            0.069
+trend_rule          3.0      0.0    375.0     0.333          0.719        -0.192   -0.575       1.027           -0.192
+llm_veto           46.0      1.0      3.0     0.370          1.173         0.051    2.333       4.756            0.099
+llm_binary         46.0      1.0      3.0     0.370          1.118         0.069    3.191       9.325            0.069
+[5/5] report
+      C:\Users\acer\OneDrive\Desktop\Project\HarnessFinance\Product\notebook\results\forward_ab\report.md  (22s)
+===== Mon 10/12/2026 11:13:38.89 ===== 
+[1/5] bars (server now 2026-10-12 07:13, start 2026-10-05 00:00) ...
+      15m 2026-07-27 01:00:00 .. 2026-10-12 06:45:00 (4959 bars)
+[2/5] frame + v5 signals ...
+      decision rows since start 472, signal rows 405
+[3/5] candidates (gpt-oss:120b via ollama_cloud, anon) ...
+      new 0 (LLM calls 0, parse failures 0); total 405
+[4/5] replay
+               resolved  pending  skipped  win_rate  profit_factor  expectancy_r  total_r  max_dd_pct  r_per_unit_risk
+ml_only            46.0      1.0      0.0     0.370          1.118         0.069    3.192       9.323            0.069
+calendar_rule      46.0      1.0      0.0     0.370          1.118         0.069    3.192       9.323            0.069
+trend_rule          3.0      0.0    375.0     0.333          0.719        -0.192   -0.575       1.027           -0.192
+llm_veto           46.0      1.0      3.0     0.370          1.173         0.051    2.333       4.756            0.099
+llm_binary         46.0      1.0      3.0     0.370          1.118         0.069    3.191       9.325            0.069
+[5/5] report
+      C:\Users\acer\OneDrive\Desktop\Project\HarnessFinance\Product\notebook\results\forward_ab\report.md  (7s)
+===== Mon 10/12/2026 11:19:12.04 ===== 
+[1/5] bars (server now 2026-10-12 07:19, start 2026-10-05 00:00) ...
+      15m 2026-07-27 01:00:00 .. 2026-10-12 07:00:00 (4960 bars)
+[2/5] frame + v5 signals ...
+      decision rows since start 473, signal rows 406
+[3/5] candidates (gpt-oss:120b via ollama_cloud, anon) ...
+      new 1 (LLM calls 1, parse failures 0); total 406; decided 4..4 min after bar close
+[4/5] replay
+               resolved  pending  skipped  win_rate  profit_factor  expectancy_r  total_r  max_dd_pct  r_per_unit_risk
+ml_only            46.0      1.0      0.0     0.370          1.118         0.069    3.192       9.323            0.069
+calendar_rule      46.0      1.0      0.0     0.370          1.118         0.069    3.192       9.323            0.069
+trend_rule          3.0      0.0    376.0     0.333          0.719        -0.192   -0.575       1.027           -0.192
+llm_veto           46.0      1.0      3.0     0.370          1.173         0.051    2.333       4.756            0.099
+llm_binary         46.0      1.0      3.0     0.370          1.118         0.069    3.191       9.325            0.069
+[5/5] report
+      C:\Users\acer\OneDrive\Desktop\Project\HarnessFinance\Product\notebook\results\forward_ab\report.md  (11s)
+===== Mon 10/12/2026 12:19:11.86 ===== 
+===== Mon 10/12/2026 22:24:37.65 ===== 
+[1/5] bars (server now 2026-10-12 18:25, start 2026-10-05 00:00) ...
+      15m 2026-07-27 01:00:00 .. 2026-10-12 18:00:00 (5017 bars)
+[2/5] frame + v5 signals ...
+      decision rows since start 530, signal rows 463
+[3/5] candidates (gpt-oss:120b via ollama_cloud, anon) ...
+      new 57 (LLM calls 57, parse failures 0); total 463; decided 11..880 min after bar close
+[4/5] replay
+               resolved  pending  skipped  win_rate  profit_factor  expectancy_r  total_r  max_dd_pct  r_per_unit_risk
+ml_only            52.0      1.0      0.0     0.346          1.015         0.009    0.480       9.323            0.009
+calendar_rule      52.0      1.0      0.0     0.346          1.015         0.009    0.480       9.323            0.009
+trend_rule          3.0      0.0    433.0     0.333          0.719        -0.192   -0.575       1.027           -0.192
+llm_veto           52.0      1.0      4.0     0.346          1.061         0.019    0.977       4.756            0.037
+llm_binary         52.0      1.0      4.0     0.346          1.015         0.009    0.477       9.325            0.009
+[5/5] report
+      C:\Users\acer\OneDrive\Desktop\Project\HarnessFinance\Product\notebook\results\forward_ab\report.md  (76s)
+===== Tue 10/13/2026  1:34:15.54 ===== 
+[1/5] bars (server now 2026-10-13 06:45, start 2026-10-05 00:00) ...
+      15m 2026-07-27 01:00:00 .. 2026-10-13 06:30:00 (5063 bars)
+[2/5] frame + v5 signals ...
+      decision rows since start 576, signal rows 500
+[3/5] candidates (gpt-oss:120b via ollama_cloud, anon) ...
+      new 37 (LLM calls 37, parse failures 0); total 500; decided 1..735 min after bar close
+[4/5] replay
+               resolved  pending  skipped  win_rate  profit_factor  expectancy_r  total_r  max_dd_pct  r_per_unit_risk
+ml_only            56.0      1.0      0.0     0.339          0.977        -0.014   -0.779       9.323           -0.014
+calendar_rule      56.0      1.0      0.0     0.339          0.977        -0.014   -0.779       9.323           -0.014
+trend_rule          3.0      0.0    470.0     0.333          0.719        -0.192   -0.575       1.027           -0.192
+llm_veto           56.0      1.0      4.0     0.339          1.020         0.006    0.347       4.756            0.012
+llm_binary         56.0      1.0      4.0     0.339          0.977        -0.014   -0.781       9.325           -0.014
+[5/5] report
+      C:\Users\acer\OneDrive\Desktop\Project\HarnessFinance\Product\notebook\results\forward_ab\report.md  (45s)
+===== Tue 10/13/2026 10:50:51.25 ===== 
+^C===== Tue 10/13/2026 11:19:11.96 ===== 
+===== Tue 10/13/2026 12:44:00.21 ===== 
+^C===== Tue 10/13/2026 13:37:06.49 ===== 
+===== Tue 10/13/2026 14:34:46.80 ===== 
+^C===== Wed 10/14/2026 10:39:48.91 ===== 
+[1/5] bars (server now 2026-10-14 06:40, start 2026-10-05 00:00) ...
+      15m 2026-07-27 01:00:00 .. 2026-10-14 06:15:00 (5155 bars)
+[2/5] frame + v5 signals ...
+      decision rows since start 668, signal rows 592
+[3/5] candidates (gpt-oss:120b via ollama_cloud, anon) ...
+      new 92 (LLM calls 92, parse failures 0); total 592; decided 11..1420 min after bar close
+[4/5] replay
+               resolved  pending  skipped  win_rate  profit_factor  expectancy_r  total_r  max_dd_pct  r_per_unit_risk
+ml_only            66.0      1.0      0.0     0.318          0.890        -0.070   -4.602      10.076           -0.070
+calendar_rule      65.0      1.0      4.0     0.323          0.913        -0.055   -3.567       9.323           -0.055
+trend_rule          3.0      0.0    562.0     0.333          0.719        -0.192   -0.575       1.027           -0.192
+llm_veto           67.0      1.0      5.0     0.328          0.930        -0.022   -1.482       5.071           -0.044
+llm_binary         67.0      1.0      5.0     0.328          0.896        -0.066   -4.439       9.937           -0.066
+[5/5] report
+      C:\Users\acer\OneDrive\Desktop\Project\HarnessFinance\Product\notebook\results\forward_ab\report.md  (122s)
+===== Wed 10/14/2026 11:19:14.66 ===== 
+[1/5] bars (server now 2026-10-14 07:19, start 2026-10-05 00:00) ...
+      15m 2026-07-27 01:00:00 .. 2026-10-14 07:00:00 (5156 bars)
+[2/5] frame + v5 signals ...
+      decision rows since start 669, signal rows 593
+[3/5] candidates (gpt-oss:120b via ollama_cloud, anon) ...
+      new 1 (LLM calls 1, parse failures 0); total 593; decided 4..4 min after bar close
+[4/5] replay
+               resolved  pending  skipped  win_rate  profit_factor  expectancy_r  total_r  max_dd_pct  r_per_unit_risk
+ml_only            67.0      1.0      0.0     0.313          0.868        -0.084   -5.650      10.796           -0.084
+calendar_rule      66.0      1.0      4.0     0.318          0.890        -0.070   -4.615       9.862           -0.070
+trend_rule          3.0      0.0    563.0     0.333          0.719        -0.192   -0.575       1.027           -0.192
+llm_veto           68.0      1.0      5.0     0.324          0.908        -0.029   -2.006       5.447           -0.058
+llm_binary         68.0      1.0      5.0     0.324          0.874        -0.081   -5.487      10.657           -0.081
+[5/5] report
+      C:\Users\acer\OneDrive\Desktop\Project\HarnessFinance\Product\notebook\results\forward_ab\report.md  (18s)
+===== Wed 10/14/2026 12:22:40.23 ===== 
+Cookie/crumb fetch failed (DNSError), continuing without crumb
+$GC=F: possibly delisted; no price data found  (period=60d)
+
+1 Failed download:
+['GC=F']: possibly delisted; no price data found  (period=60d)
+Cookie/crumb fetch failed (DNSError), continuing without crumb
+$GC=F: possibly delisted; no price data found  (1h 2025-01-01 -> 2026-10-14 02:57:04-04:00)
+
+1 Failed download:
+['GC=F']: possibly delisted; no price data found  (1h 2025-01-01 -> 2026-10-14 02:57:04-04:00)
+Cookie/crumb fetch failed (DNSError), continuing without crumb
+$^VIX: possibly delisted; no price data found  (1d 2023-06-01 -> 2026-10-14)
+
+1 Failed download:
+['^VIX']: possibly delisted; no price data found  (1d 2023-06-01 -> 2026-10-14)
+Cookie/crumb fetch failed (DNSError), continuing without crumb
+$DX-Y.NYB: possibly delisted; no price data found  (1d 2023-06-01 -> 2026-10-14)
+
+1 Failed download:
+['DX-Y.NYB']: possibly delisted; no price data found  (1d 2023-06-01 -> 2026-10-14)
+Cookie/crumb fetch failed (DNSError), continuing without crumb
+$^TNX: possibly delisted; no price data found  (1d 2023-06-01 -> 2026-10-14)
+
+1 Failed download:
+['^TNX']: possibly delisted; no price data found  (1d 2023-06-01 -> 2026-10-14)
+[1/5] bars (server now 2026-10-14 09:56, start 2026-10-05 00:00) ...
+      WARN 15m fetch failed (TypeError('Cannot convert tz-naive timestamps, use tz_localize to localize')); using the store as is
+      WARN 1h fetch failed (TypeError('Cannot convert tz-naive timestamps, use tz_localize to localize')); using the store as is
+      15m 2026-07-27 01:00:00 .. 2026-10-14 07:00:00 (5156 bars)
+[2/5] frame + v5 signals ...
+Traceback (most recent call last):
+  File "C:\Users\acer\OneDrive\Desktop\Project\HarnessFinance\Product\notebook\forward_ab.py", line 332, in <module>
+    main()
+  File "C:\Users\acer\OneDrive\Desktop\Project\HarnessFinance\Product\notebook\forward_ab.py", line 328, in main
+    asyncio.run(main_async(ap.parse_args()))
+  File "C:\Users\acer\AppData\Local\Programs\Python\Python312\Lib\asyncio\runners.py", line 195, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "C:\Users\acer\AppData\Local\Programs\Python\Python312\Lib\asyncio\runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\acer\AppData\Local\Programs\Python\Python312\Lib\asyncio\base_events.py", line 691, in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "C:\Users\acer\OneDrive\Desktop\Project\HarnessFinance\Product\notebook\forward_ab.py", line 231, in main_async
+    fr = build_frame(bars)
+         ^^^^^^^^^^^^^^^^^
+  File "C:\Users\acer\OneDrive\Desktop\Project\HarnessFinance\Product\notebook\forward_ab.py", line 120, in build_frame
+    fr = add_v3_features(fr, use_cache=True)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\acer\OneDrive\Desktop\Project\HarnessFinance\Product\notebook\xau_ml\v3.py", line 91, in add_v3_features
+    out = add_market_features(out, use_cache=use_cache)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\acer\OneDrive\Desktop\Project\HarnessFinance\Product\notebook\xau_ml\market_data.py", line 95, in add_market_features
+    feat = _daily_features(raw, prefix)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\acer\OneDrive\Desktop\Project\HarnessFinance\Product\notebook\xau_ml\market_data.py", line 61, in _daily_features
+    out[f"{prefix}_ret_5"] = (c / np.r_[np.full(5, np.nan), c[:-5]]) - 1
+                              ~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ValueError: operands could not be broadcast together with shapes (0,) (5,) 
+===== Wed 10/14/2026 14:19:12.35 ===== 
+[1/5] bars (server now 2026-10-14 10:19, start 2026-10-05 00:00) ...
+      15m 2026-07-27 01:00:00 .. 2026-10-14 10:00:00 (5168 bars)
+[2/5] frame + v5 signals ...
+      decision rows since start 681, signal rows 605
+[3/5] candidates (gpt-oss:120b via ollama_cloud, anon) ...
+      new 12 (LLM calls 12, parse failures 0); total 605; decided 4..169 min after bar close
+[4/5] replay
+               resolved  pending  skipped  win_rate  profit_factor  expectancy_r  total_r  max_dd_pct  r_per_unit_risk
+ml_only            69.0      1.0      0.0     0.319          0.863        -0.087   -6.002      11.719           -0.087
+calendar_rule      68.0      1.0      4.0     0.324          0.884        -0.073   -4.967      10.795           -0.073
+trend_rule          3.0      0.0    575.0     0.333          0.719        -0.192   -0.575       1.027           -0.192
+llm_veto           70.0      1.0      8.0     0.314          0.867        -0.043   -3.037       6.419           -0.086
+llm_binary         70.0      1.0      8.0     0.314          0.835        -0.108   -7.549      12.489           -0.108
+[5/5] report
+      C:\Users\acer\OneDrive\Desktop\Project\HarnessFinance\Product\notebook\results\forward_ab\report.md  (20s)
+===== Wed 10/14/2026 15:19:12.38 ===== 
+===== Wed 10/14/2026 16:19:12.35 ===== 
+^C===== Wed 10/14/2026 19:39:54.71 ===== 
+^C===== Thu 10/15/2026 11:14:43.27 ===== 
+$GC=F: possibly delisted; no price data found  (period=60d)
+
+1 Failed download:
+['GC=F']: possibly delisted; no price data found  (period=60d)
+$GC=F: possibly delisted; no price data found  (1h 2025-01-01 -> 2026-10-15 00:15:12-04:00)
+
+1 Failed download:
+['GC=F']: possibly delisted; no price data found  (1h 2025-01-01 -> 2026-10-15 00:15:12-04:00)
+$DX-Y.NYB: possibly delisted; no price data found  (1d 2023-06-01 -> 2026-10-15)
+
+1 Failed download:
+['DX-Y.NYB']: possibly delisted; no price data found  (1d 2023-06-01 -> 2026-10-15)
+$^TNX: possibly delisted; no price data found  (1d 2023-06-01 -> 2026-10-14)
+
+1 Failed download:
+['^TNX']: possibly delisted; no price data found  (1d 2023-06-01 -> 2026-10-14)
+[1/5] bars (server now 2026-10-15 07:14, start 2026-10-05 00:00) ...
+      WARN 15m fetch failed (TypeError('Cannot convert tz-naive timestamps, use tz_localize to localize')); using the store as is
+      WARN 1h fetch failed (TypeError('Cannot convert tz-naive timestamps, use tz_localize to localize')); using the store as is
+      15m 2026-07-27 01:00:00 .. 2026-10-14 15:15:00 (5191 bars)
+[2/5] frame + v5 signals ...
+Traceback (most recent call last):
+  File "C:\Users\acer\OneDrive\Desktop\Project\HarnessFinance\Product\notebook\forward_ab.py", line 332, in <module>
+    main()
+  File "C:\Users\acer\OneDrive\Desktop\Project\HarnessFinance\Product\notebook\forward_ab.py", line 328, in main
+    asyncio.run(main_async(ap.parse_args()))
+  File "C:\Users\acer\AppData\Local\Programs\Python\Python312\Lib\asyncio\runners.py", line 195, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "C:\Users\acer\AppData\Local\Programs\Python\Python312\Lib\asyncio\runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\acer\AppData\Local\Programs\Python\Python312\Lib\asyncio\base_events.py", line 691, in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "C:\Users\acer\OneDrive\Desktop\Project\HarnessFinance\Product\notebook\forward_ab.py", line 231, in main_async
+    fr = build_frame(bars)
+         ^^^^^^^^^^^^^^^^^
+  File "C:\Users\acer\OneDrive\Desktop\Project\HarnessFinance\Product\notebook\forward_ab.py", line 120, in build_frame
+    fr = add_v3_features(fr, use_cache=True)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\acer\OneDrive\Desktop\Project\HarnessFinance\Product\notebook\xau_ml\v3.py", line 91, in add_v3_features
+    out = add_market_features(out, use_cache=use_cache)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\acer\OneDrive\Desktop\Project\HarnessFinance\Product\notebook\xau_ml\market_data.py", line 95, in add_market_features
+    feat = _daily_features(raw, prefix)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\acer\OneDrive\Desktop\Project\HarnessFinance\Product\notebook\xau_ml\market_data.py", line 61, in _daily_features
+    out[f"{prefix}_ret_5"] = (c / np.r_[np.full(5, np.nan), c[:-5]]) - 1
+                              ~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ValueError: operands could not be broadcast together with shapes (0,) (5,) 
+===== Thu 10/15/2026 12:24:25.08 ===== 
+Cookie/crumb fetch failed (DNSError), continuing without crumb
+$GC=F: possibly delisted; no price data found  (period=60d)
+
+1 Failed download:
+['GC=F']: possibly delisted; no price data found  (period=60d)
+Cookie/crumb fetch failed (DNSError), continuing without crumb
+$GC=F: possibly delisted; no price data found  (1h 2025-01-01 -> 2026-10-15 01:24:52-04:00)
+
+1 Failed download:
+['GC=F']: possibly delisted; no price data found  (1h 2025-01-01 -> 2026-10-15 01:24:52-04:00)
+Cookie/crumb fetch failed (DNSError), continuing without crumb
+$^VIX: possibly delisted; no price data found  (1d 2023-06-01 -> 2026-10-15)
+
+1 Failed download:
+['^VIX']: possibly delisted; no price data found  (1d 2023-06-01 -> 2026-10-15)
+Cookie/crumb fetch failed (DNSError), continuing without crumb
+$DX-Y.NYB: possibly delisted; no price data found  (1d 2023-06-01 -> 2026-10-15)
+
+1 Failed download:
+['DX-Y.NYB']: possibly delisted; no price data found  (1d 2023-06-01 -> 2026-10-15)
+Cookie/crumb fetch failed (DNSError), continuing without crumb
+$^TNX: possibly delisted; no price data found  (1d 2023-06-01 -> 2026-10-15)
+
+1 Failed download:
+['^TNX']: possibly delisted; no price data found  (1d 2023-06-01 -> 2026-10-15)
+[1/5] bars (server now 2026-10-15 08:24, start 2026-10-05 00:00) ...
+      WARN 15m fetch failed (TypeError('Cannot convert tz-naive timestamps, use tz_localize to localize')); using the store as is
+      WARN 1h fetch failed (TypeError('Cannot convert tz-naive timestamps, use tz_localize to localize')); using the store as is
+      15m 2026-07-27 01:00:00 .. 2026-10-14 15:15:00 (5191 bars)
+[2/5] frame + v5 signals ...
+Traceback (most recent call last):
+  File "C:\Users\acer\OneDrive\Desktop\Project\HarnessFinance\Product\notebook\forward_ab.py", line 332, in <module>
+    main()
+  File "C:\Users\acer\OneDrive\Desktop\Project\HarnessFinance\Product\notebook\forward_ab.py", line 328, in main
+    asyncio.run(main_async(ap.parse_args()))
+  File "C:\Users\acer\AppData\Local\Programs\Python\Python312\Lib\asyncio\runners.py", line 195, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "C:\Users\acer\AppData\Local\Programs\Python\Python312\Lib\asyncio\runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\acer\AppData\Local\Programs\Python\Python312\Lib\asyncio\base_events.py", line 691, in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "C:\Users\acer\OneDrive\Desktop\Project\HarnessFinance\Product\notebook\forward_ab.py", line 231, in main_async
+    fr = build_frame(bars)
+         ^^^^^^^^^^^^^^^^^
+  File "C:\Users\acer\OneDrive\Desktop\Project\HarnessFinance\Product\notebook\forward_ab.py", line 120, in build_frame
+    fr = add_v3_features(fr, use_cache=True)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\acer\OneDrive\Desktop\Project\HarnessFinance\Product\notebook\xau_ml\v3.py", line 91, in add_v3_features
+    out = add_market_features(out, use_cache=use_cache)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\acer\OneDrive\Desktop\Project\HarnessFinance\Product\notebook\xau_ml\market_data.py", line 95, in add_market_features
+    feat = _daily_features(raw, prefix)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\acer\OneDrive\Desktop\Project\HarnessFinance\Product\notebook\xau_ml\market_data.py", line 61, in _daily_features
+    out[f"{prefix}_ret_5"] = (c / np.r_[np.full(5, np.nan), c[:-5]]) - 1
+                              ~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ValueError: operands could not be broadcast together with shapes (0,) (5,) 
+===== Thu 10/15/2026 13:54:58.05 ===== 
+Cookie/crumb fetch failed (DNSError), continuing without crumb
+$GC=F: possibly delisted; no price data found  (period=60d)
+
+1 Failed download:
+['GC=F']: possibly delisted; no price data found  (period=60d)
+Cookie/crumb fetch failed (DNSError), continuing without crumb
+$GC=F: possibly delisted; no price data found  (1h 2025-01-01 -> 2026-10-15 02:55:51-04:00)
+
+1 Failed download:
+['GC=F']: possibly delisted; no price data found  (1h 2025-01-01 -> 2026-10-15 02:55:51-04:00)
+Cookie/crumb fetch failed (DNSError), continuing without crumb
+$^VIX: possibly delisted; no price data found  (1d 2023-06-01 -> 2026-10-15)
+
+1 Failed download:
+['^VIX']: possibly delisted; no price data found  (1d 2023-06-01 -> 2026-10-15)
+Cookie/crumb fetch failed (DNSError), continuing without crumb
+$DX-Y.NYB: possibly delisted; no price data found  (1d 2023-06-01 -> 2026-10-15)
+
+1 Failed download:
+['DX-Y.NYB']: possibly delisted; no price data found  (1d 2023-06-01 -> 2026-10-15)
+Cookie/crumb fetch failed (DNSError), continuing without crumb
+$^TNX: possibly delisted; no price data found  (1d 2023-06-01 -> 2026-10-15)
+
+1 Failed download:
+['^TNX']: possibly delisted; no price data found  (1d 2023-06-01 -> 2026-10-15)
+[1/5] bars (server now 2026-10-15 09:55, start 2026-10-05 00:00) ...
+      WARN 15m fetch failed (TypeError('Cannot convert tz-naive timestamps, use tz_localize to localize')); using the store as is
+      WARN 1h fetch failed (TypeError('Cannot convert tz-naive timestamps, use tz_localize to localize')); using the store as is
+      15m 2026-07-27 01:00:00 .. 2026-10-14 15:15:00 (5191 bars)
+[2/5] frame + v5 signals ...
+Traceback (most recent call last):
+  File "C:\Users\acer\OneDrive\Desktop\Project\HarnessFinance\Product\notebook\forward_ab.py", line 332, in <module>
+    main()
+  File "C:\Users\acer\OneDrive\Desktop\Project\HarnessFinance\Product\notebook\forward_ab.py", line 328, in main
+    asyncio.run(main_async(ap.parse_args()))
+  File "C:\Users\acer\AppData\Local\Programs\Python\Python312\Lib\asyncio\runners.py", line 195, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "C:\Users\acer\AppData\Local\Programs\Python\Python312\Lib\asyncio\runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\acer\AppData\Local\Programs\Python\Python312\Lib\asyncio\base_events.py", line 691, in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "C:\Users\acer\OneDrive\Desktop\Project\HarnessFinance\Product\notebook\forward_ab.py", line 231, in main_async
+    fr = build_frame(bars)
+         ^^^^^^^^^^^^^^^^^
+  File "C:\Users\acer\OneDrive\Desktop\Project\HarnessFinance\Product\notebook\forward_ab.py", line 120, in build_frame
+    fr = add_v3_features(fr, use_cache=True)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\acer\OneDrive\Desktop\Project\HarnessFinance\Product\notebook\xau_ml\v3.py", line 91, in add_v3_features
+    out = add_market_features(out, use_cache=use_cache)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\acer\OneDrive\Desktop\Project\HarnessFinance\Product\notebook\xau_ml\market_data.py", line 95, in add_market_features
+    feat = _daily_features(raw, prefix)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\acer\OneDrive\Desktop\Project\HarnessFinance\Product\notebook\xau_ml\market_data.py", line 61, in _daily_features
+    out[f"{prefix}_ret_5"] = (c / np.r_[np.full(5, np.nan), c[:-5]]) - 1
+                              ~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ValueError: operands could not be broadcast together with shapes (0,) (5,) 
+===== Thu 10/15/2026 14:19:12.26 ===== 
+===== Thu 10/15/2026 15:19:11.92 ===== 
+===== Thu 10/15/2026 19:19:12.06 ===== 
+[1/5] bars (server now 2026-10-15 15:19, start 2026-10-05 00:00) ...
+      15m 2026-07-27 01:00:00 .. 2026-10-15 15:00:00 (5282 bars)
+[2/5] frame + v5 signals ...
+      decision rows since start 795, signal rows 696
+[3/5] candidates (gpt-oss:120b via ollama_cloud, anon) ...
+      new 91 (LLM calls 73, parse failures 0); total 696; decided 5..1954 min after bar close
+[4/5] replay
+               resolved  pending  skipped  win_rate  profit_factor  expectancy_r  total_r  max_dd_pct  r_per_unit_risk
+ml_only            77.0      1.0      0.0     0.338          0.912        -0.054   -4.166      13.739           -0.054
+calendar_rule      76.0      1.0      4.0     0.342          0.933        -0.041   -3.131      12.836           -0.041
+trend_rule          3.0      0.0    666.0     0.333          0.719        -0.192   -0.575       1.027           -0.192
+llm_veto           78.0      1.0     10.0     0.333          0.964        -0.011   -0.881       7.606           -0.022
+llm_binary         78.0      1.0     10.0     0.333          0.884        -0.073   -5.708      14.700           -0.073
+[5/5] report
+      C:\Users\acer\OneDrive\Desktop\Project\HarnessFinance\Product\notebook\results\forward_ab\report.md  (89s)
+===== Thu 10/15/2026 20:19:12.16 ===== 
+[1/5] bars (server now 2026-10-15 16:19, start 2026-10-05 00:00) ...
+      15m 2026-07-27 01:00:00 .. 2026-10-15 16:00:00 (5286 bars)
+[2/5] frame + v5 signals ...
+      decision rows since start 799, signal rows 700
+[3/5] candidates (gpt-oss:120b via ollama_cloud, anon) ...
+      new 4 (LLM calls 4, parse failures 0); total 700; decided 4..49 min after bar close
+[4/5] replay
+               resolved  pending  skipped  win_rate  profit_factor  expectancy_r  total_r  max_dd_pct  r_per_unit_risk
+ml_only            77.0      1.0      0.0     0.338          0.912        -0.054   -4.166      13.739           -0.054
+calendar_rule      76.0      1.0      4.0     0.342          0.933        -0.041   -3.131      12.836           -0.041
+trend_rule          3.0      0.0    670.0     0.333          0.719        -0.192   -0.575       1.027           -0.192
+llm_veto           78.0      1.0     10.0     0.333          0.964        -0.011   -0.881       7.606           -0.022
+llm_binary         78.0      1.0     10.0     0.333          0.884        -0.073   -5.708      14.700           -0.073
+[5/5] report
+      C:\Users\acer\OneDrive\Desktop\Project\HarnessFinance\Product\notebook\results\forward_ab\report.md  (16s)
+===== Thu 10/15/2026 21:19:11.97 ===== 
+[1/5] bars (server now 2026-10-15 17:19, start 2026-10-05 00:00) ...
+      15m 2026-07-27 01:00:00 .. 2026-10-15 17:00:00 (5290 bars)
+[2/5] frame + v5 signals ...
+      decision rows since start 803, signal rows 704
+[3/5] candidates (gpt-oss:120b via ollama_cloud, anon) ...
+      new 4 (LLM calls 4, parse failures 0); total 704; decided 4..49 min after bar close
+[4/5] replay
+               resolved  pending  skipped  win_rate  profit_factor  expectancy_r  total_r  max_dd_pct  r_per_unit_risk
+ml_only            77.0      1.0      0.0     0.338          0.912        -0.054   -4.166      13.739           -0.054
+calendar_rule      76.0      1.0      4.0     0.342          0.933        -0.041   -3.131      12.836           -0.041
+trend_rule          3.0      0.0    674.0     0.333          0.719        -0.192   -0.575       1.027           -0.192
+llm_veto           78.0      1.0     10.0     0.333          0.964        -0.011   -0.881       7.606           -0.022
+llm_binary         78.0      1.0     10.0     0.333          0.884        -0.073   -5.708      14.700           -0.073
+[5/5] report
+      C:\Users\acer\OneDrive\Desktop\Project\HarnessFinance\Product\notebook\results\forward_ab\report.md  (12s)
