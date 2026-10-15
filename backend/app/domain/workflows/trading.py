@@ -48,6 +48,8 @@ from app.domain.policy import (
     NoShortIfDisallowed,
     PolicySet,
     RequireStopLoss,
+    SmcSetupRequired,
+    SmcStructureAlignment,
     ValidPendingOrder,
     ValidSymbol,
 )
@@ -87,6 +89,13 @@ DEFAULT_MIN_RISK_REWARD = 1.5  # R:R at the first target must exceed it; 0 = rul
 # (raised from 1.0: backtests + live showed frequent stop-outs — at a realistic ~30-40% win
 # rate, a 1:1 floor is a losing expectancy; 1.5 forces the trader to find a better entry/stop)
 DEFAULT_MIN_COUNTER_TREND_RISK_REWARD = 2.5  # stricter R:R floor for a trade against the daily
+# LLM-only desk sizing (ML-led runs keep the model's own label): a stop closer than this many ATR
+# is widened, and the first target is set by code at this R multiple of the stop distance.
+# Evidence (2026-10, XAUUSD intraday Aug-Sep, 23 + 25 trades): stops at ~1.4 ATR were swept
+# within the first hour on half of the losing trades that then reached the target; re-simulating
+# both runs with stop >= 2 ATR and a 1.5R first target was the only variant positive on both.
+DEFAULT_MIN_STOP_ATR = 2.0  # 0 = off
+DEFAULT_FIRST_TARGET_R = 1.6  # 0 = the trader's own targets
 # trend; 0 = rule off (2026-10: a 2-month XAUUSD backtest found counter-trend fades of an
 # RSI/Bollinger extreme win far less often in a trending month than the base floor assumes)
 # a trader retry cannot fix these (confidence is the PM's own call; retrying invites inflating it)
@@ -109,6 +118,11 @@ class TradeRunInput(BaseModel):
     horizon: Literal["intraday", "swing", "position"] = "swing"
     language: Literal["th", "en"] = "th"
     use_ml: bool = True  # add the bull/bear ML signal (only where a validated model exists)
+    # with a long/short ML signal: no LLM at all — entry/stop/targets come from the model's own label
+    ml_only: bool = False
+    # opt-in Smart Money Concepts block for the desk when no ML signal leads (ML off / no model);
+    # off by default: the LLM-only desk is the original trading desk (trader v6, no SMC)
+    use_smc: bool = False
     # (P15) set only by the backtest runner: auto-approval, no live decision log, own threads
     backtest_id: str | None = Field(default=None, max_length=64)
 
@@ -127,6 +141,7 @@ class TradingState(TypedDict, total=False):
     market_snapshot: dict[str, Any]
     event_risk: dict[str, Any]
     ml_signal: dict[str, Any]
+    smc: dict[str, Any]
     portfolio_ctx: dict[str, Any]
     past_lessons: list[str]
     reports: dict[str, Any]
@@ -196,8 +211,42 @@ def _lang(state: dict[str, Any]) -> str:
     return "Thai" if state["input"].get("language", "th") == "th" else "English"
 
 
-def _system(role: str, state: dict[str, Any]) -> str:
-    return f"{role_profile(get_role(role))}\n\nWrite in {_lang(state)}. Keep tickers and numbers as given."
+# trade_trader's library version (v7) is written around the ML block; the LLM-only desk
+# (no ML signal leads) is the original desk on the v6 rules. Only with the opt-in SMC block
+# does it switch to v6 + the Smart Money Concepts guide (v8), and with the SMC setup gate on
+# it trades only the sweep-continuation setup (v9)
+TRADER_LLM_ONLY_VERSION = "v6"
+TRADER_SMC_VERSION = "v8"
+TRADER_SMC_SETUP_VERSION = "v9"
+
+
+def _system(role: str, state: dict[str, Any], *, version: str | None = None) -> str:
+    spec = get_role(role)
+    if version:
+        spec = spec.model_copy(update={"version": version})
+    return f"{role_profile(spec)}\n\nWrite in {_lang(state)}. Keep tickers and numbers as given."
+
+
+def _trader_version(state: dict[str, Any]) -> str | None:
+    if _is_ml_led(state):
+        return None
+    if _setup_gate(state):
+        return TRADER_SMC_SETUP_VERSION
+    return TRADER_SMC_VERSION if (state.get("smc") or {}).get("available") else TRADER_LLM_ONLY_VERSION
+
+
+def _setup_gate(state: dict[str, Any]) -> bool:
+    """The SMC setup gate applies: SMC computed (no ML lead) and ``require_smc_setup`` on."""
+    s = state.get("smc") or {}
+    return bool(s.get("available") and s.get("setup_gate") and s.get("setup"))
+
+
+def _setup_side(state: dict[str, Any]) -> str | None:
+    """Policy input: None = no gate; "none" = no active setup; else the setup's side."""
+    if not _setup_gate(state):
+        return None
+    setup = state["smc"]["setup"]
+    return str(setup["side"]) if setup.get("active") else "none"
 
 
 def _num_fields(values: dict[str, Any]) -> str:
@@ -229,6 +278,25 @@ def _event_text(state: dict[str, Any]) -> str:
     return head + ":\n" + "\n".join(lines)
 
 
+def _signals_text(snap: dict[str, Any]) -> str:
+    """Labels the snapshot carries beside the numbers (MACD histogram colour, cross, RSI divergence)."""
+    sig = snap.get("signals") or {}
+    if not sig:
+        return ""
+    parts: list[str] = []
+    state_ = sig.get("macd_hist_state")
+    if state_:
+        parts.append(f"MACD hist {state_.replace('_', ' ')} zero (signal = SMA9 of MACD)")
+    if sig.get("macd_cross"):
+        parts.append(f"MACD {sig['macd_cross']} cross on the last bar")
+    div = sig.get("rsi_divergence") or {}
+    for kind in ("bullish", "bearish"):
+        ago = div.get(kind)
+        if ago is not None:
+            parts.append(f"regular {kind} RSI divergence confirmed {ago} bars ago")
+    return f"; signals: {', '.join(parts)}" if parts else ""
+
+
 def _snapshot_text(state: dict[str, Any]) -> str:
     snap = state.get("market_snapshot") or {}
     if not snap.get("available"):
@@ -239,6 +307,7 @@ def _snapshot_text(state: dict[str, Any]) -> str:
         f"{snap.get('bar_ts')}, {snap.get('currency')}): close={snap.get('close')}, "
         f"{_num_fields(snap.get('indicators') or {})}"
     )
+    text += _signals_text(snap)
     changes = _num_fields(snap.get("change_pct") or {})
     if changes:
         text += f"; change {changes}"
@@ -248,11 +317,133 @@ def _snapshot_text(state: dict[str, Any]) -> str:
     if htf:
         text += (
             f"\nHIGHER TIMEFRAME (daily, as of {htf.get('as_of')}): close={htf.get('close')}, "
-            f"{_num_fields(htf.get('indicators') or {})}; 52w {htf.get('low_52w')}-{htf.get('high_52w')}"
+            f"{_num_fields(htf.get('indicators') or {})}{_signals_text(htf)}; "
+            f"52w {htf.get('low_52w')}-{htf.get('high_52w')}"
         )
     elif snap.get("high_52w") is not None:
         text += f"; 52w {snap.get('low_52w')}-{snap.get('high_52w')}"
-    return f"{text}\n{_event_text(state)}{_ml_text(state)}"
+    return f"{text}\n{_event_text(state)}{_ml_text(state)}{_smc_text(state)}"
+
+
+def _g(x: Any) -> str:
+    return f"{x:.6g}" if isinstance(x, int | float) else "n/a"
+
+
+def _smc_structure(s: dict[str, Any], name: str) -> str:
+    breaks = s.get(name, {}).get("breaks") or []
+    text = f"{name} structure {s.get(name, {}).get('trend', 'none')}"
+    if breaks:
+        text += "; breaks (newest first): " + ", ".join(
+            f"{b['bias']} {b['tag']} of {_g(b['level'])} {b['bars_ago']} bars ago" for b in breaks
+        )
+    return text
+
+
+def _smc_zones(items: list[dict[str, Any]]) -> str:
+    def one(z: dict[str, Any]) -> str:
+        d = z.get("distance_atr")
+        if d == 0:
+            where = ", price inside"
+        elif d:
+            where = f", {abs(d):.1f} ATR {'above' if d > 0 else 'below'}"
+        else:
+            where = ""
+        return f"{z['bias']} {_g(z['low'])}-{_g(z['high'])} ({z['bars_ago']} bars ago{where})"
+
+    return ", ".join(one(z) for z in items) or "none"
+
+
+def _smc_pd(s: dict[str, Any]) -> str:
+    pd_ = s.get("premium_discount")
+    sw = s.get("strong_weak")
+    if not pd_ or not sw:
+        return "swing range not formed yet"
+    return (
+        f"swing range {_g(pd_['bottom'])} ({sw['low']['strength']} low) - {_g(pd_['top'])} "
+        f"({sw['high']['strength']} high), equilibrium {_g(pd_['equilibrium'])}; close in "
+        f"{pd_['zone'].upper()} ({100 * pd_['position']:.0f}% of the range)"
+    )
+
+
+def _smc_text(state: dict[str, Any]) -> str:
+    """The Smart Money Concepts block ('' when not computed: an ML signal leads, or opted out)."""
+    s = state.get("smc") or {}
+    if not s:
+        return ""
+    if not s.get("available"):
+        return f"\nSMART MONEY CONCEPTS: unavailable this run ({s.get('error')}) — do not assume a structure"
+    eq = ", ".join(
+        f"{e['type']} {_g(e['level'])} ({e['bars_ago']} bars ago)" for e in s.get("equal_levels") or []
+    )
+    obs = s.get("order_blocks") or {}
+    lines = [
+        f"\nSMART MONEY CONCEPTS (LuxAlgo SMC port, computed by code on closed {s.get('interval')} bars, "
+        f"last bar {s.get('bar_ts')}; structure confirms on a close — levels are ground truth):",
+        f"- {_smc_structure(s, 'swing')}",
+        f"- {_smc_structure(s, 'internal')}",
+        f"- {_smc_pd(s)}",
+        f"- unmitigated internal order blocks: {_smc_zones(obs.get('internal') or [])}",
+        f"- unmitigated swing order blocks: {_smc_zones(obs.get('swing') or [])}",
+        f"- unfilled fair value gaps: {_smc_zones(s.get('fair_value_gaps') or [])}",
+        f"- equal highs/lows (resting liquidity): {eq or 'none'}",
+    ]
+    htf = s.get("higher_tf")
+    if htf:
+        lines.append(
+            f"- daily chart: {_smc_structure(htf, 'swing')}; {_smc_structure(htf, 'internal')}; "
+            f"{_smc_pd(htf)} (a 50-bar daily swing updates slowly — the daily internal structure "
+            "shows the current leg)"
+        )
+    lines.append(f"- reading: {_smc_reading(s)}")
+    if s.get("setup_gate") and s.get("setup"):
+        lines.append(_setup_text(s))
+    return "\n".join(lines)
+
+
+def _setup_text(s: dict[str, Any]) -> str:
+    """The SMC SETUP line: the only trade the gate lets the desk open."""
+    st = s["setup"]
+    if not st.get("active"):
+        return (
+            f"- SMC SETUP (sweep continuation, computed by code): NONE — {st.get('reason')}. "
+            "The risk policy blocks any new position without an active setup: the answer is flat."
+        )
+    c: dict[str, Any] = next((x for x in st.get("candidates") or [] if x.get("active")), {})
+    mom = c.get("momentum") or {}
+    hist = str(mom.get("macd_hist_state") or "n/a").replace("_", " ")
+    return (
+        f"- SMC SETUP (sweep continuation, computed by code): ACTIVE {str(st['side']).upper()} — "
+        f"a close through the {c.get('type')} {_g(st.get('level'))} {st.get('bars_ago')} bars ago, with "
+        f"the {st.get('swing_trend')} swing trend; momentum on that bar: MACD hist {hist}"
+        f"{', MACD ' + str(mom['macd_cross']) + ' cross' if mom.get('macd_cross') else ''}, RSI "
+        f"{_g(mom.get('rsi'))} vs its MA {_g(mom.get('rsi_ma'))}"
+        f"{', recent RSI divergence' if mom.get('rsi_divergence') else ''}; structural stop "
+        f"{_g(st.get('structure_stop'))} (the sweeping bar's {'low' if st['side'] == 'long' else 'high'}). "
+        f"Only a {st['side']} may open."
+    )
+
+
+def _smc_reading(s: dict[str, Any]) -> str:
+    """Premium/discount is an entry-price filter inside the swing trend, never a reversal signal."""
+    trend = (s.get("swing") or {}).get("trend")
+    zone = (s.get("premium_discount") or {}).get("zone")
+    if trend not in ("bullish", "bearish"):
+        return "no confirmed swing trend yet — no structural side; trade only a fresh break, else flat"
+    side, other = ("long", "short") if trend == "bullish" else ("short", "long")
+    good = "discount" if trend == "bullish" else "premium"
+    zones = "bullish order block / gap below" if trend == "bullish" else "bearish order block / gap above"
+    if zone == good:
+        where = f"price is in {good}: a good area for a {side} (market entry acceptable on a reaction)"
+    else:
+        where = (
+            f"price is in {zone or 'an unknown zone'}: a poor price for a {side} — wait with a "
+            f"{'buy' if side == 'long' else 'sell'} limit at the nearest {zones}; "
+            f"this is NOT a {other} signal"
+        )
+    return (
+        f"the {trend} swing structure allows {side}s only (a {other} needs a {other} swing CHoCH first; "
+        f"the risk policy blocks a new {other} against it); {where}"
+    )
 
 
 def _pct(x: Any) -> str:
@@ -268,20 +459,36 @@ def _ml_text(state: dict[str, Any]) -> str:
         return f"\nML MODEL: unavailable this run ({ml.get('error')}) — do not assume a signal"
     tr = ml.get("track_record") or {}
     m, al = tr.get("model") or {}, tr.get("always_long") or {}
+
+    # v0.3 context lines
+    ctx_parts: list[str] = []
+    if ml.get("is_nfp_day"):
+        ctx_parts.append("⚠️ NFP DAY — historically negative expectancy (-0.11R); skip or half-size")
+    if ml.get("vix") is not None:
+        vix_desc = "elevated" if (ml.get("vix_level") or 1.0) > 1.15 else "normal"
+        ctx_parts.append(f"VIX {ml['vix']:.1f} ({vix_desc})")
+    if ml.get("session"):
+        ctx_parts.append(f"session: {ml['session']}")
+    ctx_line = "; ".join(ctx_parts)
+
+    ctx_block = f"- context: {ctx_line}\n" if ctx_line else ""
+    is_ensemble = "0.5" in ml.get("version", "")
+    arch = "stacked ensemble (specialist + meta-model)" if is_ensemble else "LightGBM bull/bear pair"
     return (
-        f"\nML MODEL ({ml['model']} {ml['version']}, LightGBM bull/bear pair on {ml['timeframe']} bars, "
+        f"\nML MODEL ({ml['model']} {ml['version']}, {arch} on {ml['timeframe']} bars, "
         f"computed by code at bar {ml['bar_ts']}):\n"
         f"- P(long wins) = {ml['p_bull']:.2f}: a long entered at the next bar reaches "
         f"+{ml['tp_r_long']}R before -1R (stop {ml['stop']}) within {ml['time_stop_bars']} bars\n"
         f"- P(short wins) = {ml['p_bear']:.2f}: the same for a short (+{ml['tp_r_short']}R target)\n"
-        f"- model signal: {str(ml['signal']).upper()} (a side needs P >= {ml['tau']} and above the "
-        f"other side); daily trend as the model reads it: {ml['daily_trend']}\n"
+        f"- model signal: {str(ml['signal']).upper()} (confidence {ml.get('confidence', 0):.2f}); "
+        f"daily trend: {ml['daily_trend']}\n"
+        f"{ctx_block}"
         f"- track record ({tr.get('period')}): {m.get('trades')} trades, win {_pct(m.get('win_rate'))}, "
         f"PF {m.get('profit_factor') or 0:.2f}, {_pct(m.get('long_share'))} longs; always-long: win "
-        f"{_pct(al.get('win_rate'))}, PF {al.get('profit_factor') or 0:.2f}. It rarely signals short, "
-        "so a low P(short) is weak evidence against a short, not proof.\n"
-        "Treat it as one quantitative input next to the analysts: say whether you agree and why; "
-        "it gives no price levels."
+        f"{_pct(al.get('win_rate'))}, PF {al.get('profit_factor') or 0:.2f}\n"
+        "The ML signal is the PRIMARY input for direction. Your role is to FILTER (skip weak setups, "
+        "NFP days, low-confidence signals) and ADJUST (SL ±0.5 ATR, TP down to 1.0R when time/vol "
+        "is insufficient). Do not override the ML direction without strong contrary evidence."
     )
 
 
@@ -369,6 +576,7 @@ def _snapshot_value(data: dict[str, Any], provenance_ids: list[str]) -> dict[str
         "low_52w": data.get("low_52w"),
         "range_high": data.get("range_high_252_bars"),
         "range_low": data.get("range_low_252_bars"),
+        "signals": data.get("signals") or {},
         "provenance_ids": provenance_ids,
     }
 
@@ -424,6 +632,30 @@ async def _ml_signal(state: dict[str, Any], ctx: NodeContext, snapshot: dict[str
     return {"available": True, **res.data, "provenance_ids": list(res.provenance_ids)}
 
 
+async def _smc_tool(state: dict[str, Any], ctx: NodeContext, interval: str, purpose: str) -> dict[str, Any]:
+    inst = state["instrument"]
+    args: dict[str, Any] = {"symbol": inst["canonical"], "interval": interval, "purpose": purpose}
+    if inst.get("analysis_date"):
+        args["as_of"] = inst["analysis_date"]
+    res = await _tool(ctx, "trade_smc", args)
+    if not res.ok or not isinstance(res.data, dict):
+        return {"available": False, "error": res.summary}
+    return {"available": True, **res.data, "provenance_ids": list(res.provenance_ids)}
+
+
+async def _smc(state: dict[str, Any], ctx: NodeContext, snapshot: dict[str, Any]) -> dict[str, Any]:
+    """Smart Money Concepts on the snapshot's bars (+ the daily chart); {} when opted out."""
+    if not state["input"].get("use_smc", False) or not snapshot.get("available"):
+        return {}
+    interval = snapshot.get("interval", "1d")
+    out = await _smc_tool(state, ctx, interval, "load_context_smc")
+    if out["available"] and interval != "1d":
+        htf = await _smc_tool(state, ctx, "1d", "higher_timeframe_smc")
+        if htf["available"]:
+            out["higher_tf"] = htf
+    return out
+
+
 async def load_context(state: dict[str, Any], ctx: NodeContext) -> dict[str, Any]:
     inst = state["instrument"]
     spec = horizon(state["input"].get("horizon"))
@@ -448,6 +680,9 @@ async def load_context(state: dict[str, Any], ctx: NodeContext) -> dict[str, Any
         snapshot = {"available": False, "error": res.summary}
     event_risk = await _event_risk(state, ctx) if snapshot["available"] else {"available": False}
     ml_signal = await _ml_signal(state, ctx, snapshot)
+    smc = await _smc(state, ctx, snapshot) if not ml_signal.get("available") else {}
+    if smc:
+        smc["setup_gate"] = bool(ctx.config.get("require_smc_setup", True))
 
     # (P12) the harness reads the saved book: {state, equity, cash, symbol_weight, ...} in the
     # instrument's currency; use_portfolio=false (or no book) is "not_provided", never "flat"
@@ -475,6 +710,7 @@ async def load_context(state: dict[str, Any], ctx: NodeContext) -> dict[str, Any
         "market_snapshot": snapshot,
         "event_risk": event_risk,
         "ml_signal": ml_signal,
+        "smc": smc,
         "portfolio_ctx": portfolio,
         "past_lessons": lessons,
         "invest_debate": {"history": [], "count": 0, "latest_speaker": None},
@@ -488,8 +724,26 @@ async def load_context(state: dict[str, Any], ctx: NodeContext) -> dict[str, Any
     }
 
 
+def _is_ml_led(state: dict[str, Any]) -> bool:
+    """The ML model covers this symbol/horizon AND produced a directional signal."""
+    ml = state.get("ml_signal") or {}
+    return bool(ml.get("available") and ml.get("signal") in ("long", "short"))
+
+
+def _is_ml_only(state: dict[str, Any]) -> bool:
+    """The run opted out of every LLM role and the model gave a long/short signal."""
+    return bool(state["input"].get("ml_only")) and _is_ml_led(state)
+
+
 def route_after_context(state: dict[str, Any]) -> str:
-    return "ok" if state.get("market_snapshot", {}).get("available") else "unavailable"
+    if not state.get("market_snapshot", {}).get("available"):
+        return "unavailable"
+    ml = state.get("ml_signal") or {}
+    if ml.get("available") and ml.get("signal") == "flat":
+        return "ml_flat"
+    if _is_ml_only(state):
+        return "ml_direct"
+    return "ok"
 
 
 # -- nodes: analysts (concurrent) ---------------------------------------------------------------
@@ -511,6 +765,12 @@ async def analysts(state: dict[str, Any], ctx: NodeContext) -> dict[str, Any]:
             f'Analyse the {interval} bars: pass interval="{interval}" to get_prices and compute_indicators. '
             "Weigh the scheduled events above against the holding period."
         )
+        if name == "market" and (state.get("smc") or {}).get("available"):
+            instruction += (
+                " Cover the SMART MONEY CONCEPTS block: market structure (BOS/CHoCH on the horizon's bars "
+                "and the daily chart), premium/discount, the nearest order blocks, fair value gaps and "
+                "liquidity (equal highs/lows, weak highs/lows) — quote its levels as given."
+            )
         result = await ctx.agent.run_loop(
             AgentRunRequest(
                 role=ANALYST_ROLES[name],
@@ -541,6 +801,38 @@ async def analysts(state: dict[str, Any], ctx: NodeContext) -> dict[str, Any]:
             reports[name] = out
     ok = sum(1 for r in reports.values() if r.get("text"))
     return {"reports": reports, "_summary": f"{ok}/{len(names)} reports · {', '.join(names)}"}
+
+
+def route_after_analysts(state: dict[str, Any]) -> str:
+    """ML-led runs skip the bull/bear debate — the ML model already decided direction."""
+    return "ml_plan" if _is_ml_led(state) else "debate"
+
+
+async def ml_research_plan(state: dict[str, Any], ctx: NodeContext) -> dict[str, Any]:
+    """Deterministic research_plan from the ML signal — no LLM call, no debate."""
+    ml = state["ml_signal"]
+    stance = {"long": Rating.OVERWEIGHT, "short": Rating.UNDERWEIGHT}.get(ml["signal"], Rating.HOLD)
+    confidence = min(0.5 + ml.get("confidence", 0) * 0.5, 0.95)  # map ML confidence → [0.5, 0.95]
+    decision = Decision(
+        verdict=Verdict.APPROVE,
+        confidence=round(confidence, 2),
+        reason=f"ML signal {ml['signal']} (p_bull={ml['p_bull']:.2f}, p_bear={ml['p_bear']:.2f})",
+    )
+    value: dict[str, Any] = {
+        "stance": stance.value,
+        "thesis": (
+            f"ML model {ml['model']} signals {ml['signal']} with confidence {ml.get('confidence', 0):.2f}"
+        ),
+        "key_risks": [],
+        "catalysts": [],
+        "decision": decision.model_dump(mode="json"),
+        "verdict": Verdict.APPROVE.value,
+        "mode": "ml",
+    }
+    return {
+        "research_plan": value,
+        "_summary": f"{value['stance']} · ML-led {ml['signal']} (conf {confidence:.2f})",
+    }
 
 
 # -- nodes: investment debate -------------------------------------------------------------------
@@ -711,11 +1003,14 @@ async def _size(
         "atr_multiple": atr_multiple,
         "stop_level": proposal.get("stop_level"),
         "targets": proposal.get("target_levels") or [],
+        "target_r": proposal.get("target_r") or [],
         "equity": _equity(state, ctx),
         "risk_pct": float(ctx.config.get("risk_pct", DEFAULT_RISK_PCT)),
         "size_fraction": size_fraction,
         "lot_size": inst.get("lot_size", 1),
         "max_position_weight": float(ctx.config.get("max_position_weight", 0.20)) if stock else None,
+        "min_stop_atr": _min_stop_atr(ctx.config) if not _is_ml_led(state) else None,
+        "first_target_r": _first_target_r(ctx.config) if not _is_ml_led(state) else None,
         "currency": inst["currency"],
         "time_stop_bars": bars,
         "interval": interval,
@@ -731,7 +1026,55 @@ async def _size(
     return dict(res.data), list(res.provenance_ids)
 
 
+def _ml_proposal(state: dict[str, Any]) -> dict[str, Any]:
+    """The trade the model's label describes: market entry at the next bar, stop = k x ATR,
+    one target at tp_r x the stop distance, time stop in bars. No LLM, no judgement."""
+    ml = state["ml_signal"]
+    side = ml["signal"]
+    tp_r = ml["tp_r_long"] if side == "long" else ml["tp_r_short"]
+    confidence = min(0.5 + ml.get("confidence", 0) * 0.5, 0.95)
+    return {
+        "side": side,
+        "entry_zone": [],
+        "order_type": "market",
+        "order_price": None,
+        "order_valid_bars": None,
+        "stop_basis": "atr",
+        "atr_multiple": ml.get("stop_atr_multiple"),
+        "stop_level": None,
+        "target_levels": [],
+        "target_r": [tp_r],
+        "horizon": state["input"].get("horizon", "swing"),
+        "time_stop_bars": ml.get("time_stop_bars"),
+        "invalidation": f"stop {ml.get('stop')} or {ml.get('time_stop_bars')} bars without a target",
+        "rationale": (
+            f"ML-only: {ml['model']} {side} (p_bull={ml['p_bull']:.2f}, p_bear={ml['p_bear']:.2f}); "
+            f"stop {ml.get('stop')}, target {tp_r}R, as the model's label defines the trade"
+        ),
+        "decision": Decision(
+            verdict=Verdict.APPROVE, confidence=round(confidence, 2), reason=f"ML-only {side}"
+        ).model_dump(mode="json"),
+    }
+
+
 async def trader(state: dict[str, Any], ctx: NodeContext) -> dict[str, Any]:
+    if _is_ml_only(state):
+        proposal = _ml_proposal(state)
+        attempt = int((state.get("policy") or {}).get("attempts") or 0) + 1
+        sizing, prov = await _size(state, ctx, proposal, attempt=f"ml_only#{attempt}")
+        stop = sizing.get("stop")
+        return {
+            "trade_proposal": {
+                "proposal": proposal,
+                "sizing": sizing,
+                "provenance_ids": prov,
+                "mode": "ml",
+                "attempt": attempt,
+            },
+            "risk_debate": {"history": [], "count": 0, "latest_speaker": None},
+            "_summary": f"ML-only {proposal['side']} · stop {stop if stop is not None else 'none'} · "
+            f"{sizing.get('units')} units",
+        }
     plan = state["research_plan"]
     previous = state.get("policy") or {}
     failures = [
@@ -745,7 +1088,7 @@ async def trader(state: dict[str, Any], ctx: NodeContext) -> dict[str, Any]:
         f"## Analyst reports\n{_reports_text(state)}\n\n"
         f"## Portfolio context\n{_portfolio_text(state.get('portfolio_ctx') or {})}\n\n"
         + _lessons_text(state)
-        + _limits_text(ctx)
+        + _limits_text(ctx, state)
         + (
             "## Your previous proposal was blocked by the risk policy — fix it:\n"
             + "\n".join(f"- {f['rule_id']}: {f['message']}" for f in failures)
@@ -756,7 +1099,7 @@ async def trader(state: dict[str, Any], ctx: NodeContext) -> dict[str, Any]:
         + "Return your trade proposal (basis only; the system computes stop price and size)."
     )
     messages = [
-        LLMMessage(role="system", content=_system("trade_trader", state)),
+        LLMMessage(role="system", content=_system("trade_trader", state, version=_trader_version(state))),
         LLMMessage(role="user", content=user),
     ]
     result = await ctx.llm.structured(messages, TraderProposal, tier="deep", purpose="structured")
@@ -825,6 +1168,50 @@ def _proposal_text(state: dict[str, Any]) -> str:
         f"(all computed)\ninvalidation: {p.get('invalidation') or '(none given)'}\n"
         f"rationale: {p.get('rationale')}"
     )
+
+
+def route_after_trader(state: dict[str, Any]) -> str:
+    """ML-led runs skip risk debate + PM — go straight to policy gate."""
+    proposal = (state.get("trade_proposal") or {}).get("proposal") or {}
+    if proposal.get("side") == "flat":
+        return "reject"  # trader said flat → no_trade
+    return "ml_decide" if _is_ml_led(state) else "risk"
+
+
+async def ml_decision(state: dict[str, Any], ctx: NodeContext) -> dict[str, Any]:
+    """Deterministic final_decision from the trader's proposal — no PM LLM call.
+
+    The ML model picked the direction, analysts informed the trader, the trader sized it.
+    Code-based policy_gate handles risk checks. No PM or risk debate needed.
+    """
+    proposal = state["trade_proposal"]["proposal"]
+    sizing = state["trade_proposal"]["sizing"]
+    prov = state["trade_proposal"].get("provenance_ids", [])
+    ml = state.get("ml_signal") or {}
+    confidence = min(0.5 + ml.get("confidence", 0) * 0.5, 0.95)
+    rating = {"long": Rating.OVERWEIGHT, "short": Rating.UNDERWEIGHT}.get(
+        proposal.get("side", ""), Rating.HOLD
+    )
+    decision = Decision(
+        verdict=Verdict.APPROVE,
+        confidence=round(confidence, 2),
+        reason=f"ML-led {proposal.get('side')} — policy gate will enforce risk rules",
+    )
+    value = {
+        "rating": rating.value,
+        "decision": decision.model_dump(mode="json"),
+        "verdict": Verdict.APPROVE.value,
+        "final_size_pct": 1.0,
+        "adjustments": "",
+        "summary": f"ML-led {proposal.get('side')}",
+        "sizing": sizing,
+        "provenance_ids": prov,
+        "mode": "ml",
+    }
+    return {
+        "final_decision": value,
+        "_summary": f"{value['rating']} · ML-led ({confidence:.2f}) · {sizing.get('units')} units",
+    }
 
 
 # -- nodes: risk debate -------------------------------------------------------------------------
@@ -905,7 +1292,7 @@ async def portfolio_manager(state: dict[str, Any], ctx: NodeContext) -> dict[str
         f"{state['research_plan']['stance']}: {state['research_plan']['thesis']}\n\n"
         f"## Trade proposal\n{_proposal_text(state)}\n\n"
         + _lessons_text(state)
-        + _limits_text(ctx)
+        + _limits_text(ctx, state)
         + f"## Risk debate\n{_history_text(risk.get('history') or [])}\n\n"
         f"## Portfolio context\n{_portfolio_text(pf)}\n\nReturn your final decision."
     )
@@ -959,11 +1346,22 @@ def _min_counter_trend_rr(config: Any) -> float:
     return float(config.get("min_counter_trend_risk_reward", DEFAULT_MIN_COUNTER_TREND_RISK_REWARD))
 
 
-def _limits_text(ctx: NodeContext) -> str:
+def _min_stop_atr(config: Any) -> float | None:
+    v = float(config.get("min_stop_atr", DEFAULT_MIN_STOP_ATR))
+    return v if v > 0 else None
+
+
+def _first_target_r(config: Any) -> float | None:
+    v = float(config.get("first_target_r", DEFAULT_FIRST_TARGET_R))
+    return v if v > 0 else None
+
+
+def _limits_text(ctx: NodeContext, state: dict[str, Any] | None = None) -> str:
     """Gate limits the plan is built against. The confidence floor is left out on purpose: a model
     told the bar tends to report a confidence just above it."""
     rr = _min_risk_reward(ctx.config)
-    ct_rr = _min_counter_trend_rr(ctx.config)
+    gate = state is not None and _setup_gate(state)
+    ct_rr = 0.0 if gate else _min_counter_trend_rr(ctx.config)  # the setup carries its own trend rule
     reach = float(ctx.config.get("max_order_distance_atr", DEFAULT_MAX_ORDER_DISTANCE_ATR))
     lines = [
         f"- A limit/stop entry must be on the right side of the current price and within {reach:g} x ATR "
@@ -984,6 +1382,26 @@ def _limits_text(ctx: NodeContext) -> str:
             "blocked. Place the first target accordingly, wait for a better entry with a limit order, "
             "or stay flat.\n",
         )
+    floor_atr, first_r = _min_stop_atr(ctx.config), _first_target_r(ctx.config)
+    if floor_atr:
+        lines.append(
+            f"- Stop floor: a stop closer than {floor_atr:g} x ATR to the entry is widened to that "
+            "distance by the system (position size shrinks to keep the risk constant) — intraday "
+            "noise swept tighter stops before the move came. Choose your basis knowing this.\n"
+        )
+    if first_r:
+        lines.append(
+            f"- The FIRST target is set by the system at {first_r:g}R of the final stop distance; your "
+            "`target_levels` are used as later targets only (ones inside the first target are "
+            "dropped). Spend your effort on the side, the entry price and the stop basis.\n"
+        )
+    if gate:
+        lines.insert(
+            0,
+            "- A new position needs an ACTIVE SMC SETUP (see the SMC block) on the same side; without "
+            "one every long/short is blocked. The daily-SMA counter-trend rule is off for this desk: the "
+            "setup already requires the swing trend.\n",
+        )
     return "## Risk policy (enforced by code after you)\n" + "".join(lines) + "\n"
 
 
@@ -1003,6 +1421,8 @@ def trading_policy(asset_type: str, config: Any, horizon_name: str | None = None
             severity="block" if config.get("block_on_low_confidence", True) else "warn",
         ),
         NoShortIfDisallowed(),
+        SmcStructureAlignment(),  # passes when the run has no SMC block
+        SmcSetupRequired(),  # passes when the run has no setup gate
     ]
     if horizon_name is not None:
         guard = float(horizon(horizon_name).event_guard_h)
@@ -1071,7 +1491,11 @@ def _policy_inputs(
         "quantity": -units if side == "short" else units,
         "event_calendar_available": bool((state.get("event_risk") or {}).get("available")),
         "hours_to_next_high_impact": (state.get("event_risk") or {}).get("next_high_impact_hours"),
-        "counter_trend": _counter_trend(state, side),
+        # the setup gate brings its own trend rule (swing trend); the daily-SMA rule would ban
+        # every counter-trend setup outright (a 1.6R first target never clears 2.5R)
+        "counter_trend": False if _setup_gate(state) else _counter_trend(state, side),
+        "smc_swing_trend": ((state.get("smc") or {}).get("swing") or {}).get("trend"),
+        "smc_setup_side": _setup_side(state),
     }
     cash = pf.get("cash")
     context = {
@@ -1381,9 +1805,21 @@ def _outcome(state: dict[str, Any]) -> dict[str, Any]:
         return {"status": "invalid", "reason": inst.get("error")}
     if not (state.get("market_snapshot") or {}).get("available"):
         return {"status": "unavailable", "reason": state["market_snapshot"].get("error")}
+    # ML flat early exit: no research_plan exists yet
+    ml = state.get("ml_signal") or {}
+    if ml.get("available") and ml.get("signal") == "flat" and not state.get("research_plan"):
+        return {
+            "status": "no_trade",
+            "reason": f"ML signal flat (p_bull={ml.get('p_bull')}, p_bear={ml.get('p_bear')})",
+        }
     plan = state.get("research_plan") or {}
     if plan.get("verdict") == Verdict.REJECT.value:
         return {"status": "no_trade", "reason": "research manager: " + plan["decision"]["reason"]}
+    # trader said flat in ML-led mode → no final_decision exists
+    tp = state.get("trade_proposal") or {}
+    if tp.get("proposal", {}).get("side") == "flat" and not state.get("final_decision"):
+        reason = tp.get("proposal", {}).get("rationale") or "trader chose flat"
+        return {"status": "no_trade", "reason": f"trader: {reason}"}
     final = state.get("final_decision") or {}
     if final.get("verdict") == Verdict.REJECT.value:
         return {"status": "no_trade", "reason": "portfolio manager: " + final["decision"]["reason"]}
@@ -1521,13 +1957,20 @@ _RISK_MAP = {
 
 TRADING_WORKFLOW = WorkflowSpec(
     id="trading",
-    # 2: refresh_price node; 3: horizon bars + event_risk; 4: ml_signal (old checkpoints must not
-    # resume; the version is in the backtest cache key, so no decision made without ML is reused)
-    version="4",
+    # 6: ML-led architecture — when ML signal is long/short, skip debate + RM + risk debate + PM;
+    # analysts still inform the trader, but policy gate (code) enforces risk, not LLM agents.
+    # ML flat → early exit. Legacy (no ML) path unchanged. Bumped from 5 to invalidate old caches.
+    version="9",
     input_model=TradeRunInput,
     output_model=TradeRunOutput,
     state_model=TradingState,
-    reducers={"reports": "merge"},
+    reducers={
+        "reports": "merge",
+        # ML-led and legacy paths both write these fields but never in the same run;
+        # "merge" satisfies the multi-writer validator (only one branch is ever taken).
+        "research_plan": "merge",
+        "final_decision": "merge",
+    },
     nodes=[
         _node(
             "resolve_symbol", "Resolve symbol", NodeKind.COMPUTE, "retrieve", resolve_symbol, {"instrument"}
@@ -1538,9 +1981,35 @@ TRADING_WORKFLOW = WorkflowSpec(
             NodeKind.COMPUTE,
             "retrieve",
             load_context,
-            {"market_snapshot", "event_risk", "ml_signal", "portfolio_ctx", "past_lessons", "invest_debate"},
+            {
+                "market_snapshot",
+                "event_risk",
+                "ml_signal",
+                "smc",
+                "portfolio_ctx",
+                "past_lessons",
+                "invest_debate",
+            },
         ),
         _node("analysts", "Analysts", NodeKind.AGENT, "analyze", analysts, {"reports"}),
+        # -- ML-led path: analysts → ml_research_plan → trader → ml_decision → policy_gate
+        _node(
+            "ml_research_plan",
+            "ML research plan",
+            NodeKind.COMPUTE,
+            "synthesize",
+            ml_research_plan,
+            {"research_plan"},
+        ),
+        _node(
+            "ml_decision",
+            "ML decision",
+            NodeKind.COMPUTE,
+            "synthesize",
+            ml_decision,
+            {"final_decision"},
+        ),
+        # -- legacy path: analysts → bull⇄bear → research_manager → trader → risk debate → PM
         _node("bull_researcher", "Bull", NodeKind.AGENT, "analyze", bull_researcher, {"invest_debate"}),
         _node("bear_researcher", "Bear", NodeKind.AGENT, "analyze", bear_researcher, {"invest_debate"}),
         _node(
@@ -1563,6 +2032,7 @@ TRADING_WORKFLOW = WorkflowSpec(
             portfolio_manager,
             {"final_decision"},
         ),
+        # -- shared tail: policy_gate → refresh → approval → record → report
         _node("policy_gate", "Policy gate", NodeKind.GATE, "verify", policy_gate, {"policy"}),
         _node("refresh_price", "Live price", NodeKind.COMPUTE, "compute", refresh_price, {"live"}),
         _node("approval", "Approval", NodeKind.APPROVAL, "verify", approval, {"approval"}),
@@ -1578,8 +2048,8 @@ TRADING_WORKFLOW = WorkflowSpec(
         _node("report", "Report", NodeKind.REPORT, "report", report, {"report_md", "outcome"}),
     ],
     edges=[
-        ("analysts", "bull_researcher"),
-        ("trader", "aggressive"),
+        ("ml_research_plan", "trader"),
+        ("ml_decision", "policy_gate"),
         ("record_decision", "report"),
         ("report", "END"),
     ],
@@ -1592,7 +2062,19 @@ TRADING_WORKFLOW = WorkflowSpec(
         _router(
             "load_context",
             route_after_context,
-            {"ok": "analysts", "unavailable": "report", "__fallback__": "report"},
+            {
+                "ok": "analysts",
+                "ml_direct": "ml_research_plan",  # ml_only: no analysts, trader is deterministic
+                "ml_flat": "report",  # ML signal flat → early no_trade
+                "unavailable": "report",
+                "__fallback__": "report",
+            },
+        ),
+        # after analysts: ML-led → skip debate, legacy → bull/bear debate
+        _router(
+            "analysts",
+            route_after_analysts,
+            {"ml_plan": "ml_research_plan", "debate": "bull_researcher", "__fallback__": "bull_researcher"},
         ),
         _router("bull_researcher", should_continue_debate, _DEBATE_MAP),
         _router("bear_researcher", should_continue_debate, _DEBATE_MAP),
@@ -1600,6 +2082,17 @@ TRADING_WORKFLOW = WorkflowSpec(
             "research_manager",
             route_after_research,
             {"trade": "trader", "reject": "report", "__fallback__": "trader"},
+        ),
+        # after trader: ML-led → skip risk debate + PM, legacy → risk debate
+        _router(
+            "trader",
+            route_after_trader,
+            {
+                "ml_decide": "ml_decision",
+                "risk": "aggressive",
+                "reject": "report",
+                "__fallback__": "aggressive",
+            },
         ),
         _router("aggressive", should_continue_risk, _RISK_MAP),
         _router("conservative", should_continue_risk, _RISK_MAP),
@@ -1631,6 +2124,9 @@ TRADING_WORKFLOW = WorkflowSpec(
         "debate_rounds",
         "risk_rounds",
         "use_portfolio",
+        "use_ml",
+        "ml_only",
+        "use_smc",
         "portfolio_id",
         "horizon",
         "backtest_id",

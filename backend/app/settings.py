@@ -16,7 +16,8 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
-        env_file=".env",
+        # backend/.env wins; Product/.env (one level up, the file the IDE usually opens) fills the rest
+        env_file=("../.env", ".env"),
         env_file_encoding="utf-8",
         extra="ignore",
         case_sensitive=False,
@@ -28,7 +29,7 @@ class Settings(BaseSettings):
 
     # LLM (Phase 04). Provider ids: anthropic, google (AI Studio / Gemini),
     # openai (ChatGPT), xai (Grok), thaillm, ollama (local), ollama_cloud, deepseek, groq,
-    # openrouter.
+    # openrouter, claude_code (P16).
     anthropic_api_key: SecretStr | None = None
     openai_api_key: SecretStr | None = None
     google_api_key: SecretStr | None = Field(
@@ -42,6 +43,21 @@ class Settings(BaseSettings):
     thaillm_base_url: str | None = None
     ollama_base_url: str | None = None
     ollama_api_key: SecretStr | None = None  # Ollama Cloud (https://ollama.com/v1)
+    # (P16) provider claude_code: Claude through the user's own subscription by spawning the
+    # locally installed Claude Code CLI. The OAuth token from `claude setup-token` is for
+    # personal use on this machine only; it is never a substitute for an API key for others.
+    anthropic_api_sub_key: SecretStr | None = Field(
+        default=None, validation_alias=AliasChoices("ANTHROPIC_API_SUB_KEY", "CLAUDE_CODE_OAUTH_TOKEN")
+    )
+    claude_code_bin: str | None = None  # path to the `claude` CLI (default: found on PATH)
+    claude_code_max_concurrency: int = 2  # CLI processes running at once
+    # Per-call timeout for claude_code instead of LLM_TIMEOUT_S: each call spawns a CLI and
+    # a long analyst report on Opus can take >120s, and a timeout restarts the whole call.
+    claude_code_timeout_s: float = 300.0
+    # Microcompact count trigger used when the agent runs on claude_code (None = off, the
+    # token trigger still applies). With a 1M window, clearing after 8 results only made
+    # the model re-fetch the same data.
+    claude_code_mc_count_trigger: int | None = None
 
     # Leave provider/model unset to auto-pick the first configured provider
     # (see app.harness.llm.config.RECOMMENDED_DEEP / RECOMMENDED_QUICK).
@@ -82,6 +98,9 @@ class Settings(BaseSettings):
     policy_block_on_low_confidence: bool = True  # trading: below min_confidence = no trade (False = warn)
     policy_min_risk_reward: float | None = None  # trading: R:R at the first target must exceed it (0 = off)
     policy_min_counter_trend_risk_reward: float | None = None  # trading: stricter R:R vs the daily trend
+    policy_min_stop_atr: float | None = None  # trading (LLM desk): stop floor in ATR (0 = off)
+    policy_first_target_r: float | None = None  # trading (LLM desk): system-set first target in R (0 = off)
+    policy_require_smc_setup: bool | None = None  # trading (LLM desk): open only on an active SMC setup
     policy_require_stop_loss: bool = True
     policy_max_turnover: float | None = None
 

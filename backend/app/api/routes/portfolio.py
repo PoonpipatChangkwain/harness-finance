@@ -7,10 +7,15 @@ revisions, value history, cross-portfolio summary, weekly report). The single-bo
 Positions are written only here, by the user: the advisor saves *plans*; applying one
 is its own call that writes a revision. A book that was never saved answers 404 —
 "not provided" is never presented as an empty book.
+
+(P16) ``…/positions/preview`` resolves any entry mode at the latest price without saving, and
+``/portfolios/parse-holdings`` turns text pasted from a broker app into rows via the quick LLM
+(transcription only; the preview computes the rest).
 """
 
 from __future__ import annotations
 
+import logging
 from datetime import UTC, datetime
 from decimal import Decimal
 from typing import Any, Literal
@@ -23,17 +28,35 @@ from app.api.routes.sessions import LLMChoice, _check_llm_choice
 from app.domain.models.portfolio import Portfolio, portfolio_context, portfolio_hash
 from app.domain.portfolio.analytics import PortfolioAnalytics
 from app.domain.portfolio.apply import apply_legs
-from app.domain.portfolio.entry import EntryError, PositionInput, parse_csv, resolve_positions
+from app.domain.portfolio.entry import (
+    EntryError,
+    PositionInput,
+    PositionsPreview,
+    parse_csv,
+    preview_positions,
+    resolve_positions,
+)
 from app.domain.portfolio.market import data_source, fetch_quote, fx_pair
+from app.domain.portfolio.paste import (
+    MAX_TEXT_CHARS,
+    PROMPT_ID,
+    MarketHint,
+    ParsedHoldings,
+    holdings_messages,
+    to_position_inputs,
+)
 from app.domain.portfolio.summary import MarketFilter, summarize
+from app.domain.ports import LLMUsage, StructuredMode, Tier
 from app.domain.workflows.portfolio_advisor import PORTFOLIO_ADVISOR_WORKFLOW, AdviseConstraints, RiskProfile
 from app.harness.graph.checkpoint import graph_signature, thread_id
+from app.harness.llm.errors import LLMNotConfigured
 from app.harness.portfolio.scheduler import last_slot, next_slot
 from app.harness.runtime.services import get_services
 from app.harness.storage import portfolio_repo, runs_repo
 from app.harness.workflow.portfolio_advisor import SCOPE as ADVISOR_SCOPE
 from app.harness.workflow.portfolio_advisor import advisor_date
 
+logger = logging.getLogger(__name__)
 router = APIRouter(tags=["portfolio"])
 
 DEFAULT_ID = portfolio_repo.DEFAULT_PORTFOLIO_ID
@@ -103,6 +126,27 @@ class AdviseStarted(BaseModel):
 
 class ReportRunRequest(BaseModel):
     portfolio_ids: list[str] | None = None
+
+
+class PositionsPreviewRequest(BaseModel):
+    positions: list[PositionInput] = Field(default_factory=list)
+
+
+class ParseHoldingsRequest(BaseModel):
+    text: str = Field(min_length=1, max_length=MAX_TEXT_CHARS)
+    market_hint: MarketHint | None = None
+    llm: LLMChoice | None = None
+
+
+class ParseHoldingsOut(BaseModel):
+    rows: list[PositionInput]
+    unparsed: list[str]
+    notes: list[EntryError] = Field(default_factory=list, description="LLM remarks per row (warnings)")
+    mode: StructuredMode
+    provider: str | None
+    model: str | None
+    prompt_version: str
+    usage: LLMUsage
 
 
 def _entry_errors(errors: list[EntryError], converted: list[dict[str, Any]] | None = None) -> JSONResponse:
@@ -258,6 +302,56 @@ async def run_weekly_report(body: ReportRunRequest | None = None) -> dict[str, A
     return {"started": results}
 
 
+@router.post("/portfolios/parse-holdings", response_model=ParseHoldingsOut)
+async def parse_holdings(body: ParseHoldingsRequest) -> ParseHoldingsOut | JSONResponse:
+    """Text pasted from a broker app → ``PositionInput`` rows (quick tier, or the ``llm`` picked).
+
+    No side effect: nothing is saved and no price is resolved — send the rows to
+    ``…/positions/preview`` next. 503 ``llm_not_configured`` when no LLM is set up.
+    """
+    services = get_services()
+    tier: Tier = "quick"
+    try:
+        if body.llm is not None:
+            choice = _check_llm_choice(body.llm)
+            llm = services.get_llm_for_choice(choice["provider"], choice["model"])
+            tier = "deep"  # a picked model is the deep tier of that choice (no failover)
+        else:
+            llm = services.get_llm()
+    except (LLMNotConfigured, ValueError) as exc:
+        return JSONResponse(
+            status_code=503, content={"error": {"type": "llm_not_configured", "message": str(exc)}}
+        )
+    result = await llm.structured(
+        holdings_messages(body.text, body.market_hint),
+        ParsedHoldings,
+        tier=tier,
+        purpose="portfolio.parse_holdings",
+    )
+    rows, unparsed, notes = to_position_inputs(result.value or ParsedHoldings(), body.market_hint)
+    logger.info(
+        "parse-holdings: %d rows, %d unparsed (%s %s/%s, prompt %s, %d+%d tokens)",
+        len(rows),
+        len(unparsed),
+        result.mode,
+        result.provider,
+        result.model,
+        PROMPT_ID,
+        result.usage.input_tokens,
+        result.usage.output_tokens,
+    )
+    return ParseHoldingsOut(
+        rows=rows,
+        unparsed=unparsed,
+        notes=notes,
+        mode=result.mode,
+        provider=result.provider,
+        model=result.model,
+        prompt_version=PROMPT_ID,
+        usage=result.usage,
+    )
+
+
 @router.get("/portfolios/{portfolio_id}", response_model=PortfolioOut)
 async def get_portfolio_by_id(portfolio_id: str) -> PortfolioOut:
     return _out(await _require(portfolio_id))
@@ -297,7 +391,8 @@ async def get_analytics(portfolio_id: str, fresh: bool = False) -> dict[str, Any
 
 @router.post("/portfolios/{portfolio_id}/import", openapi_extra=_CSV_BODY)
 async def import_csv(portfolio_id: str, request: Request, commit: bool = False) -> Any:
-    """CSV ``symbol,quantity,avg_cost,weight,note`` → preview (default) or ``?commit=1`` to save.
+    """CSV ``symbol,quantity,avg_cost,weight,note`` (+ ``value,pnl_pct,pnl_amount,cost_total,mode,
+    target_weight``) → preview (default) or ``?commit=1`` to save.
 
     Replaces the positions; cash, name and currency stay as they are.
     """
@@ -343,6 +438,20 @@ async def import_csv(portfolio_id: str, request: Request, commit: bool = False) 
         "revision_id": revision.id,
         "portfolio": _out(saved).model_dump(mode="json"),
     }
+
+
+@router.post("/portfolios/{portfolio_id}/positions/preview", response_model=PositionsPreview)
+async def positions_preview(portfolio_id: str, body: PositionsPreviewRequest) -> PositionsPreview:
+    """Resolve rows in any entry mode at the latest price — **nothing is saved** (P16).
+
+    Every number carries a provenance id (stored, so a hover resolves). ``pf_default`` works
+    before the first save (the user may be creating the book); any other unknown id is 404.
+    """
+    if portfolio_id != DEFAULT_ID and await portfolio_repo.get_portfolio(portfolio_id) is None:
+        raise HTTPException(status_code=404, detail=f"portfolio {portfolio_id} not found")
+    preview, records = await preview_positions(body.positions)
+    await get_services().provenance.add_many(records)
+    return preview
 
 
 @router.post("/portfolios/{portfolio_id}/advise", response_model=AdviseStarted)
@@ -499,6 +608,11 @@ async def put_default_portfolio(body: PortfolioWrite) -> PortfolioOut | JSONResp
 @router.post("/portfolio/import", openapi_extra=_CSV_BODY)
 async def import_default_portfolio(request: Request, commit: bool = False) -> Any:
     return await import_csv(DEFAULT_ID, request, commit)
+
+
+@router.post("/portfolio/positions/preview", response_model=PositionsPreview)
+async def default_positions_preview(body: PositionsPreviewRequest) -> PositionsPreview:
+    return await positions_preview(DEFAULT_ID, body)
 
 
 @router.get("/portfolio/analytics")

@@ -152,6 +152,7 @@ async def get_trade_run(run_id: str) -> dict[str, Any]:
     return {
         "trade_result": _result(found[1]) if found else None,
         "event_risk": state.get("event_risk"),
+        "ml_signal": state.get("ml_signal") or None,  # {} = no model covers this symbol/horizon
         "run": run.model_dump(mode="json"),
         "input": run.input,
         "graph_view": TRADING_WORKFLOW.graph_view().model_dump(),

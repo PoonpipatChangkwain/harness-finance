@@ -100,6 +100,39 @@ export interface EventRisk {
   next_high_impact_hours?: number | null;
 }
 
+/** state.ml_signal: the bull/bear model at the last closed bar (`trade_ml_signal`). */
+export interface MlTrackStats {
+  trades?: number | null;
+  win_rate?: number | null;
+  profit_factor?: number | null;
+  expectancy_r?: number | null;
+  long_share?: number | null;
+}
+
+export interface MlSignal {
+  available: boolean;
+  error?: string;
+  model?: string;
+  version?: string;
+  timeframe?: string;
+  bar_ts?: string;
+  p_bull?: number;
+  p_bear?: number;
+  signal?: "long" | "short" | "flat";
+  confidence?: number;
+  daily_trend?: string;
+  tp_r_long?: number;
+  tp_r_short?: number;
+  time_stop_bars?: number;
+  is_nfp_day?: boolean;
+  vix?: number | null;
+  vix_level?: number | null;
+  session?: string | null;
+  missing_features?: string[];
+  track_record?: { period?: string; model?: MlTrackStats; always_long?: MlTrackStats };
+  provenance_ids?: string[];
+}
+
 export type OutcomeKind = "tp" | "sl" | "manual_exit" | "time_stop" | "not_filled" | "cancelled";
 
 export interface TradeOutcomeBody {
@@ -248,6 +281,8 @@ export interface TradeRunDetail {
   policy: PolicyEvaluation | null;
   live?: LiveRepricing | null;
   event_risk?: EventRisk | null;
+  /** null when no validated model covers this symbol/horizon (or the run opted out) */
+  ml_signal?: MlSignal | null;
   /** the decision log entry of an approved run (null until recorded) */
   trade_result?: TradeResult | null;
   /** state.approval once answered, else the pending approval row */

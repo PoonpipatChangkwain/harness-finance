@@ -67,7 +67,7 @@ def microcompact(
             candidates.append(i)
 
     trigger: Literal["count", "token"] | None = None
-    if len(candidates) > config.mc_count_trigger:
+    if config.mc_count_trigger is not None and len(candidates) > config.mc_count_trigger:
         trigger = "count"
     else:
         total = sum(estimate_tokens(messages[i].content, config.chars_per_token) for i in candidates)

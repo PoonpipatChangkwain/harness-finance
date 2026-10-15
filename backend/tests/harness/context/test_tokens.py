@@ -88,3 +88,13 @@ def test_config_from_settings(tmp_path: Path) -> None:
     cfg = ContextConfig.from_settings(s, keep_tool_uses=7)
     assert cfg.mc_count_trigger == 2 and cfg.memory_flush is False and cfg.keep_tool_uses == 7
     assert cfg.mc_keep_recent == 4
+
+
+def test_config_claude_code_has_its_own_count_trigger(tmp_path: Path) -> None:
+    s = Settings(_env_file=None, data_dir=tmp_path, context_mc_count_trigger=2)  # type: ignore[call-arg]
+    assert ContextConfig.from_settings(s, provider="claude_code").mc_count_trigger is None  # off by default
+    assert ContextConfig.from_settings(s, provider="anthropic").mc_count_trigger == 2
+    assert ContextConfig.from_settings(s).mc_count_trigger == 2
+    s = Settings(_env_file=None, data_dir=tmp_path, claude_code_mc_count_trigger=30)  # type: ignore[call-arg]
+    assert ContextConfig.from_settings(s, provider="claude_code").mc_count_trigger == 30
+    assert ContextConfig.from_settings(s, provider="claude_code", mc_count_trigger=5).mc_count_trigger == 5

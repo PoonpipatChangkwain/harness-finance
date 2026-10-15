@@ -152,7 +152,7 @@ class FailoverLLM:
                 attempts.append((cfg.label, kind, str(exc)))
                 await self._switch(sink, chain, index, kind, str(exc))
 
-        tried = ", ".join(f"{label}={kind}" for label, kind, _ in attempts)
+        tried = ", ".join(f"{label}={kind} ({detail[:200]})" for label, kind, detail in attempts)
         raise LLMUnavailable(f"all LLM clients failed: {tried}", attempts)
 
     async def stream(
@@ -186,5 +186,5 @@ class FailoverLLM:
                     raise LLMError(f"{cfg.label}: {exc}", kind=kind, provider=cfg.provider) from exc
                 attempts.append((cfg.label, kind, str(exc)))
                 await self._switch(sink, chain, index, kind, str(exc))
-        tried = ", ".join(f"{label}={kind}" for label, kind, _ in attempts)
+        tried = ", ".join(f"{label}={kind} ({detail[:200]})" for label, kind, detail in attempts)
         raise LLMUnavailable(f"all LLM clients failed: {tried}", attempts)

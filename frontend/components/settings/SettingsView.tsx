@@ -87,10 +87,12 @@ function Section({
   );
 }
 
-function KeyDot({ configured, hint }: { configured: boolean; hint?: string }) {
+function KeyDot({ configured, hint, reason }: { configured: boolean; hint?: string; reason?: string | null }) {
   return (
     <span
-      title={configured ? "มี key แล้ว" : hint ? `ยังไม่มี key: ตั้ง ${hint} ใน backend/.env` : "ยังไม่ได้ตั้งค่า"}
+      title={
+        configured ? "มี key แล้ว" : reason ? reason : hint ? `ยังไม่มี key: ตั้ง ${hint} ใน backend/.env` : "ยังไม่ได้ตั้งค่า"
+      }
       className={clsx("inline-block size-2 shrink-0 rounded-full", configured ? "bg-done" : "bg-idle")}
     />
   );
@@ -132,7 +134,7 @@ function TierPicker({ view, value, onChange, label }: { view: View; value: TierC
           <option key={m} value={m} />
         ))}
       </datalist>
-      <KeyDot configured={entry?.configured ?? false} hint={entry?.env_hint} />
+      <KeyDot configured={entry?.configured ?? false} hint={entry?.env_hint} reason={entry?.configured_reason} />
       {entry && !entry.configured ? <span className="text-[11.5px] text-warning">ตั้ง {entry.env_hint} ใน backend/.env</span> : null}
     </div>
   );
@@ -222,11 +224,22 @@ function LlmSection({ view, save, busy }: { view: View; save: (body: SettingsUpd
         <div className="mb-1 text-muted">สถานะ key</div>
         <ul className="grid gap-1 sm:grid-cols-2">
           {view.catalog.llm.map((p) => (
-            <li key={p.id} className="flex items-center gap-2">
-              <KeyDot configured={p.configured} hint={p.env_hint} />
-              {p.label}
-              {p.free ? <span className="text-[10.5px] text-done">free</span> : null}
-              <span className="num ml-auto text-[11px] text-subtle">{p.configured ? "มี key" : p.env_hint}</span>
+            <li key={p.id} data-testid="llm-catalog-entry" className="flex items-start gap-2">
+              <span className="pt-1.5">
+                <KeyDot configured={p.configured} hint={p.env_hint} reason={p.configured_reason} />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="flex items-center gap-2">
+                  {p.label}
+                  {p.free ? <span className="text-[10.5px] text-done">free</span> : null}
+                  <span className="num ml-auto text-[11px] text-subtle">{p.configured ? "มี key" : p.env_hint}</span>
+                </span>
+                {p.note ? (
+                  <span data-testid="llm-catalog-note" className="block text-[11px] text-subtle">
+                    {p.note}
+                  </span>
+                ) : null}
+              </span>
             </li>
           ))}
         </ul>

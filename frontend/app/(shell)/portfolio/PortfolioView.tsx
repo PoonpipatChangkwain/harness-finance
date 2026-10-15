@@ -3,7 +3,8 @@
 /**
  * Portfolio page (ui-spec §6, phase-13 §13.3 + §13.6).
  * - chips: ทั้งหมด (cross-portfolio overview, Dime!-style) · one chip per book · + new book
- * - a book: summary tiles · holdings (inline edit / CSV / %-only) · allocation · sector
+ * - a book: summary tiles · holdings (guided add dialog / paste from a broker app / inline
+ *   edit / CSV / %-only) · allocation · sector
  *   exposure · risk · rebalance proposal of the advisor · plans · weekly AI reports
  * - AI Advisor lives in the inspector; when its run reaches approval the page scrolls to
  *   the proposal and highlights it
@@ -11,16 +12,18 @@
  */
 
 import { clsx } from "clsx";
-import { FileUp, Percent, Plus, Settings2 } from "lucide-react";
+import { ClipboardPaste, FileUp, Percent, Plus, Settings2 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
+import { AddPositionDialog } from "@/components/portfolio/AddPositionDialog";
 import { AllocationChart } from "@/components/portfolio/AllocationChart";
 import { ExposureBars } from "@/components/portfolio/ExposureBars";
 import { HoldingsTable } from "@/components/portfolio/HoldingsTable";
 import { ImportCsvDialog } from "@/components/portfolio/ImportCsvDialog";
+import { PasteHoldingsDialog } from "@/components/portfolio/PasteHoldingsDialog";
 import { PlansHistory } from "@/components/portfolio/PlansHistory";
 import { PORTFOLIO_TABS } from "@/components/portfolio/PortfolioInspectorTabs";
 import { PortfolioFormDialog, type PortfolioMeta } from "@/components/portfolio/PortfolioFormDialog";
@@ -32,7 +35,7 @@ import { WeeklyReports } from "@/components/portfolio/WeeklyReports";
 import { useInspectorTabs } from "@/components/shell/InspectorRegistry";
 import { StateDot, dotFor } from "@/components/ui/StateDot";
 import { api, ApiError } from "@/lib/api";
-import type { EntryKind } from "@/lib/holdings";
+import { buildPositions, mergePositions, remapErrors, rowsFromBook, type EntryMode } from "@/lib/holdings";
 import {
   entryErrors,
   portfolioApi,
@@ -77,7 +80,17 @@ function useSectorLimit(): { limit: number; label: string } {
   return state;
 }
 
-function EmptyState({ onStart, onImport }: { onStart: (k: EntryKind) => void; onImport: () => void }) {
+function EmptyState({
+  onAdd,
+  onPaste,
+  onPercent,
+  onImport,
+}: {
+  onAdd: () => void;
+  onPaste: () => void;
+  onPercent: () => void;
+  onImport: () => void;
+}) {
   return (
     <div data-testid="portfolio-empty" className="mx-auto flex max-w-lg flex-col items-center gap-3 py-12 text-center">
       <h2 className="text-[18px] font-semibold">ยังไม่มีข้อมูลพอร์ต</h2>
@@ -85,13 +98,16 @@ function EmptyState({ onStart, onImport }: { onStart: (k: EntryKind) => void; on
         กรอก position ของคุณ แล้วระบบจะดึงราคา คำนวณน้ำหนัก กำไร/ขาดทุน และความเสี่ยงให้ — ทุกตัวเลขตรวจที่มาได้ (ไม่มีการส่งคำสั่งซื้อขายจริง)
       </p>
       <div className="flex flex-wrap justify-center gap-2">
-        <button type="button" data-testid="empty-add" onClick={() => onStart("value")} className="inline-flex items-center gap-1 rounded-md bg-accent px-3 py-1.5 text-[13px] text-bg">
+        <button type="button" data-testid="empty-add" onClick={onAdd} className="inline-flex items-center gap-1 rounded-md bg-accent px-3 py-1.5 text-[13px] text-bg">
           <Plus className="size-4" aria-hidden /> เพิ่ม position
+        </button>
+        <button type="button" data-testid="empty-paste" onClick={onPaste} className="inline-flex items-center gap-1 rounded-md bg-layer-2 px-3 py-1.5 text-[13px]">
+          <ClipboardPaste className="size-4" aria-hidden /> วางข้อความจากแอปโบรกเกอร์
         </button>
         <button type="button" data-testid="empty-import" onClick={onImport} className="inline-flex items-center gap-1 rounded-md bg-layer-2 px-3 py-1.5 text-[13px]">
           <FileUp className="size-4" aria-hidden /> Import CSV
         </button>
-        <button type="button" data-testid="empty-percent" onClick={() => onStart("weight")} className="inline-flex items-center gap-1 rounded-md bg-layer-2 px-3 py-1.5 text-[13px]">
+        <button type="button" data-testid="empty-percent" onClick={onPercent} className="inline-flex items-center gap-1 rounded-md bg-layer-2 px-3 py-1.5 text-[13px]">
           <Percent className="size-4" aria-hidden /> กรอกแบบ %
         </button>
       </div>
@@ -114,8 +130,10 @@ function BookDetail({ id, brief }: { id: string; brief: PortfolioBrief | null })
   const [analytics, setAnalytics] = useState<PortfolioAnalytics | null>(null);
   const [analyticsError, setAnalyticsError] = useState<string | null>(null);
   const [loadingAnalytics, setLoadingAnalytics] = useState(false);
-  const [startWith, setStartWith] = useState<{ kind: EntryKind; nonce: number } | null>(null);
+  const [startWith, setStartWith] = useState<{ kind: EntryMode; nonce: number } | null>(null);
   const [importing, setImporting] = useState(false);
+  const [adding, setAdding] = useState(false);
+  const [pasting, setPasting] = useState(false);
   const [runs, setRuns] = useState<AdvisorRun[]>([]);
   const [busy, setBusy] = useState(false);
   const [approvalError, setApprovalError] = useState<string | null>(null);
@@ -216,6 +234,14 @@ function BookDetail({ id, brief }: { id: string; brief: PortfolioBrief | null })
     }
   };
 
+  /** rows of the add / paste dialogs → merged into the saved book (or replacing it) → PUT; 422 indexed by the new rows */
+  const saveNew = async (rows: PositionInput[], replace = false): Promise<EntryError[] | null> => {
+    const existing = replace || !book ? [] : buildPositions(rowsFromBook(book.portfolio));
+    const merged = mergePositions(existing, rows);
+    const result = await save(merged.positions, book?.portfolio.cash ?? null);
+    return result ? remapErrors(result, merged.indexOf) : null;
+  };
+
   const resolve = async (answer: PlanApproval) => {
     if (!pending) return;
     setBusy(true);
@@ -243,7 +269,12 @@ function BookDetail({ id, brief }: { id: string; brief: PortfolioBrief | null })
   return (
     <div className="space-y-3">
       {!showTable ? (
-        <EmptyState onStart={(kind) => setStartWith({ kind, nonce: Date.now() })} onImport={() => setImporting(true)} />
+        <EmptyState
+          onAdd={() => setAdding(true)}
+          onPaste={() => setPasting(true)}
+          onPercent={() => setStartWith({ kind: "weight", nonce: Date.now() })}
+          onImport={() => setImporting(true)}
+        />
       ) : null}
 
       {hasPositions ? (
@@ -275,7 +306,9 @@ function BookDetail({ id, brief }: { id: string; brief: PortfolioBrief | null })
           analytics={analytics}
           onSave={save}
           onImport={() => setImporting(true)}
+          onPaste={() => setPasting(true)}
           startWith={startWith}
+          portfolioId={id}
         />
       ) : null}
       {loadingAnalytics && analytics ? <p className="text-[11px] text-subtle">กำลังอัปเดตราคา…</p> : null}
@@ -328,6 +361,25 @@ function BookDetail({ id, brief }: { id: string; brief: PortfolioBrief | null })
       {book ? <PlansHistory portfolioId={id} revision={revision} onApplied={bump} /> : null}
       {book ? <WeeklyReports portfolioId={id} names={names} revision={revision} /> : null}
 
+      {adding ? (
+        <AddPositionDialog
+          portfolioId={id}
+          onClose={() => setAdding(false)}
+          onSave={(rows) => saveNew(rows)}
+          onPercentMode={() => {
+            setAdding(false);
+            setStartWith({ kind: "weight", nonce: Date.now() });
+          }}
+        />
+      ) : null}
+      {pasting ? (
+        <PasteHoldingsDialog
+          portfolioId={id}
+          hasPositions={hasPositions}
+          onClose={() => setPasting(false)}
+          onSave={(rows, replace) => saveNew(rows, replace)}
+        />
+      ) : null}
       {importing ? (
         <ImportCsvDialog
           portfolioId={id}

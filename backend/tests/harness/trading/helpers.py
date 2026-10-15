@@ -13,7 +13,13 @@ from app.domain.models.provenance import new_record
 from app.domain.ports import LLMMessage, LLMResponse
 from app.domain.tools.base import ToolContext, ToolOutput, ToolSpec
 from app.domain.tools.common import to_symbol
-from app.domain.tools.trading import TRADING_TOOLS, TradeEventRiskArgs, TradeQuoteArgs, TradeSnapshotArgs
+from app.domain.tools.trading import (
+    TRADING_TOOLS,
+    TradeEventRiskArgs,
+    TradeQuoteArgs,
+    TradeSmcArgs,
+    TradeSnapshotArgs,
+)
 from app.harness.events.bus import EventBus
 from app.harness.executor.registry import ToolRegistry
 from app.harness.llm.fake import FakeLLM, ScriptItem
@@ -105,12 +111,26 @@ async def _fake_event_risk(args: TradeEventRiskArgs, ctx: ToolContext) -> ToolOu
     return ToolOutput(data=value, summary=f"{len(rows)} events", records=[rec])
 
 
+# What ``trade_smc`` returns (the SMC block + its setup); None = unavailable (the default).
+SMC_FAKE: dict[str, dict[str, Any] | None] = {"value": None}
+
+
+async def _fake_smc(args: TradeSmcArgs, ctx: ToolContext) -> ToolOutput:
+    value = SMC_FAKE["value"]
+    if value is None:
+        return ToolOutput(data=None, summary="SMC unavailable (test)", status="unavailable")
+    rec = new_record("compute", None, source="compute", calculation="compute.smc.smart_money_concepts@v2")
+    return ToolOutput(data={"interval": args.interval, **value}, summary="smc", records=[rec])
+
+
 def trading_tools() -> list[ToolSpec]:
     size_trade = next(t for t in TRADING_TOOLS if t.name == "size_trade")
     snapshot = next(t for t in TRADING_TOOLS if t.name == "trade_snapshot")
     quote = next(t for t in TRADING_TOOLS if t.name == "trade_quote")
     events = next(t for t in TRADING_TOOLS if t.name == "trade_event_risk")
+    smc = next(t for t in TRADING_TOOLS if t.name == "trade_smc")
     return [
+        smc.model_copy(update={"fn": _fake_smc, "requires": frozenset()}),
         snapshot.model_copy(update={"fn": _fake_snapshot, "requires": frozenset()}),
         quote.model_copy(update={"fn": _fake_quote, "requires": frozenset()}),
         events.model_copy(update={"fn": _fake_event_risk, "requires": frozenset()}),
@@ -165,6 +185,7 @@ def proposal(
     *,
     basis: str = "atr",
     stop_level: float | None = None,
+    atr_multiple: float = 2.0,
     targets: list[float] | None = None,
     proposed_units: float | None = None,
     order_type: str = "market",
@@ -176,7 +197,7 @@ def proposal(
         order_type=order_type,  # type: ignore[arg-type]
         order_price=order_price,
         stop_basis=basis,  # type: ignore[arg-type]
-        atr_multiple=2.0,
+        atr_multiple=atr_multiple,
         stop_level=stop_level,
         target_levels=targets if targets is not None else [37.0, 39.0],
         rationale="buy the pullback",

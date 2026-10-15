@@ -107,3 +107,43 @@ async def test_pending_order_too_far_or_unmeasurable_fails_closed() -> None:
     assert "no ATR" in no_atr["order_error"]
     missing = (await _size(order_type="limit")).data
     assert "order_price is missing" in missing["order_error"] and missing["entry"] == 34.5
+
+
+async def test_target_r_follows_the_entry_and_stop() -> None:
+    d = (await _size(targets=[], target_r=[1.5, 2.5])).data  # stop 33.3, risk 1.2
+    assert d["targets"] == pytest.approx([36.3, 37.5])
+    assert d["risk_reward"] == pytest.approx([1.5, 2.5])
+    s = (await _size(side="short", targets=[], target_r=[1.5])).data  # stop 35.7
+    assert s["targets"] == pytest.approx([32.7])
+
+
+async def test_stop_floor_widens_a_tight_stop_and_shrinks_the_size() -> None:
+    # 1 x ATR = 0.6 below -> floored to 2 x ATR = 1.2 (stop 33.3), units sized from the wider stop
+    d = (await _size(atr_multiple=1.0, min_stop_atr=2.0)).data
+    assert d["stop"] == pytest.approx(33.3) and d["units"] == 8300
+    assert any(n.startswith("stop widened from 33.9 to 33.3") for n in d["notes"])
+    # a level stop inside the floor is widened too; one beyond it is kept
+    d = (await _size(stop_basis="level", stop_level=34.0, min_stop_atr=2.0)).data
+    assert d["stop"] == pytest.approx(33.3)
+    d = (await _size(stop_basis="level", stop_level=32.5, min_stop_atr=2.0)).data
+    assert d["stop"] == 32.5 and not any("widened" in n for n in d["notes"])
+    # short mirror
+    d = (await _size(side="short", atr_multiple=1.0, min_stop_atr=2.0)).data
+    assert d["stop"] == pytest.approx(35.7)
+
+
+async def test_first_target_is_set_by_the_system_from_the_floored_stop() -> None:
+    # stop 33.3 (risk 1.2): T1 = 34.5 + 1.6 x 1.2 = 36.42; the trader's 37.0 becomes target 2
+    d = (await _size(first_target_r=1.6)).data
+    assert d["targets"] == [pytest.approx(36.42), 37.0]
+    assert d["risk_reward"][0] == pytest.approx(1.6)
+    # trader targets inside T1 are dropped with a note
+    d = (await _size(targets=[35.0, 38.0], first_target_r=1.6)).data
+    assert d["targets"] == [pytest.approx(36.42), 38.0]
+    assert any("dropped" in n for n in d["notes"])
+    # with the floor, T1 is measured from the widened stop
+    d = (await _size(atr_multiple=1.0, min_stop_atr=2.0, first_target_r=1.6, targets=[])).data
+    assert d["stop"] == pytest.approx(33.3) and d["targets"] == [pytest.approx(36.42)]
+    # short
+    d = (await _size(side="short", targets=[31.0], first_target_r=1.6)).data
+    assert d["targets"] == [pytest.approx(32.58), 31.0]

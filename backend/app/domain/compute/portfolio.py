@@ -278,26 +278,161 @@ def pnl_summary(
 
 
 def units_from_value(
-    value: Decimal, pnl_pct: Decimal, price: Decimal, *, inputs: list[str] | None = None
-) -> ComputeResult[dict[str, Decimal]]:
+    value: Decimal, pnl_pct: Decimal | None, price: Decimal, *, inputs: list[str] | None = None
+) -> ComputeResult[dict[str, Decimal | None]]:
     """Units and average cost from "market value + % gain" (the Dime!-style entry, P12 §12.7).
 
     ``value`` and ``price`` are in the symbol's own currency; ``pnl_pct`` is a
     fraction (0.1452 = +14.52%). ``units = value / price`` and
     ``cost_basis = value / (1 + pnl_pct)`` so later prices move value and P&L.
+    (P16) ``pnl_pct=None`` ("value only") gives the units and leaves the cost unknown.
     """
     if price <= 0:
         raise ValueError("price must be positive")
-    if pnl_pct <= -1:
+    if pnl_pct is not None and pnl_pct <= -1:
         raise ValueError("pnl_pct must be greater than -100%")
     units = value / price
-    cost_basis = value / (1 + pnl_pct)
-    avg_cost = cost_basis / units if units != 0 else Decimal(0)
-    out = {"units": units, "cost_basis": cost_basis, "avg_cost": avg_cost}
+    cost_basis = value / (1 + pnl_pct) if pnl_pct is not None else None
+    avg_cost = (cost_basis / units if units != 0 else Decimal(0)) if cost_basis is not None else None
+    out: dict[str, Decimal | None] = {"units": units, "cost_basis": cost_basis, "avg_cost": avg_cost}
     record = compute_record(
         f"compute.portfolio.units_from_value@{_VERSION}",
+        {k: None if v is None else str(v) for k, v in out.items()},
+        params={
+            "value": str(value),
+            "pnl_pct": None if pnl_pct is None else str(pnl_pct),
+            "price": str(price),
+        },
+        inputs=inputs,
+    )
+    return ComputeResult(value=out, records=[record])
+
+
+def _positive(value: Decimal, label: str) -> None:
+    if value <= 0:
+        raise ValueError(f"{label}ต้องมากกว่า 0 (ได้ {value})")
+
+
+def _pnl_pct_ok(pnl_pct: Decimal) -> None:
+    if pnl_pct <= -1:
+        raise ValueError(f"% กำไร/ขาดทุนต้องมากกว่า -100% (ได้ {pnl_pct:%})")
+
+
+def avg_cost_from_pnl_pct(
+    price: Decimal, pnl_pct: Decimal, *, inputs: list[str] | None = None
+) -> ComputeResult[dict[str, Decimal]]:
+    """Average cost from "latest price + % gain" (P16): ``avg_cost = price / (1 + pnl_pct)``.
+
+    ``pnl_pct`` is a fraction (0.0769 = +7.69%, negative = loss).
+    """
+    _positive(price, "ราคาล่าสุด")
+    _pnl_pct_ok(pnl_pct)
+    out = {"avg_cost": price / (1 + pnl_pct)}
+    record = compute_record(
+        f"compute.portfolio.avg_cost_from_pnl_pct@{_VERSION}",
         {k: str(v) for k, v in out.items()},
-        params={"value": str(value), "pnl_pct": str(pnl_pct), "price": str(price)},
+        params={"price": str(price), "pnl_pct": str(pnl_pct)},
+        inputs=inputs,
+    )
+    return ComputeResult(value=out, records=[record])
+
+
+def avg_cost_from_pnl_amount(
+    quantity: Decimal, price: Decimal, pnl_amount: Decimal, *, inputs: list[str] | None = None
+) -> ComputeResult[dict[str, Decimal]]:
+    """Average cost from "quantity + gain in money" (P16).
+
+    ``cost_basis = quantity * price - pnl_amount`` and ``avg_cost = cost_basis / quantity``;
+    ``pnl_amount`` is in the symbol's currency, negative = loss. A loss larger than the
+    market value would mean a cost basis <= 0 and is refused.
+    """
+    _positive(quantity, "จำนวนหุ้น")
+    _positive(price, "ราคาล่าสุด")
+    cost_basis = quantity * price - pnl_amount
+    if cost_basis <= 0:
+        raise ValueError("กำไรที่กรอกมากกว่ามูลค่าปัจจุบัน ทำให้ต้นทุนรวม ≤ 0 — ตรวจเครื่องหมายหรือจำนวนอีกครั้ง")
+    out = {"avg_cost": cost_basis / quantity, "cost_basis": cost_basis}
+    record = compute_record(
+        f"compute.portfolio.avg_cost_from_pnl_amount@{_VERSION}",
+        {k: str(v) for k, v in out.items()},
+        params={"quantity": str(quantity), "price": str(price), "pnl_amount": str(pnl_amount)},
+        inputs=inputs,
+    )
+    return ComputeResult(value=out, records=[record])
+
+
+def units_from_value_and_pnl_amount(
+    value: Decimal, pnl_amount: Decimal, price: Decimal, *, inputs: list[str] | None = None
+) -> ComputeResult[dict[str, Decimal]]:
+    """Units and average cost from "market value + gain in money" (P16).
+
+    ``units = value / price``, ``cost_basis = value - pnl_amount``,
+    ``avg_cost = cost_basis / units`` (all in the symbol's currency).
+    """
+    _positive(value, "มูลค่า")
+    _positive(price, "ราคาล่าสุด")
+    cost_basis = value - pnl_amount
+    if cost_basis <= 0:
+        raise ValueError("กำไรที่กรอกไม่น้อยกว่ามูลค่าปัจจุบัน ทำให้ต้นทุนรวม ≤ 0 — ตรวจเครื่องหมายหรือตัวเลขอีกครั้ง")
+    units = value / price
+    out = {"units": units, "cost_basis": cost_basis, "avg_cost": cost_basis / units}
+    record = compute_record(
+        f"compute.portfolio.units_from_value_and_pnl_amount@{_VERSION}",
+        {k: str(v) for k, v in out.items()},
+        params={"value": str(value), "pnl_amount": str(pnl_amount), "price": str(price)},
+        inputs=inputs,
+    )
+    return ComputeResult(value=out, records=[record])
+
+
+def avg_cost_from_cost_total(
+    quantity: Decimal, cost_total: Decimal, *, inputs: list[str] | None = None
+) -> ComputeResult[dict[str, Decimal]]:
+    """Average cost from "quantity + total cost paid" (P16): ``avg_cost = cost_total / quantity``.
+
+    ``cost_total`` may be 0 (shares received for free) but never negative.
+    """
+    _positive(quantity, "จำนวนหุ้น")
+    if cost_total < 0:
+        raise ValueError(f"ต้นทุนรวมต้องไม่ติดลบ (ได้ {cost_total})")
+    out = {"avg_cost": cost_total / quantity, "cost_basis": cost_total}
+    record = compute_record(
+        f"compute.portfolio.avg_cost_from_cost_total@{_VERSION}",
+        {k: str(v) for k, v in out.items()},
+        params={"quantity": str(quantity), "cost_total": str(cost_total)},
+        inputs=inputs,
+    )
+    return ComputeResult(value=out, records=[record])
+
+
+def position_value(
+    quantity: Decimal,
+    avg_cost: Decimal | None,
+    price: Decimal | None,
+    *,
+    inputs: list[str] | None = None,
+) -> ComputeResult[dict[str, Decimal | None]]:
+    """One holding's market value, cost basis and unrealized P&L in the symbol's currency (P16
+    entry preview). A missing price or cost leaves the numbers that need it ``None`` — never 0.
+    """
+    market_value = quantity * price if price is not None else None
+    cost_basis = quantity * avg_cost if avg_cost is not None else None
+    pnl = market_value - cost_basis if market_value is not None and cost_basis is not None else None
+    pnl_pct = pnl / cost_basis if pnl is not None and cost_basis else None
+    out: dict[str, Decimal | None] = {
+        "market_value": market_value,
+        "cost_basis": cost_basis,
+        "unrealized_pnl": pnl,
+        "unrealized_pnl_pct": pnl_pct,
+    }
+    record = compute_record(
+        f"compute.portfolio.position_value@{_VERSION}",
+        {k: None if v is None else str(v) for k, v in out.items()},
+        params={
+            "quantity": str(quantity),
+            "avg_cost": None if avg_cost is None else str(avg_cost),
+            "price": None if price is None else str(price),
+        },
         inputs=inputs,
     )
     return ComputeResult(value=out, records=[record])

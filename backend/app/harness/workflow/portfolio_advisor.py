@@ -68,6 +68,7 @@ def _build(ctx: RunContext) -> Any:
         executor,
         deep_model=base_llm.primary("deep")[1],
         quick_model=base_llm.primary("quick")[1],
+        deep_provider=base_llm.primary("deep")[0],
         sub_nodes=SUB_NODES,
     )
     return make_node_context_factory(

@@ -54,8 +54,11 @@ CATALOG: dict[str, ModelInfo] = {
     "claude-opus-4-8": _claude(1_000_000, 5.0, 25.0, sampling=False),
     "claude-opus-4-7": _claude(1_000_000, 5.0, 25.0, sampling=False),
     "claude-opus-4-6": _claude(1_000_000, 5.0, 25.0, sampling=True),
+    "claude-sonnet-5-5": _claude(1_000_000, 2.0, 10.0, 0.20, sampling=False),
     "claude-sonnet-5": _claude(1_000_000, 2.0, 10.0, sampling=False),
     "claude-sonnet-4-6": _claude(1_000_000, 3.0, 15.0, sampling=True),
+    # Claude Code 2.1.91 reports contextWindow=200000 for claude-haiku-5-5 (modelUsage)
+    "claude-haiku-5-5": _claude(200_000, 0.10, 0.50, sampling=False),
     "claude-haiku-4-5": _claude(200_000, 1.0, 5.0, sampling=True),
     # window only (price via LLM_PRICING): keeps the compaction threshold right
     "openai/gpt-oss-120b": ModelInfo(context_window=131_072),
@@ -65,6 +68,14 @@ CATALOG: dict[str, ModelInfo] = {
     "gemma4:31b": ModelInfo(context_window=131_072),
     # ThaiLLM (free): the 400 error reports "maximum context length is 16384 tokens"
     "Typhoon-S-ThaiLLM-8B-Instruct": ModelInfo(context_window=16_384),
+}
+
+# Model aliases the Claude Code CLI accepts (``--model opus``) → the latest id, for pricing.
+MODEL_ALIASES: dict[str, str] = {
+    "opus": "claude-opus-5-5",
+    "sonnet": "claude-sonnet-5-5",
+    "haiku": "claude-haiku-5-5",
+    "fable": "claude-fable-5-1",
 }
 
 _warned: set[str] = set()
@@ -89,6 +100,7 @@ def parse_pricing(spec: str) -> dict[str, ModelInfo]:
 def lookup(model: str, *, free: bool = False, overrides: dict[str, ModelInfo] | None = None) -> ModelInfo:
     if overrides and model in overrides:
         return overrides[model]
+    model = MODEL_ALIASES.get(model.strip().lower(), model)
     if model in CATALOG:
         return CATALOG[model]
     for key in sorted(CATALOG, key=len, reverse=True):

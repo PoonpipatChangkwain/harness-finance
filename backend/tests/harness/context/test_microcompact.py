@@ -45,6 +45,19 @@ def test_below_triggers_is_noop() -> None:
     assert result.cleared == 0 and result.trigger is None
 
 
+def test_count_trigger_off_leaves_many_small_results() -> None:
+    result = microcompact(conversation(20), tools=registry(), config=ContextConfig(mc_count_trigger=None))
+    assert result.cleared == 0 and result.trigger is None
+
+
+def test_count_trigger_off_still_clears_by_tokens() -> None:
+    msgs = [system(), user("q")]
+    for i in range(5):
+        msgs += round_(i, content="x" * 70_000)
+    result = microcompact(msgs, tools=registry(), config=ContextConfig(mc_count_trigger=None))
+    assert result.trigger == "token" and result.cleared == 1
+
+
 def test_token_trigger_with_few_large_results() -> None:
     msgs = [system(), user("q")]
     for i in range(5):

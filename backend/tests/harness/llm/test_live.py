@@ -37,3 +37,26 @@ async def test_live_provider(provider: str) -> None:
     )
     assert resp.text.strip()
     assert resp.usage.input_tokens > 0
+
+
+@pytest.mark.live
+async def test_live_claude_code_structured() -> None:
+    """P16: the local Claude Code CLI (subscription) answers a structured call natively."""
+    from pydantic import BaseModel
+
+    class Count(BaseModel):
+        n: int
+
+    settings = get_settings()
+    if not is_provider_configured("claude_code", settings):
+        pytest.skip("claude_code not configured (no Claude Code CLI, or no token/login)")
+    chain = TierChain(primary=LLMTierConfig(provider="claude_code", model="claude-haiku-5-5", timeout_s=120))
+    llm = HarnessLLM.from_config(LLMConfig(deep=chain, quick=chain), settings)
+    result = await llm.structured(
+        [LLMMessage(role="user", content="How many legs does a spider have? Answer as n.")],
+        Count,
+        tier="quick",
+        purpose="agent",
+    )
+    assert result.mode == "native", result.raw_text
+    assert result.value == Count(n=8)

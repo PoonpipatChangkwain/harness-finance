@@ -38,6 +38,7 @@ from app.harness.llm.config import (
     LLMTierConfig,
     is_provider_configured,
     load_llm_config,
+    provider_status,
 )
 from app.harness.llm.errors import LLMNotConfigured
 from app.harness.runtime.services import get_services
@@ -54,6 +55,9 @@ POLICY_BUILTIN: dict[str, float | bool | None] = {
     "min_confidence": 0.7,
     "block_on_low_confidence": True,
     "min_risk_reward": 1.0,
+    "min_stop_atr": 2.0,
+    "first_target_r": 1.6,
+    "require_smc_setup": True,
     "require_stop_loss": True,
     "max_turnover": None,
 }
@@ -121,6 +125,7 @@ def settings_view() -> dict[str, Any]:
     current = services.overrides.current
     defaults_order = {cap.value: router_.default_order(cap)[1] for cap in Capability}
     effective_order = {**defaults_order, **current.data.order}
+    status = {pid: provider_status(pid, keys) for pid in PROVIDERS}
     return {
         "values": _values(services.settings, keys, effective_order),
         "defaults": _values(services.overrides.baseline, keys, defaults_order),
@@ -131,7 +136,9 @@ def settings_view() -> dict[str, Any]:
                 {
                     "id": pid,
                     "label": info.label,
-                    "configured": is_provider_configured(pid, keys),
+                    "configured": status[pid][0],
+                    "configured_reason": None if status[pid][0] else status[pid][1],
+                    "note": info.note,
                     "env_hint": info.env_hint,
                     "free": info.free,
                     "recommended": {"quick": RECOMMENDED_QUICK.get(pid), "deep": RECOMMENDED_DEEP.get(pid)},

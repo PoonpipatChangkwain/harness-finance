@@ -108,6 +108,28 @@ describe("Settings", () => {
     expect(document.body.innerHTML).not.toMatch(/sk-|gsk_/);
   });
 
+  it("shows a provider note and the reason it is not configured (P16)", async () => {
+    const view = fakeView();
+    view.catalog.llm.push({
+      id: "claude_code",
+      label: "Claude (subscription via Claude Code)",
+      configured: false,
+      env_hint: "ANTHROPIC_API_SUB_KEY",
+      free: true,
+      recommended: { quick: "claude-haiku-5-5", deep: "claude-opus-5-5" },
+      models: ["claude-opus-5-5"],
+      note: "ใช้ subscription ของคุณผ่าน Claude Code CLI ที่ติดตั้งในเครื่อง — สำหรับใช้ส่วนตัวเท่านั้น",
+      configured_reason: "ไม่พบ Claude Code CLI",
+    });
+    render(<SettingsView api={{ get: vi.fn(async () => view), put: vi.fn(async () => view) }} />);
+    const entries = await screen.findAllByTestId("llm-catalog-entry");
+    const claude = entries.find((e) => e.textContent?.includes("Claude (subscription via Claude Code)"))!;
+    expect(within(claude).getByTestId("llm-catalog-note").textContent).toContain("สำหรับใช้ส่วนตัวเท่านั้น");
+    expect(claude.querySelector("[title='ไม่พบ Claude Code CLI']")).not.toBeNull();
+    const groq = entries.find((e) => e.textContent?.includes("Groq"))!;
+    expect(within(groq).queryByTestId("llm-catalog-note")).toBeNull();
+  });
+
   it("limits / policy bodies carry only what changed, in fractions", async () => {
     expect(changedNumbers({ max_iterations: "6", max_tool_calls_total: "40", tool_timeout_s: "" }, { max_iterations: 10, max_tool_calls_total: 40, tool_timeout_s: 30 })).toEqual({
       max_iterations: 6,

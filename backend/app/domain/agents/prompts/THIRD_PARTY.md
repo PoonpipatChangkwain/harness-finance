@@ -22,7 +22,7 @@ Source: https://github.com/TauricResearch/TradingAgents (`tradingagents/agents/`
 | `trade_macro_analyst.v2.md` | analyst preamble shared by `analysts/*.py` (role text is our own) |
 | `trade_bull_researcher.v2.md`, `trade_bear_researcher.v2.md` | `researchers/bull_researcher.py`, `researchers/bear_researcher.py` |
 | `trade_research_manager.v2.md` | `managers/research_manager.py` + `schemas.py` (`ResearchPlan`) |
-| `trade_trader.v2.md`, `trade_trader.v3.md`, `trade_trader.v4.md`, `trade_trader.v5.md`, `trade_trader.v6.md` (v3 adds our horizon / event-risk / time-stop rules, v4 our pending limit/stop orders, v5 our flat-on-marginal-setup + calibrated-confidence rules, v6 our range-position entry-quality rules) | `trader/trader.py` + `schemas.py` (`TraderProposal`) |
+| `trade_trader.v2.md`, `trade_trader.v3.md`, `trade_trader.v4.md`, `trade_trader.v5.md`, `trade_trader.v6.md`, `trade_trader.v7.md`, `trade_trader.v8.md`, `trade_trader.v9.md` (v3 adds our horizon / event-risk / time-stop rules, v4 our pending limit/stop orders, v5 our flat-on-marginal-setup + calibrated-confidence rules, v6 our range-position entry-quality rules, v7 our ML-led mode — ML signal is primary, LLM filters/adjusts, v8 = v6 + our Smart Money Concepts guide for the LLM-only desk, v9 = v8 with our SMC sweep-continuation setup gate) | `trader/trader.py` + `schemas.py` (`TraderProposal`) |
 | `trade_reflector.v1.md` | `graph/reflection.py` (`Reflector._system_prompt`) |
 | `trade_aggressive_debator.v2.md`, `trade_conservative_debator.v2.md`, `trade_neutral_debator.v2.md` | `risk_mgmt/*_debator.py` |
 | `trade_portfolio_manager.v2.md` | `managers/portfolio_manager.py` + `schemas.py` (`PortfolioDecision`) + `context.py` (portfolio not provided) |
@@ -53,3 +53,22 @@ Source: https://github.com/virattt/dexter, local copy `../dexter`. MIT License.
 |---|---|
 | `research_lead.v2.md` ("How you think") | `SOUL.md` (condensed) |
 | `harness/runtime/prompts.py` (Behavior section, final-answer rules 6, 8, 9) | `src/agent/channels.ts` (CLI profile), `src/agent/prompts.ts` |
+
+## LuxAlgo Smart Money Concepts — CC BY-NC-SA 4.0
+
+Source: "Smart Money Concepts [LuxAlgo]" Pine Script v5 indicator, © LuxAlgo, published on
+TradingView. Licensed under
+Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International
+(https://creativecommons.org/licenses/by-nc-sa/4.0/). Ported to Python and modified (analysis
+only, no drawing; deviations listed in the module docstring) in `domain/compute/smc.py`, which
+is therefore distributed under the same license — **non-commercial use only**. The
+`trade_trader.v8.md` SMC section is our own text.
+
+## TradingView built-in RSI (Pine v6) and ChrisMoody's CM_MacD_Ult_MTF
+
+`domain/compute/indicators.py` follows two TradingView scripts (analysis only, re-implemented in
+pandas, no code copied): the RSI-based moving average and the regular bullish/bearish divergence
+rules (pivot lookback 5/5, 5-60 bars apart) of TradingView's built-in "Relative Strength Index"
+indicator, and the SMA signal line, four-state histogram colouring and signal-cross dots of
+`CM_MacD_Ult_MTF` by ChrisMoody (2014, published on TradingView). The RSI itself (Wilder) and
+MACD 12/26 were already in-house.

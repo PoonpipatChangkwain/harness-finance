@@ -13,6 +13,8 @@ results land in the scratchpad and every number gets a provenance record — but
   the same data as ``get_economic_calendar`` under its own call budget.
 - ``trade_ml_signal``: the deterministic bull/bear model's probabilities at the last
   closed bar (``compute/ml/bull_bear.py``) — evidence for the desk, never an order.
+- ``trade_smc``: Smart Money Concepts (``compute/smc.py``) on closed bars — the
+  structure/levels block the LLM-only desk reads when no ML signal leads.
 - ``size_trade``: turns the trader's *basis* (ATR multiple or a level) into a
   stop price, targets' risk/reward, units, notional and position weight. The
   LLM never supplies any of these numbers.
@@ -28,10 +30,13 @@ from datetime import UTC, date, datetime, timedelta
 from decimal import ROUND_DOWN, Decimal
 from typing import Any, Literal
 
+import pandas as pd
 from pydantic import BaseModel, Field
 
+from app.domain.compute import smc, smc_setup
 from app.domain.compute.base import compute_record
 from app.domain.compute.ml import bull_bear
+from app.domain.compute.ml.features import MARKET_SYMBOLS
 from app.domain.compute.risk import OrderType, pending_order, position_size, risk_reward, stop_from_atr
 from app.domain.data.base import Capability
 from app.domain.models.horizon import INTERVAL_MINUTES, INTERVAL_RANGE, time_stop_at
@@ -90,6 +95,41 @@ async def trade_quote(args: TradeQuoteArgs, ctx: ToolContext) -> ToolOutput:
     )
 
 
+async def _fetch_market_daily(as_of: date | None = None) -> dict[str, pd.DataFrame]:
+    """Fetch VIX/DXY/US10Y daily closes for v0.3 market features.
+
+    Uses the data layer's yfinance provider (same as main bars). Each symbol's daily close
+    series is returned as a DataFrame with DatetimeIndex and a ``close`` column.
+    """
+    from app.domain.models.symbol import AssetType, Market, Symbol
+
+    result: dict[str, pd.DataFrame] = {}
+    for yf_sym, prefix in MARKET_SYMBOLS:
+        try:
+            sym = Symbol(
+                raw=yf_sym,
+                canonical=yf_sym,
+                display=yf_sym,
+                asset_type=AssetType.INDEX,
+                market=Market.US,
+                currency="USD",
+            )
+            res = await fetch(Capability.PRICES, sym, as_of=as_of, range="1y", interval="1d")
+            frame = res.data
+            if as_of is not None:
+                frame = frame.as_of(as_of)
+            bars = list(frame.bars)
+            if bars:
+                idx = pd.DatetimeIndex([pd.Timestamp(b.ts).tz_localize(None) for b in bars])
+                result[prefix] = pd.DataFrame(
+                    {"close": [float(b.close) for b in bars]},
+                    index=idx,
+                )
+        except Exception:
+            pass  # LightGBM handles NaN natively; missing market data is not fatal
+    return result
+
+
 class TradeMlSignalArgs(BaseModel):
     symbol: str = Field(min_length=1)
     horizon: str = "intraday"
@@ -102,7 +142,8 @@ async def trade_ml_signal(args: TradeMlSignalArgs, ctx: ToolContext) -> ToolOutp
     stem = bull_bear.model_for(sym.canonical, args.horizon)
     if stem is None:
         raise ValueError(f"no validated ML model for {sym.canonical} {args.horizon}")
-    tf = bull_bear.load(stem)[0]["timeframe"]
+    meta, _ = bull_bear.load(stem)
+    tf = meta["timeframe"]
     main_res = await fetch(Capability.PRICES, sym, as_of=args.as_of, range=INTERVAL_RANGE[tf], interval=tf)
     daily_res = await fetch(Capability.PRICES, sym, as_of=args.as_of, range="2y", interval="1d")
     main_frame, daily_frame = main_res.data, daily_res.data
@@ -112,8 +153,20 @@ async def trade_ml_signal(args: TradeMlSignalArgs, ctx: ToolContext) -> ToolOutp
     now = datetime.now(UTC)
     step = timedelta(minutes=INTERVAL_MINUTES[tf])
     main = [b for b in main_frame.bars if b.ts + step <= now]
+    all_records = [*main_res.records, *daily_res.records]
+
+    # v0.3: fetch VIX/DXY/US10Y daily data if the model needs market features
+    market_daily: dict[str, pd.DataFrame] | None = None
+    groups = meta.get("feature_groups") or {}
+    if meta.get("v3_features") and groups.get("market"):
+        market_daily = await _fetch_market_daily(args.as_of)
+
     result = bull_bear.predict(
-        stem, main, list(daily_frame.bars), inputs=[r.id for r in (*main_res.records, *daily_res.records)]
+        stem,
+        main,
+        list(daily_frame.bars),
+        inputs=[r.id for r in all_records],
+        market_daily=market_daily,
     )
     v = result.value
     return ToolOutput(
@@ -121,8 +174,40 @@ async def trade_ml_signal(args: TradeMlSignalArgs, ctx: ToolContext) -> ToolOutp
         summary=(
             f"{sym.canonical} {stem} @ {v['bar_ts']}: P(bull) {v['p_bull']:.2f} · "
             f"P(bear) {v['p_bear']:.2f} → {v['signal']}"
+            f"{' [NFP DAY]' if v.get('is_nfp_day') else ''}"
         ),
-        records=[*main_res.records, *daily_res.records, *result.records],
+        records=[*all_records, *result.records],
+    )
+
+
+class TradeSmcArgs(BaseModel):
+    symbol: str = Field(min_length=1)
+    interval: SnapshotInterval = "1h"
+    as_of: date | None = None
+    purpose: str = "load_context"
+
+
+async def trade_smc(args: TradeSmcArgs, ctx: ToolContext) -> ToolOutput:
+    sym = to_symbol(args.symbol)
+    res = await fetch(
+        Capability.PRICES, sym, as_of=args.as_of, range=INTERVAL_RANGE[args.interval], interval=args.interval
+    )
+    frame = res.data if args.as_of is None else res.data.as_of(args.as_of)
+    # only CLOSED bars: a structure break is confirmed on a close, not on a forming bar
+    now = datetime.now(UTC)
+    step = timedelta(minutes=INTERVAL_MINUTES[args.interval])
+    bars = [b for b in frame.bars if b.ts + step <= now]
+    result = smc.smart_money_concepts(bars, inputs=[r.id for r in res.records])
+    setup = smc_setup.sweep_continuation_setup(bars, result.value, inputs=[r.id for r in result.records])
+    v = {"interval": args.interval, **result.value, "setup": setup.value}
+    return ToolOutput(
+        data=v,
+        summary=(
+            f"{sym.canonical} SMC {args.interval} @ {v['bar_ts']}: swing {v['swing']['trend']} · "
+            f"internal {v['internal']['trend']} · setup "
+            f"{setup.value['side'] if setup.value['active'] else 'none'}"
+        ),
+        records=[*res.records, *result.records, *setup.records],
     )
 
 
@@ -143,6 +228,10 @@ class SizeTradeArgs(BaseModel):
     atr_multiple: float | None = Field(default=None, gt=0, le=10)
     stop_level: float | None = Field(default=None, gt=0)
     targets: list[float] = Field(default_factory=list)
+    target_r: list[float] = Field(
+        default_factory=list,
+        description="Targets as multiples of the stop distance (R) from the entry: re-priced with it",
+    )
     equity: float = Field(gt=0, description="Account equity (or assumed notional), instrument currency")
     risk_pct: float = Field(default=0.01, gt=0, le=0.05, description="Equity fraction risked at the stop")
     size_fraction: float = Field(default=1.0, ge=0, le=1, description="Portfolio manager's keep-ratio")
@@ -150,6 +239,11 @@ class SizeTradeArgs(BaseModel):
     max_position_weight: float | None = Field(
         default=None, gt=0, le=1, description="Cap units so notional/equity stays within this (cash equities)"
     )
+    # stop floor: a stop closer than this many ATR to the entry is widened to it (needs ``atr``)
+    min_stop_atr: float | None = Field(default=None, gt=0, le=10)
+    # system-set first target at this R multiple of the (floored) stop distance; the trader's
+    # ``targets`` beyond it become later targets, closer ones are dropped
+    first_target_r: float | None = Field(default=None, gt=0, le=20)
     currency: str = ""
     # time stop: ``time_stop_bars`` bars of ``interval`` after ``start`` (the price's timestamp)
     time_stop_bars: int | None = Field(default=None, ge=1, le=2000)
@@ -231,10 +325,66 @@ async def size_trade(args: SizeTradeArgs, ctx: ToolContext) -> ToolOutput:
     else:
         notes.append("stop_basis=level but no stop_level")
 
+    if stop is not None and args.min_stop_atr and args.atr:
+        floor = _d(args.atr) * _d(args.min_stop_atr)
+        if abs(entry - stop) < floor:
+            proposed = stop
+            stop = entry - floor if side == "long" else entry + floor
+            notes.append(
+                f"stop widened from {float(proposed):g} to {float(stop):g}: at least "
+                f"{args.min_stop_atr:g} x ATR ({float(floor):g}) from the entry"
+            )
+            records.append(
+                compute_record(
+                    f"compute.trade.stop_floor@{_VERSION}",
+                    str(stop),
+                    params={
+                        "entry": str(entry),
+                        "proposed": str(proposed),
+                        "atr": args.atr,
+                        "min_stop_atr": args.min_stop_atr,
+                    },
+                    inputs=inputs,
+                )
+            )
+
     rr_values: list[float | None] = []
     targets: list[float] = []
     if stop is not None:
-        for t in args.targets:
+        wanted = list(args.targets)
+        if args.first_target_r is not None:
+            risk_dist = abs(entry - stop)
+            first = entry + risk_dist * _d(args.first_target_r)
+            if side == "short":
+                first = entry - risk_dist * _d(args.first_target_r)
+            beyond = [t for t in wanted if (_d(t) > first if side == "long" else _d(t) < first)]
+            if len(beyond) != len(wanted):
+                notes.append(
+                    f"{len(wanted) - len(beyond)} proposed target(s) inside the system's first target "
+                    f"{float(first):g} dropped"
+                )
+            wanted = [float(first), *beyond]
+            records.append(
+                compute_record(
+                    f"compute.trade.first_target@{_VERSION}",
+                    str(first),
+                    params={"entry": str(entry), "stop": str(stop), "r": args.first_target_r, "side": side},
+                    inputs=inputs,
+                )
+            )
+        for r in args.target_r:  # R multiples → prices at this entry, so a live re-price moves them too
+            offset = abs(entry - stop) * _d(r)
+            price = entry + offset if side == "long" else entry - offset
+            wanted.append(float(price))
+            records.append(
+                compute_record(
+                    f"compute.trade.target_from_r@{_VERSION}",
+                    str(price),
+                    params={"entry": str(entry), "stop": str(stop), "r": r, "side": side},
+                    inputs=inputs,
+                )
+            )
+        for t in wanted:
             target = _d(t)
             if (side == "long" and target <= entry) or (side == "short" and target >= entry):
                 notes.append(f"target {t} is not beyond entry {entry}")
@@ -410,6 +560,16 @@ TRADING_TOOLS: list[ToolSpec] = [
         limit_by="purpose",
         internal=True,
         fn=trade_ml_signal,
+    ),
+    ToolSpec(
+        name="trade_smc",
+        description="(internal) Smart Money Concepts structure, order blocks, liquidity and gaps",
+        args_model=TradeSmcArgs,
+        category="compute",
+        requires=frozenset({Capability.PRICES}),
+        limit_by="purpose",
+        internal=True,
+        fn=trade_smc,
     ),
     ToolSpec(
         name="size_trade",

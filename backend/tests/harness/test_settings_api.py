@@ -71,6 +71,12 @@ async def test_get_reports_configured_but_never_keys(keyed: Settings, install_se
     assert body["values"]["limits"]["max_iterations"] == 10
     assert body["values"]["data"]["order"]["quote"] == ["alpha", "beta"]
     assert [p["id"] for p in body["catalog"]["data"]["quote"]["providers"]] == ["alpha", "beta", "gamma"]
+    assert groq["note"] is None and groq["configured_reason"] is None
+    sub = next(p for p in body["catalog"]["llm"] if p["id"] == "claude_code")
+    assert sub["note"] and sub["configured"] is False  # the autouse fixture hides the local CLI
+    assert "CLI not found" in sub["configured_reason"]
+    for p in body["catalog"]["llm"]:  # every unconfigured provider says what to set
+        assert (p["configured_reason"] is None) is p["configured"]
 
 
 async def test_put_rejects_api_key_fields(keyed: Settings, install_services: Any) -> None:

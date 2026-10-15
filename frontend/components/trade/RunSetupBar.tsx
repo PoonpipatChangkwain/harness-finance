@@ -6,6 +6,7 @@
  * the date defaults to today and a past date shows the backtest badge (data cut at as_of).
  */
 
+import { clsx } from "clsx";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Play } from "lucide-react";
 import { useEffect } from "react";
@@ -23,6 +24,8 @@ export const setupSchema = z.object({
   debateRounds: z.number().int().min(1).max(3),
   riskRounds: z.number().int().min(1).max(3),
   usePortfolio: z.boolean(),
+  useMl: z.boolean(),
+  mlOnly: z.boolean(),
   horizon: z.enum(["intraday", "swing", "position"]),
   language: z.enum(["th", "en"]),
 });
@@ -36,6 +39,8 @@ export function defaultSetup(assetType: string | null | undefined, today = today
     debateRounds: 1,
     riskRounds: 1,
     usePortfolio: true,
+    useMl: true,
+    mlOnly: false,
     horizon: "swing",
     language: "th",
   };
@@ -53,6 +58,9 @@ export function toRunRequest(symbol: SymbolInfo, form: SetupForm, llm: LlmChoice
     debate_rounds: form.debateRounds,
     risk_rounds: form.riskRounds,
     use_portfolio: form.usePortfolio,
+    use_ml: form.useMl,
+    ml_only: form.useMl && form.mlOnly,
+    use_smc: false, // original LLM desk (trader v6, no SMC) whenever no ML signal leads
     horizon: form.horizon,
     language: form.language,
     llm,
@@ -87,6 +95,7 @@ export function RunSetupBar({
   const allowed = allowedAnalysts(symbol.asset_type);
   const chosen = watch("analysts");
   const date = watch("date");
+  const useMl = watch("useMl");
   const toggle = (a: AnalystName) =>
     setValue("analysts", chosen.includes(a) ? chosen.filter((x) => x !== a) : [...chosen, a], { shouldValidate: true });
 
@@ -151,6 +160,15 @@ export function RunSetupBar({
       </label>
       <label className="flex items-center gap-1">
         <input type="checkbox" {...register("usePortfolio")} /> ใช้พอร์ตของฉัน
+      </label>
+      <label className="flex items-center gap-1" title="ใช้ได้เฉพาะ symbol/horizon ที่มีโมเดลที่ validate แล้ว (ตอนนี้ XAUUSD intraday/swing)">
+        <input type="checkbox" data-testid="use-ml" {...register("useMl")} /> ML signal
+      </label>
+      <label
+        className={clsx("flex items-center gap-1", !useMl && "opacity-50")}
+        title="ถ้า ML ออก long/short: ไม่เรียก LLM เลย (ข้าม analysts) entry/stop/TP มาจาก label ของโมเดล ถ้า flat จบเป็น no_trade"
+      >
+        <input type="checkbox" data-testid="ml-only" disabled={!useMl} {...register("mlOnly")} /> ML ล้วน (ไม่ใช้ LLM)
       </label>
       <ModelPicker providers={providers.data} choice={llm} onChange={onLlmChange} disabled={busy || disabled} />
       <button

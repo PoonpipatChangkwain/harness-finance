@@ -18,6 +18,8 @@ from app.domain.policy.rules import (
     NoSellList,
     NoShortIfDisallowed,
     RequireStopLoss,
+    SmcSetupRequired,
+    SmcStructureAlignment,
     ValidPendingOrder,
     ValidSymbol,
 )
@@ -41,6 +43,8 @@ __all__ = [
     "PolicyRule",
     "PolicySet",
     "RequireStopLoss",
+    "SmcSetupRequired",
+    "SmcStructureAlignment",
     "ValidPendingOrder",
     "ValidSymbol",
 ]

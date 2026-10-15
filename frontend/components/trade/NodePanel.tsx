@@ -45,7 +45,7 @@ export function nodeOutput(node: string, detail: TradeRunDetail | undefined): { 
     case "resolve_symbol":
       return { data: detail.instrument };
     case "load_context":
-      return { data: detail.market_snapshot };
+      return { data: detail.ml_signal ? { market_snapshot: detail.market_snapshot, ml_signal: detail.ml_signal } : detail.market_snapshot };
     case "analysts":
       return { data: detail.reports };
     case "research_manager":

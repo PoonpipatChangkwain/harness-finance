@@ -11,8 +11,25 @@ import { ProposalTable, buildTargetEdits } from "@/components/portfolio/Proposal
 import { ProvValue } from "@/components/portfolio/ProvValue";
 import { correlationColor } from "@/components/portfolio/RiskPanel";
 import type { EventEnvelope } from "@/lib/events";
-import { buildPositions, declaredTotalPct, emptyRow, validateRows, type DraftRow } from "@/lib/holdings";
-import type { EntryError, PortfolioAnalytics, PortfolioBrief, PortfolioData, ProposalCard, SummaryAsset } from "@/lib/portfolio-api";
+import {
+  buildPositions,
+  declaredTotalPct,
+  draftFromPosition,
+  emptyRow,
+  mergePositions,
+  remapErrors,
+  validateRows,
+  type DraftRow,
+} from "@/lib/holdings";
+import {
+  normalizePreview,
+  type EntryError,
+  type PortfolioAnalytics,
+  type PortfolioBrief,
+  type PortfolioData,
+  type ProposalCard,
+  type SummaryAsset,
+} from "@/lib/portfolio-api";
 import { fractionToPercentText, percentTextToFraction } from "@/lib/portfolio-format";
 import { replay } from "@/stores/run-reducer";
 import { FIXTURE_DIR } from "@/tests/fixtures";
@@ -82,16 +99,79 @@ const ANALYTICS = {
 describe("draft rows ↔ PositionInput", () => {
   it("builds the PUT positions for each entry mode", () => {
     const rows: DraftRow[] = [
-      { ...emptyRow("qty"), symbol: "PTT.BK", quantity: "1,000", avgCost: "30.5", targetPct: "20" },
-      { ...emptyRow("value"), symbol: "NVDA", value: "549.96", pnlPct: "14.52" },
-      { ...emptyRow("qty"), symbol: "KBANK.BK", quantity: "100", note: "  bank " },
+      { ...emptyRow("qty_cost"), symbol: "PTT.BK", quantity: "1,000", avgCost: "30.5", targetPct: "20" },
+      { ...emptyRow("value_pnl_pct"), symbol: "NVDA", value: "549.96", pnlPct: "14.52" },
+      { ...emptyRow("qty_cost"), symbol: "KBANK.BK", quantity: "100", note: "  bank " },
+      { ...emptyRow("qty_pnl_pct"), symbol: "SCB.BK", quantity: "200", pnlPct: "-7.69", avgCost: "99" },
+      { ...emptyRow("qty_pnl_amount"), symbol: "AAPL", quantity: "10", pnlAmount: "-1,250.5" },
+      { ...emptyRow("value_pnl_amount"), symbol: "MSFT", value: "4,000", pnlAmount: "320" },
+      { ...emptyRow("cost_total"), symbol: "AOT.BK", quantity: "300", costTotal: "18,000" },
     ];
     expect(buildPositions(rows)).toEqual([
-      { symbol: "PTT.BK", quantity: "1000", avg_cost: "30.5", target_weight: "0.2" },
-      { symbol: "NVDA", value: "549.96", pnl_pct: "0.1452" },
-      { symbol: "KBANK.BK", quantity: "100", note: "bank" },
+      { symbol: "PTT.BK", mode: "qty_cost", quantity: "1000", avg_cost: "30.5", target_weight: "0.2" },
+      { symbol: "NVDA", mode: "value_pnl_pct", value: "549.96", pnl_pct: "0.1452" },
+      { symbol: "KBANK.BK", mode: "qty_cost", quantity: "100", note: "bank" },
+      // fields of other modes are never sent (avgCost is ignored here)
+      { symbol: "SCB.BK", mode: "qty_pnl_pct", quantity: "200", pnl_pct: "-0.0769" },
+      { symbol: "AAPL", mode: "qty_pnl_amount", quantity: "10", pnl_amount: "-1250.5" },
+      { symbol: "MSFT", mode: "value_pnl_amount", value: "4000", pnl_amount: "320" },
+      { symbol: "AOT.BK", mode: "cost_total", quantity: "300", cost_total: "18000" },
     ]);
-    expect(buildPositions([{ ...emptyRow("weight"), symbol: "SPY", weightPct: "60%" }])).toEqual([{ symbol: "SPY", weight: "0.6" }]);
+    expect(buildPositions([{ ...emptyRow("weight"), symbol: "SPY", weightPct: "60%" }])).toEqual([
+      { symbol: "SPY", mode: "weight", weight: "0.6" },
+    ]);
+  });
+
+  it("a parsed PositionInput becomes a draft of the right mode", () => {
+    expect(draftFromPosition({ symbol: "NVDA", value: "549.96", pnl_pct: "0.1452" })).toMatchObject({ kind: "value_pnl_pct", value: "549.96", pnlPct: "14.52" });
+    expect(draftFromPosition({ symbol: "PTT", quantity: "1000", avg_cost: "32.5", pnl_pct: "0.0769" }).kind).toBe("qty_cost");
+    expect(draftFromPosition({ symbol: "A", quantity: "5", pnl_amount: "-20" }).kind).toBe("qty_pnl_amount");
+    expect(draftFromPosition({ symbol: "A", quantity: "5", cost_total: "100" }).kind).toBe("cost_total");
+    expect(draftFromPosition({ symbol: "A", value: "5", pnl_amount: "1" }).kind).toBe("value_pnl_amount");
+    expect(draftFromPosition({ symbol: "A", weight: "0.25" })).toMatchObject({ kind: "weight", weightPct: "25" });
+    expect(draftFromPosition({ symbol: "A", mode: "qty_pnl_pct", quantity: "5", pnl_pct: "-0.1" })).toMatchObject({ kind: "qty_pnl_pct", pnlPct: "-10" });
+  });
+
+  it("merges new rows into the book and maps a 422 back to them", () => {
+    const existing = [
+      { symbol: "PTT.BK", mode: "qty_cost" as const, quantity: "1000", target_weight: "0.2", note: "core" },
+      { symbol: "AAPL", mode: "qty_cost" as const, quantity: "10" },
+    ];
+    const added = [
+      { symbol: "NVDA", mode: "value_pnl_pct" as const, value: "500" },
+      { symbol: "ptt.bk", mode: "qty_pnl_amount" as const, quantity: "1200", pnl_amount: "-50" },
+    ];
+    const { positions, indexOf } = mergePositions(existing, added);
+    expect(indexOf).toEqual([2, 0]);
+    expect(positions).toEqual([
+      { symbol: "ptt.bk", mode: "qty_pnl_amount", quantity: "1200", pnl_amount: "-50", target_weight: "0.2", note: "core" },
+      { symbol: "AAPL", mode: "qty_cost", quantity: "10" },
+      { symbol: "NVDA", mode: "value_pnl_pct", value: "500" },
+    ]);
+    const errs: EntryError[] = [
+      { index: 2, symbol: "NVDA", field: "value", message: "ไม่มีราคา" },
+      { index: 1, symbol: "AAPL", field: "quantity", message: "x" },
+      { index: null, symbol: null, field: null, message: "book" },
+    ];
+    expect(remapErrors(errs, indexOf)).toEqual([
+      { index: 0, symbol: "NVDA", field: "value", message: "ไม่มีราคา" },
+      { index: null, symbol: "AAPL", field: "quantity", message: "แถว 2 (AAPL) ในพอร์ต: x" },
+      { index: null, symbol: null, field: null, message: "book" },
+    ]);
+  });
+
+  it("normalizes a preview whose numbers arrive as plain strings", () => {
+    const out = normalizePreview({
+      rows: [{ index: 0, symbol: "PTT.BK", mode: "qty_pnl_pct", status: "ok", quantity: 1000, avg_cost: "32.5", price: "35", currency: "THB", market_value: { value: "35000", provenance_id: "prov_mv" }, provenance_id: "prov_row" }],
+      errors: [],
+    });
+    const row = out.rows[0]!;
+    expect(row.symbol.canonical).toBe("PTT.BK");
+    expect(row.quantity).toBe("1000");
+    expect(row.price).toEqual({ value: 35, provenance_id: "prov_row" });
+    expect(row.market_value).toEqual({ value: 35000, provenance_id: "prov_mv" });
+    expect(row.unrealized_pnl).toBeNull();
+    expect(row.errors).toEqual([]);
   });
 
   it("percent text ↔ fraction round-trips without float noise", () => {
@@ -103,8 +183,8 @@ describe("draft rows ↔ PositionInput", () => {
 
   it("validates before sending", () => {
     const errs = validateRows([
-      { ...emptyRow("qty"), symbol: "PTT", quantity: "0" },
-      { ...emptyRow("qty"), symbol: "ptt", quantity: "10" },
+      { ...emptyRow("qty_cost"), symbol: "PTT", quantity: "0" },
+      { ...emptyRow("qty_cost"), symbol: "ptt", quantity: "10" },
       { ...emptyRow("weight"), symbol: "A", weightPct: "70" },
       { ...emptyRow("weight"), symbol: "B", weightPct: "40" },
     ]);
@@ -112,6 +192,21 @@ describe("draft rows ↔ PositionInput", () => {
       [0, "quantity"],
       [1, "symbol"],
       [null, "weight"],
+    ]);
+    // the second number of each mode: required where the mode needs it, sign only for P&L
+    const modeErrs = validateRows([
+      { ...emptyRow("qty_pnl_amount"), symbol: "A", quantity: "10" },
+      { ...emptyRow("cost_total"), symbol: "B", quantity: "10", costTotal: "-5" },
+      { ...emptyRow("qty_pnl_pct"), symbol: "C", quantity: "10", pnlPct: "-100" },
+      { ...emptyRow("value_pnl_amount"), symbol: "D", value: "0", pnlAmount: "-5" },
+      { ...emptyRow("qty_pnl_amount"), symbol: "E", quantity: "10", pnlAmount: "-50" },
+      { ...emptyRow("value_pnl_pct"), symbol: "F", value: "100" },
+    ]);
+    expect(modeErrs.map((e) => [e.index, e.field])).toEqual([
+      [0, "pnl_amount"],
+      [1, "cost_total"],
+      [2, "pnl_pct"],
+      [3, "value"],
     ]);
     expect(declaredTotalPct([{ ...emptyRow("weight"), weightPct: "70" }, { ...emptyRow("weight"), weightPct: "12.5" }])).toBe(82.5);
   });
@@ -128,8 +223,8 @@ describe("HoldingsTable", () => {
     await waitFor(() => expect(onSave).toHaveBeenCalledTimes(1));
     expect(onSave).toHaveBeenCalledWith(
       [
-        { symbol: "PTT.BK", quantity: "1200", avg_cost: "30", target_weight: "0.2" },
-        { symbol: "AAPL", quantity: "10", avg_cost: "150", target_weight: "0.15", note: "core" },
+        { symbol: "PTT.BK", mode: "qty_cost", quantity: "1200", avg_cost: "30", target_weight: "0.2" },
+        { symbol: "AAPL", mode: "qty_cost", quantity: "10", avg_cost: "150", target_weight: "0.15", note: "core" },
       ],
       "40000",
     );
@@ -173,21 +268,85 @@ describe("HoldingsTable", () => {
     expect(screen.getByTestId("declared-total").textContent).toContain("เกิน 100%");
   });
 
-  it("a new row is a draft entered as value + % gain", async () => {
+  it("+ เพิ่ม opens the add dialog; its rows are merged into the PUT of the book", async () => {
     const onSave = vi.fn(async () => null);
     const search = vi.fn(async () => ({ normalized: sym("NVDA", "USD", "US"), matches: [] }));
-    render(<HoldingsTable book={BOOK} analytics={ANALYTICS} onSave={onSave} onImport={() => {}} search={search} />);
+    const preview = vi.fn(async () => ({ rows: [], errors: [] }));
+    render(
+      <HoldingsTable book={BOOK} analytics={ANALYTICS} onSave={onSave} onImport={() => {}} search={search} portfolioId="pf_default" addApi={{ preview }} />,
+    );
     fireEvent.click(screen.getByTestId("add-row"));
+    const dialog = screen.getByTestId("add-position-dialog");
+    expect(screen.getAllByTestId("holding-row")).toHaveLength(2); // no inline draft row
+    fireEvent.change(within(dialog).getByTestId("symbol-search"), { target: { value: "NVDA" } });
+    fireEvent.mouseDown(await within(dialog).findByTestId("symbol-option", {}, { timeout: 2000 }));
+    fireEvent.click(within(dialog).getByTestId("mode-value_pnl_pct"));
+    fireEvent.change(within(dialog).getByTestId("add-first"), { target: { value: "549.96" } });
+    fireEvent.change(within(dialog).getByTestId("add-second"), { target: { value: "14.52" } });
+    fireEvent.click(within(dialog).getByTestId("add-save"));
+    await waitFor(() => expect(onSave).toHaveBeenCalled());
+    expect(onSave).toHaveBeenCalledWith(
+      [
+        { symbol: "PTT.BK", mode: "qty_cost", quantity: "1000", avg_cost: "30", target_weight: "0.2" },
+        { symbol: "AAPL", mode: "qty_cost", quantity: "10", avg_cost: "150", note: "core" },
+        { symbol: "NVDA", mode: "value_pnl_pct", value: "549.96", pnl_pct: "0.1452" },
+      ],
+      "50000",
+    );
+    await waitFor(() => expect(screen.queryByTestId("add-position-dialog")).toBeNull());
+  });
+
+  it("a 422 of the merged PUT comes back to the dialog's row", async () => {
+    const onSave = vi.fn(async () => [{ index: 2, symbol: "NVDA", field: "value", message: "ดึงราคา NVDA ไม่ได้" }]);
+    const search = vi.fn(async () => ({ normalized: sym("NVDA", "USD", "US"), matches: [] }));
+    const preview = vi.fn(async () => ({ rows: [], errors: [] }));
+    render(<HoldingsTable book={BOOK} analytics={ANALYTICS} onSave={onSave} onImport={() => {}} search={search} addApi={{ preview }} />);
+    fireEvent.click(screen.getByTestId("add-row"));
+    const dialog = screen.getByTestId("add-position-dialog");
+    fireEvent.change(within(dialog).getByTestId("symbol-search"), { target: { value: "NVDA" } });
+    fireEvent.mouseDown(await within(dialog).findByTestId("symbol-option", {}, { timeout: 2000 }));
+    fireEvent.click(within(dialog).getByTestId("mode-value_pnl_pct"));
+    fireEvent.change(within(dialog).getByTestId("add-first"), { target: { value: "549.96" } });
+    fireEvent.click(within(dialog).getByTestId("add-save"));
+    const err = await within(dialog).findByTestId("item-error");
+    expect(err.textContent).toContain("ดึงราคา NVDA ไม่ได้");
+  });
+
+  it("a draft row on the table picks its entry mode from a menu of 6", async () => {
+    const onSave = vi.fn(async () => null);
+    const search = vi.fn(async () => ({ normalized: sym("NVDA", "USD", "US"), matches: [] }));
+    render(
+      <HoldingsTable book={BOOK} analytics={ANALYTICS} onSave={onSave} onImport={() => {}} search={search} startWith={{ kind: "qty_cost", nonce: 1 }} />,
+    );
+    const menu = screen.getByTestId("row-mode") as HTMLSelectElement;
+    expect(menu.value).toBe("qty_cost");
+    expect(Array.from(menu.options).map((o) => o.value)).toEqual([
+      "qty_cost",
+      "qty_pnl_pct",
+      "qty_pnl_amount",
+      "value_pnl_pct",
+      "value_pnl_amount",
+      "cost_total",
+    ]);
     const input = screen.getAllByTestId("symbol-search").at(-1)!;
     fireEvent.change(input, { target: { value: "NVDA" } });
-    const option = await screen.findByTestId("symbol-option", {}, { timeout: 2000 });
-    fireEvent.mouseDown(option);
-    fireEvent.change(screen.getByLabelText("value NVDA"), { target: { value: "549.96" } });
-    fireEvent.change(screen.getByLabelText("pnl percent NVDA"), { target: { value: "14.52" } });
+    fireEvent.mouseDown(await screen.findByTestId("symbol-option", {}, { timeout: 2000 }));
+    expect(screen.getByRole("option", { name: "จำนวน + กำไร/ขาดทุน (USD)" })).toBeTruthy();
+    fireEvent.change(screen.getByTestId("row-mode"), { target: { value: "qty_pnl_amount" } });
+    expect(screen.queryByLabelText("avg cost NVDA")).toBeNull();
+    fireEvent.change(screen.getByLabelText("quantity NVDA"), { target: { value: "5" } });
+    fireEvent.change(screen.getByLabelText("pnl amount NVDA"), { target: { value: "-120" } });
     fireEvent.click(screen.getByTestId("save-holdings"));
     await waitFor(() => expect(onSave).toHaveBeenCalled());
     const positions = (onSave.mock.calls[0] as unknown as [unknown[]])[0];
-    expect(positions.at(-1)).toEqual({ symbol: "NVDA", value: "549.96", pnl_pct: "0.1452" });
+    expect(positions.at(-1)).toEqual({ symbol: "NVDA", mode: "qty_pnl_amount", quantity: "5", pnl_amount: "-120" });
+  });
+
+  it("leaving %-only mode turns a new weight row into a value row with the mode menu", () => {
+    render(<HoldingsTable book={null} analytics={null} onSave={async () => null} onImport={() => {}} startWith={{ kind: "weight", nonce: 1 }} />);
+    expect(screen.queryByTestId("row-mode")).toBeNull();
+    fireEvent.click(screen.getByTestId("percent-mode"));
+    expect((screen.getByTestId("row-mode") as HTMLSelectElement).value).toBe("value_pnl_pct");
   });
 });
 

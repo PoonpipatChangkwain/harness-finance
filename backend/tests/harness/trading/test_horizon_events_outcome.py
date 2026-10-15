@@ -122,6 +122,7 @@ async def test_unavailable_calendar_is_said_not_assumed_quiet(
 
 async def test_settled_outcome_computes_r_and_becomes_the_next_runs_lesson(settings: Settings) -> None:
     memory = MemoryStore()
+    settings.policy_first_target_r = 0  # target 2 of the trader's own list is settled below
     llm = FakeLLM([*happy_script(4), "narrative", "The ATR stop was too tight for the open; widen it."])
     services = trading_services(settings, llm, memory)
     run_id = await _start(services)

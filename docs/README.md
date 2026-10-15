@@ -46,6 +46,8 @@ P00 Scaffold
 | 12 | [phase-12-portfolio-backend.md](phases/phase-12-portfolio-backend.md) | F1, T4, T5 | portfolio analytics + advisor |
 | 13 | [phase-13-portfolio-ui-settings.md](phases/phase-13-portfolio-ui-settings.md) | UI | หน้า Portfolio + Settings |
 | 14 | [phase-14-hardening.md](phases/phase-14-hardening.md) | ทั้งหมด | evals, E2E, budget, docs |
+| 15 | [phase-15-backtest.md](phases/phase-15-backtest.md) | F1, T3 | backtest + portfolio simulator |
+| 16 | [phase-16-portfolio-entry-claude-code.md](phases/phase-16-portfolio-entry-claude-code.md) | F1, F4, UI | โหมดกรอกพอร์ตแบบโบรกเกอร์ + preview + วางข้อความ; LLM provider `claude_code` (subscription) |
 
 ## วิธีส่งงานให้ implementing agent (template)
 

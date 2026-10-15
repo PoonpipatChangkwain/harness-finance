@@ -72,9 +72,9 @@ def _build(ctx: RunContext) -> tuple[Any, ResearchAgent, ContextManager]:
         services.get_llm_for_choice(choice["provider"], choice["model"]) if choice else services.get_llm()
     )
     llm = base_llm.bind(emit=scoped, on_usage=on_usage)
-    deep_model = base_llm.primary("deep")[1]
+    deep_provider, deep_model = base_llm.primary("deep")
     quick_model = base_llm.primary("quick")[1]
-    config = ContextConfig.from_settings(services.settings)
+    config = ContextConfig.from_settings(services.settings, provider=deep_provider)
     context = ContextManager(
         llm,
         services.tools,

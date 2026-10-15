@@ -58,6 +58,10 @@ export interface LlmCatalogEntry {
   free: boolean;
   recommended: { quick: string | null; deep: string | null };
   models: string[];
+  /** (P16) short note shown under the provider (e.g. claude_code: personal subscription only) */
+  note?: string | null;
+  /** (P16) why the provider is not configured (KeyDot tooltip) */
+  configured_reason?: string | null;
 }
 
 export interface DataCatalogEntry {

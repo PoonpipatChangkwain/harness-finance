@@ -141,6 +141,8 @@ export function toConfig(f: BacktestForm, llm: LlmChoice | null): BacktestConfig
     concurrency: f.concurrency,
     budget_usd: f.budgetUsd.trim() && budget > 0 ? budget : null,
     baseline: f.baseline,
+    use_ml: true, // backend default: the desk reads the ML signal where a validated model exists
+    use_smc: false, // original LLM desk (trader v6, no SMC) whenever no ML signal leads
     sim: toSimConfig(f.sim),
   };
 }

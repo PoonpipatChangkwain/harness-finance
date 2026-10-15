@@ -25,6 +25,7 @@ from app.harness.workflow.validate import validate_spec
 from app.settings import Settings
 from tests.harness.trading.helpers import (
     QUOTES,
+    SMC_FAKE,
     TimedFakeLLM,
     analyst_turns,
     debate_turns,
@@ -95,8 +96,9 @@ def test_routers_fall_back_on_odd_speakers() -> None:
         == "neutral"
     )
     assert should_continue_risk({**base, "risk_debate": {"count": 3, "latest_speaker": "neutral"}}) == "pm"
+    debate_router = next(r for r in TRADING_WORKFLOW.routers if r.source == "bull_researcher")
     for key in ("__fallback__", "bull", "bear", "manager"):
-        assert key in TRADING_WORKFLOW.routers[2].path_map
+        assert key in debate_router.path_map
 
 
 async def test_happy_path_stock_waits_for_approval_then_reports(settings: Settings) -> None:
@@ -244,6 +246,7 @@ async def test_confidence_floor_is_70_and_warn_mode_keeps_the_human(settings: Se
 
 
 async def test_rr_at_the_first_target_must_exceed_the_minimum(settings: Settings) -> None:
+    settings.policy_first_target_r = 0  # the trader's own targets are under test
     # long 34.5, stop 33.3 (risk 1.2): TP1 35.0 → R:R 0.42 blocks; the retry's TP1 37.0 → 2.08 passes
     script = [*analyst_turns(4), *debate_turns(), research_plan(), proposal(targets=[35.0, 39.0]),
               *risk_turns(), pm(), proposal(), *risk_turns(), pm()]  # fmt: skip
@@ -257,8 +260,24 @@ async def test_rr_at_the_first_target_must_exceed_the_minimum(settings: Settings
     assert "min_risk_reward: R:R 0.42" in trader_calls[1].messages[-1].content
 
 
+async def test_default_desk_floors_the_stop_and_sets_the_first_target(settings: Settings) -> None:
+    # PTT 34.5, ATR 0.6: the trader's 1 x ATR stop (33.9) is floored to 2 x ATR (33.3); T1 = 1.6R =
+    # 36.42 is set by code and the trader's 37.0 / 39.0 become targets 2 and 3
+    script = [*analyst_turns(4), *debate_turns(), research_plan(), proposal(atr_multiple=1.0),
+              *risk_turns(), pm()]  # fmt: skip
+    llm = FakeLLM(script)
+    run_id = await _start(trading_services(settings, llm))
+    card = of(await events_of(run_id), "approval.required")[0]["proposal"]
+    assert card["stop"] == pytest.approx(33.3)
+    assert card["targets"] == [pytest.approx(36.42), 37.0, 39.0]
+    assert card["risk_reward"][0] == pytest.approx(1.6)
+    trader_call = next(c for c in llm.calls if "Return your trade proposal" in c.messages[-1].content)
+    assert "Stop floor" in trader_call.messages[-1].content
+
+
 async def test_rr_rule_off_at_zero(settings: Settings) -> None:
     settings.policy_min_risk_reward = 0
+    settings.policy_first_target_r = 0
     script = [*analyst_turns(4), *debate_turns(), research_plan(), proposal(targets=[35.0]),
               *risk_turns(), pm()]  # fmt: skip
     llm = FakeLLM(script)
@@ -299,6 +318,45 @@ async def test_policy_block_twice_rejects_without_approval(settings: Settings) -
     events = await events_of(run_id)
     assert not of(events, "approval.required")
     assert run.output is not None and run.output["status"] == "rejected"
+
+
+def _smc_with(setup: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "bar_ts": "2026-09-25T08:00:00+00:00",
+        "swing": {"trend": "bullish", "breaks": []},
+        "internal": {"trend": "bullish", "breaks": []},
+        "setup": setup,
+    }
+
+
+async def test_smc_setup_gate_blocks_without_a_setup_and_passes_with_one(
+    settings: Settings, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    none = {"active": False, "side": None, "reason": "no continuation sweep of an equal high/low"}
+    monkeypatch.setitem(SMC_FAKE, "value", _smc_with(none))
+    script = [
+        *analyst_turns(4), *debate_turns(), research_plan(), proposal(), *risk_turns(), pm(),
+        proposal(), *risk_turns(), pm(), "narrative",
+    ]  # fmt: skip
+    llm = FakeLLM(script)
+    run_id = await _start(trading_services(settings, llm), use_smc=True)
+    run = await runs_repo.get_run(run_id)
+    assert run is not None and run.output is not None and run.output["status"] == "rejected"
+    gates = [p for p in of(await events_of(run_id), "node.finished") if p["node"] == "policy_gate"]
+    assert all("smc_setup_required" in g["summary"] for g in gates)
+    trader = next(c for c in llm.calls if "Return your trade proposal" in c.messages[-1].content)
+    assert "Sweep continuation" in trader.messages[0].content  # trader prompt v9
+    assert "SMC SETUP (sweep continuation, computed by code): NONE" in trader.messages[-1].content
+
+    active = {
+        "active": True, "side": "long", "level": 34.2, "bars_ago": 2, "structure_stop": 33.9,
+        "swing_trend": "bullish", "reason": "long setup",
+        "candidates": [{"active": True, "type": "EQH", "momentum": {"macd_hist_state": "rising_above"}}],
+    }  # fmt: skip
+    monkeypatch.setitem(SMC_FAKE, "value", _smc_with(active))
+    run_id = await _start(trading_services(settings, FakeLLM(happy_script(4))), use_smc=True)
+    run = await runs_repo.get_run(run_id)
+    assert run is not None and run.status == "waiting_approval"
 
 
 async def test_llm_size_is_overwritten_by_compute(settings: Settings) -> None:
@@ -350,6 +408,7 @@ async def test_edited_size_is_recomputed_and_rechecked(settings: Settings) -> No
 
 async def test_edited_stop_and_targets_are_recomputed(settings: Settings) -> None:
     """(P11) stop/targets edits are a basis: compute re-derives R:R and size, policy re-checks."""
+    settings.policy_first_target_r = 0  # the trader's own targets are under test
     services = trading_services(settings, FakeLLM([*happy_script(4), "narrative"]))
     run_id = await _start(services)
     await _approve(services, run_id, "edited", edits={"stop_level": 33.0, "target_levels": [38.0]})
@@ -503,6 +562,7 @@ async def test_buy_limit_is_sized_from_its_price_and_survives_a_move_toward_it(
     settings: Settings, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     # PTT 34.5, ATR 0.6: buy limit 34.0 (0.83 ATR below), ATR stop 32.8, TP1 37 → R:R 2.5
+    settings.policy_first_target_r = 0
     monkeypatch.setitem(QUOTES, "PTT.BK", [34.5, 34.9])  # a market order would fail the 0.5 ATR drift
     memory = MemoryStore()
     limit = proposal(order_type="limit", order_price=34.0)

@@ -54,15 +54,35 @@ export interface PortfolioBrief {
   updated_at: string;
 }
 
-/** Backend `PositionInput`: one of quantity(+avg_cost) · value(+pnl_pct) · weight. Numbers as strings. */
+/**
+ * How a position was entered (contracts §5, P16). The backend fills in what is missing with
+ * compute (never the frontend): e.g. `qty_pnl_pct` → avg cost from the latest price.
+ */
+export type EntryMode =
+  | "qty_cost"
+  | "qty_pnl_pct"
+  | "qty_pnl_amount"
+  | "value_pnl_pct"
+  | "value_pnl_amount"
+  | "cost_total"
+  | "weight";
+
+/**
+ * Backend `PositionInput`. Numbers are decimal strings; `pnl_pct` / `weight` / `target_weight`
+ * are fractions (14.52% → "0.1452"); `pnl_pct` / `pnl_amount` are negative for a loss and
+ * `pnl_amount` is money in the symbol's currency. Only the fields of `mode` may be set.
+ */
 export interface PositionInput {
   symbol: string;
+  mode?: EntryMode;
   quantity?: string;
   avg_cost?: string;
   weight?: string;
   target_weight?: string;
   value?: string;
   pnl_pct?: string;
+  pnl_amount?: string;
+  cost_total?: string;
   note?: string;
 }
 
@@ -350,6 +370,138 @@ export interface AdvisorRun {
   report_md: string | null;
 }
 
+/** One row of `POST …/positions/preview` (P16): the resolved entry, nothing saved. */
+export interface PreviewRow {
+  index: number;
+  symbol: SymbolInfo;
+  mode: EntryMode;
+  status: "ok" | "error";
+  quantity: string | null;
+  avg_cost: string | null;
+  price: PV | null;
+  price_as_of: string | null;
+  currency: string;
+  market_value: PV | null;
+  cost_basis: PV | null;
+  unrealized_pnl: PV | null;
+  unrealized_pnl_pct: PV | null;
+  provenance_id: string | null;
+  /** status "error" → why the row cannot be saved; status "ok" → warnings (e.g. no price) */
+  errors: EntryError[];
+}
+
+export interface PositionsPreview {
+  rows: PreviewRow[];
+  /** book-level errors */
+  errors: EntryError[];
+}
+
+export type MarketHint = "TH" | "US";
+
+export interface ParseHoldingsRequest {
+  text: string;
+  market_hint?: MarketHint | null;
+  llm?: LlmChoice | null;
+}
+
+export interface ParsedHoldings {
+  rows: PositionInput[];
+  unparsed: string[];
+  mode: "native" | "fallback_parsed" | "failed";
+  provider: string | null;
+  model: string | null;
+}
+
+/** `GET /market/{symbol}/quote` */
+export interface QuoteOut {
+  quote: { symbol: string; price: string; change: string | null; change_pct: string | null; ts: string; currency: string };
+  provider: string;
+  provenance_id: string | null;
+}
+
+type Loose = Record<string, unknown>;
+
+const toNum = (v: unknown): number | null => {
+  if (v === null || v === undefined || v === "") return null;
+  const n = typeof v === "number" ? v : Number(v);
+  return Number.isFinite(n) ? n : null;
+};
+
+/** A number field that may arrive as `{value, provenance_id}`, a number or a decimal string. */
+function toPV(v: unknown, fallbackPid: string | null): PV | null {
+  if (v && typeof v === "object" && "value" in v) {
+    const o = v as { value: unknown; provenance_id?: unknown };
+    const value = toNum(o.value);
+    if (value === null) return null;
+    return { value, provenance_id: typeof o.provenance_id === "string" ? o.provenance_id : (fallbackPid ?? "") };
+  }
+  const value = toNum(v);
+  return value === null ? null : { value, provenance_id: fallbackPid ?? "" };
+}
+
+/** A quantity / cost that may arrive as a decimal string, a number or a PV → decimal string. */
+function toDecimalText(v: unknown): string | null {
+  if (v === null || v === undefined || v === "") return null;
+  if (typeof v === "string") return v;
+  if (typeof v === "number") return Number.isFinite(v) ? String(v) : null;
+  if (typeof v === "object" && "value" in v) return toDecimalText((v as { value: unknown }).value);
+  return null;
+}
+
+function toSymbol(v: unknown, currency: string): SymbolInfo {
+  if (v && typeof v === "object" && "canonical" in v) return v as SymbolInfo;
+  const text = typeof v === "string" ? v : "";
+  return { raw: text, canonical: text, asset_type: "stock", market: "", currency, display: text.replace(/\.BK$/, "") };
+}
+
+const toErrors = (v: unknown): EntryError[] => (Array.isArray(v) ? (v as EntryError[]) : []);
+
+/** Normalizes the preview response so components only ever see `PreviewRow` (PV for numbers). */
+export function normalizePreview(raw: unknown): PositionsPreview {
+  const body = (raw ?? {}) as Loose;
+  const rows = Array.isArray(body.rows) ? (body.rows as Loose[]) : [];
+  return {
+    errors: toErrors(body.errors),
+    rows: rows.map((r, i) => {
+      const pid = typeof r.provenance_id === "string" ? r.provenance_id : null;
+      // per-field provenance ids (backend `provenance: {price: "prov_…", …}`) win over the row id
+      const prov = (r.provenance && typeof r.provenance === "object" ? r.provenance : {}) as Record<string, unknown>;
+      const pidOf = (field: string): string | null => (typeof prov[field] === "string" ? (prov[field] as string) : pid);
+      const currency = typeof r.currency === "string" ? r.currency : "";
+      const errors = toErrors(r.errors);
+      const status = r.status === "error" || r.status === "ok" ? r.status : errors.length ? "error" : "ok";
+      return {
+        index: typeof r.index === "number" ? r.index : i,
+        symbol: toSymbol(r.symbol, currency),
+        mode: (typeof r.mode === "string" ? r.mode : "qty_cost") as EntryMode,
+        status,
+        quantity: toDecimalText(r.quantity ?? r.units),
+        avg_cost: toDecimalText(r.avg_cost),
+        price: toPV(r.price, pidOf("price")),
+        price_as_of: typeof r.price_as_of === "string" ? r.price_as_of : null,
+        currency,
+        market_value: toPV(r.market_value, pidOf("market_value")),
+        cost_basis: toPV(r.cost_basis, pidOf("cost_basis")),
+        unrealized_pnl: toPV(r.unrealized_pnl, pidOf("unrealized_pnl")),
+        unrealized_pnl_pct: toPV(r.unrealized_pnl_pct, pidOf("unrealized_pnl_pct")),
+        provenance_id: pid,
+        errors,
+      };
+    }),
+  };
+}
+
+/** A 503 `llm_not_configured` from `parse-holdings` (any of the error body shapes FastAPI may use). */
+export function isLlmNotConfigured(err: unknown): boolean {
+  if (!(err instanceof ApiError)) return false;
+  if (err.type === "llm_not_configured") return true;
+  const body = (err.body ?? {}) as { error?: unknown; detail?: unknown };
+  const tag = (v: unknown): string | null =>
+    typeof v === "string" ? v : v && typeof v === "object" && "type" in v ? String((v as { type: unknown }).type) : null;
+  const detail = body.detail && typeof body.detail === "object" ? (body.detail as { error?: unknown }).error : body.detail;
+  return tag(body.error) === "llm_not_configured" || tag(detail) === "llm_not_configured" || err.status === 503;
+}
+
 /** The per-row errors of a 422 from PUT / import commit, or null for any other failure. */
 export function entryErrors(err: unknown): EntryError[] | null {
   if (!(err instanceof ApiError) || err.status !== 422) return null;
@@ -390,6 +542,14 @@ export const portfolioApi = {
       })}`,
       { method: "POST" },
     ),
+  /** (P16) resolve entry modes + latest price without saving; `id` null = the default book */
+  positionsPreview: async (id: string | null, positions: PositionInput[]) =>
+    normalizePreview(
+      await request<unknown>(id ? `${pf(id)}/positions/preview` : "/portfolio/positions/preview", json({ positions })),
+    ),
+  /** (P16) broker-app text → rows (LLM, no prices, no side effect); 503 when no LLM is configured */
+  parseHoldings: (body: ParseHoldingsRequest) => request<ParsedHoldings>("/portfolios/parse-holdings", json(body)),
+  quote: (symbol: string) => request<QuoteOut>(`/market/${encodeURIComponent(symbol)}/quote`),
   revisions: (id: string) => request<{ revisions: RevisionRecord[] }>(`${pf(id)}/revisions`),
   reports: (portfolioId?: string) =>
     request<WeeklyReports>(`/portfolios/reports${query({ portfolio_id: portfolioId })}`),

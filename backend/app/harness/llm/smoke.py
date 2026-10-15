@@ -3,6 +3,7 @@
     uv run python -m app.harness.llm.smoke "สวัสดี"
     uv run python -m app.harness.llm.smoke "hello" --tier deep
     uv run python -m app.harness.llm.smoke "hello" --provider ollama --model llama3.1
+    uv run python -m app.harness.llm.smoke "hello" --provider claude_code --model claude-haiku-5-5
     uv run python -m app.harness.llm.smoke --status
 
 Prints the answer, the provider/model that answered, token counts and cost.
@@ -21,8 +22,8 @@ from app.harness.llm.config import (
     LLMConfig,
     LLMTierConfig,
     TierChain,
-    is_provider_configured,
     load_llm_config,
+    provider_status,
 )
 from app.settings import get_settings
 
@@ -31,8 +32,12 @@ async def _main(args: argparse.Namespace) -> int:
     settings = get_settings()
     if args.status:
         for pid, info in PROVIDERS.items():
-            mark = "OK " if is_provider_configured(pid, settings) else "-- "
-            print(f"{mark}{pid:<11} {info.label:<28} {info.env_hint}")
+            configured, reason = provider_status(pid, settings)
+            mark = "OK " if configured else "-- "
+            line = f"{mark}{pid:<12} {info.label:<38} {info.env_hint}"
+            if not configured and info.kind == "claude_code" and reason:  # why the CLI path is off
+                line += f"    ({reason})"
+            print(line)
         return 0
 
     config = load_llm_config(settings)

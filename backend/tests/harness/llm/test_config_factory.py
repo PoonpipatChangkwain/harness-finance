@@ -48,6 +48,7 @@ def _settings(**kwargs: object) -> Settings:
         "deepseek",
         "groq",
         "openrouter",
+        "claude_code",  # the autouse fixture hides this machine's Claude Code CLI
     ],
 )
 def test_factory_raises_not_configured_without_key(provider: str) -> None:
@@ -65,6 +66,9 @@ def test_factory_raises_not_configured_without_key(provider: str) -> None:
         ("claude", "anthropic"),
         ("ThaiLLM", "thaillm"),
         ("ollama", "ollama"),
+        ("claude_sub", "claude_code"),
+        ("claude-subscription", "claude_code"),
+        ("claude_code_cli", "claude_code"),
     ],
 )
 def test_provider_aliases(alias: str, canonical: str) -> None:
@@ -233,3 +237,23 @@ def test_model_choice_replaces_deep_only_when_quick_is_configured() -> None:
     assert [c.label for c in config.quick.chain()] == ["thaillm:Typhoon-S-ThaiLLM-8B-Instruct"]
     alone = llm_config_for_choice("groq", "openai/gpt-oss-20b")
     assert alone.quick.primary.label == "groq:openai/gpt-oss-20b"
+
+
+def test_claude_code_key_is_optional_and_auto_picked_after_anthropic(monkeypatch: pytest.MonkeyPatch) -> None:
+    """P16: CLI + token (or a local login) = configured; auto-pick ranks it right after anthropic."""
+    from app.harness.llm import claude_code
+
+    monkeypatch.setattr(claude_code, "find_cli", lambda settings: "/usr/bin/claude")
+    monkeypatch.setattr(claude_code, "has_local_login", lambda: False)
+    assert resolve_endpoint("claude_code", _settings()).api_key is None  # no raise without a token
+    assert not is_provider_configured("claude_code", _settings())  # no token, no login
+
+    s = _settings(anthropic_api_sub_key=SecretStr("oat"), groq_api_key=SecretStr("g"))
+    config = load_llm_config(s)
+    assert config.quick.primary.label == "claude_code:claude-haiku-5-5"
+    assert config.deep.primary.label == "claude_code:claude-opus-5-5"
+    both = load_llm_config(
+        _settings(anthropic_api_sub_key=SecretStr("oat"), anthropic_api_key=SecretStr("a"))
+    )
+    assert both.quick.primary.provider == "anthropic"
+    assert parse_failover("claude_sub:sonnet")[0].label == "claude_code:sonnet"

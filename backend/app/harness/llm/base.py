@@ -46,7 +46,10 @@ class BaseLLMClient:
         return self.cfg.model
 
     def prepare(self, messages: Sequence[BaseMessage]) -> list[BaseMessage]:
-        """Anthropic: mark the leading system prompt ``cache_control: ephemeral`` (~90% cheaper re-reads)."""
+        """Anthropic: mark the leading system prompt ``cache_control: ephemeral`` (~90% cheaper re-reads).
+
+        Not for ``claude_code``: the CLI manages prompt caching itself and takes plain text.
+        """
         msgs = list(messages)
         if self.provider_info.kind != "anthropic" or not msgs or not isinstance(msgs[0], SystemMessage):
             return msgs

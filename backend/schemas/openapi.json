@@ -1810,6 +1810,48 @@
         }
       }
     },
+    "/api/portfolios/parse-holdings": {
+      "post": {
+        "tags": [
+          "portfolio"
+        ],
+        "summary": "Parse Holdings",
+        "description": "Text pasted from a broker app → ``PositionInput`` rows (quick tier, or the ``llm`` picked).\n\nNo side effect: nothing is saved and no price is resolved — send the rows to\n``…/positions/preview`` next. 503 ``llm_not_configured`` when no LLM is set up.",
+        "operationId": "parse_holdings_api_portfolios_parse_holdings_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ParseHoldingsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ParseHoldingsOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/portfolios/{portfolio_id}": {
       "get": {
         "tags": [
@@ -2057,7 +2099,7 @@
           "portfolio"
         ],
         "summary": "Import Csv",
-        "description": "CSV ``symbol,quantity,avg_cost,weight,note`` → preview (default) or ``?commit=1`` to save.\n\nReplaces the positions; cash, name and currency stay as they are.",
+        "description": "CSV ``symbol,quantity,avg_cost,weight,note`` (+ ``value,pnl_pct,pnl_amount,cost_total,mode,\ntarget_weight``) → preview (default) or ``?commit=1`` to save.\n\nReplaces the positions; cash, name and currency stay as they are.",
         "operationId": "import_csv_api_portfolios__portfolio_id__import_post",
         "parameters": [
           {
@@ -2113,6 +2155,59 @@
             "text/plain": {
               "schema": {
                 "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/portfolios/{portfolio_id}/positions/preview": {
+      "post": {
+        "tags": [
+          "portfolio"
+        ],
+        "summary": "Positions Preview",
+        "description": "Resolve rows in any entry mode at the latest price — **nothing is saved** (P16).\n\nEvery number carries a provenance id (stored, so a hover resolves). ``pf_default`` works\nbefore the first save (the user may be creating the book); any other unknown id is 404.",
+        "operationId": "positions_preview_api_portfolios__portfolio_id__positions_preview_post",
+        "parameters": [
+          {
+            "name": "portfolio_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Portfolio Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PositionsPreviewRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PositionsPreview"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
               }
             }
           }
@@ -2589,6 +2684,47 @@
             "text/plain": {
               "schema": {
                 "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/portfolio/positions/preview": {
+      "post": {
+        "tags": [
+          "portfolio"
+        ],
+        "summary": "Default Positions Preview",
+        "operationId": "default_positions_preview_api_portfolio_positions_preview_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PositionsPreviewRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PositionsPreview"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
               }
             }
           }
@@ -3523,6 +3659,16 @@
             "title": "Language",
             "default": "th"
           },
+          "use_ml": {
+            "type": "boolean",
+            "title": "Use Ml",
+            "default": true
+          },
+          "use_smc": {
+            "type": "boolean",
+            "title": "Use Smc",
+            "default": false
+          },
           "llm": {
             "anyOf": [
               {
@@ -3647,6 +3793,62 @@
         "type": "object",
         "title": "DataOverrides"
       },
+      "EntryError": {
+        "properties": {
+          "index": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Index"
+          },
+          "symbol": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Symbol"
+          },
+          "field": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Field"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          },
+          "severity": {
+            "type": "string",
+            "enum": [
+              "error",
+              "warning"
+            ],
+            "title": "Severity",
+            "default": "error"
+          }
+        },
+        "type": "object",
+        "required": [
+          "index",
+          "message"
+        ],
+        "title": "EntryError"
+      },
       "GraphView": {
         "properties": {
           "nodes": {
@@ -3730,6 +3932,38 @@
           "model"
         ],
         "title": "LLMPick"
+      },
+      "LLMUsage": {
+        "properties": {
+          "input_tokens": {
+            "type": "integer",
+            "title": "Input Tokens",
+            "default": 0
+          },
+          "output_tokens": {
+            "type": "integer",
+            "title": "Output Tokens",
+            "default": 0
+          },
+          "cache_read_tokens": {
+            "type": "integer",
+            "title": "Cache Read Tokens",
+            "default": 0
+          },
+          "cache_write_tokens": {
+            "type": "integer",
+            "title": "Cache Write Tokens",
+            "default": 0
+          },
+          "cost_usd": {
+            "type": "number",
+            "title": "Cost Usd",
+            "default": 0.0
+          }
+        },
+        "type": "object",
+        "title": "LLMUsage",
+        "description": "Token counts reported by the provider API (not estimated) plus derived cost."
       },
       "LimitsOverrides": {
         "properties": {
@@ -4021,6 +4255,121 @@
         ],
         "title": "MessageOut"
       },
+      "ParseHoldingsOut": {
+        "properties": {
+          "rows": {
+            "items": {
+              "$ref": "#/components/schemas/PositionInput-Output"
+            },
+            "type": "array",
+            "title": "Rows"
+          },
+          "unparsed": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Unparsed"
+          },
+          "notes": {
+            "items": {
+              "$ref": "#/components/schemas/EntryError"
+            },
+            "type": "array",
+            "title": "Notes",
+            "description": "LLM remarks per row (warnings)"
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "native",
+              "fallback_parsed",
+              "failed"
+            ],
+            "title": "Mode"
+          },
+          "provider": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Provider"
+          },
+          "model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model"
+          },
+          "prompt_version": {
+            "type": "string",
+            "title": "Prompt Version"
+          },
+          "usage": {
+            "$ref": "#/components/schemas/LLMUsage"
+          }
+        },
+        "type": "object",
+        "required": [
+          "rows",
+          "unparsed",
+          "mode",
+          "provider",
+          "model",
+          "prompt_version",
+          "usage"
+        ],
+        "title": "ParseHoldingsOut"
+      },
+      "ParseHoldingsRequest": {
+        "properties": {
+          "text": {
+            "type": "string",
+            "maxLength": 20000,
+            "minLength": 1,
+            "title": "Text"
+          },
+          "market_hint": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "TH",
+                  "US"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Market Hint"
+          },
+          "llm": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LLMChoice"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "text"
+        ],
+        "title": "ParseHoldingsRequest"
+      },
       "PolicyOverrides": {
         "properties": {
           "max_position_weight": {
@@ -4098,6 +4447,56 @@
               }
             ],
             "title": "Min Risk Reward"
+          },
+          "min_counter_trend_risk_reward": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 10.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Min Counter Trend Risk Reward"
+          },
+          "min_stop_atr": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 10.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Min Stop Atr"
+          },
+          "first_target_r": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 20.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "First Target R"
+          },
+          "require_smc_setup": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Require Smc Setup"
           },
           "require_stop_loss": {
             "anyOf": [
@@ -4437,7 +4836,7 @@
           },
           "positions": {
             "items": {
-              "$ref": "#/components/schemas/PositionInput"
+              "$ref": "#/components/schemas/PositionInput-Input"
             },
             "type": "array",
             "title": "Positions"
@@ -4512,7 +4911,7 @@
         ],
         "title": "Position"
       },
-      "PositionInput": {
+      "PositionInput-Input": {
         "properties": {
           "symbol": {
             "type": "string",
@@ -4529,6 +4928,27 @@
                 "type": "null"
               }
             ]
+          },
+          "mode": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "qty_cost",
+                  "qty_pnl_pct",
+                  "qty_pnl_amount",
+                  "value_pnl_pct",
+                  "value_pnl_amount",
+                  "cost_total",
+                  "weight"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mode",
+            "description": "Entry mode; null = inferred from the fields"
           },
           "quantity": {
             "anyOf": [
@@ -4624,7 +5044,39 @@
               }
             ],
             "title": "Pnl Pct",
-            "description": "Unrealized gain as a fraction (0.1452 = +14.52%)"
+            "description": "Unrealized gain as a fraction (0.1452 = +14.52%, negative = loss)"
+          },
+          "pnl_amount": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pnl Amount",
+            "description": "Unrealized gain in the symbol's currency (negative = loss)"
+          },
+          "cost_total": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cost Total",
+            "description": "Total cost paid (>= 0), symbol's currency"
           },
           "note": {
             "anyOf": [
@@ -4644,6 +5096,202 @@
           "symbol"
         ],
         "title": "PositionInput"
+      },
+      "PositionInput-Output": {
+        "properties": {
+          "symbol": {
+            "type": "string",
+            "maxLength": 32,
+            "minLength": 1,
+            "title": "Symbol"
+          },
+          "market": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Market"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "mode": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "qty_cost",
+                  "qty_pnl_pct",
+                  "qty_pnl_amount",
+                  "value_pnl_pct",
+                  "value_pnl_amount",
+                  "cost_total",
+                  "weight"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mode",
+            "description": "Entry mode; null = inferred from the fields"
+          },
+          "quantity": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quantity"
+          },
+          "avg_cost": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Avg Cost"
+          },
+          "weight": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Weight",
+            "description": "Declared weight 0..1 (weight-only mode)"
+          },
+          "target_weight": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target Weight"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value",
+            "description": "Market value in the symbol's currency"
+          },
+          "pnl_pct": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pnl Pct",
+            "description": "Unrealized gain as a fraction (0.1452 = +14.52%, negative = loss)"
+          },
+          "pnl_amount": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pnl Amount",
+            "description": "Unrealized gain in the symbol's currency (negative = loss)"
+          },
+          "cost_total": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cost Total",
+            "description": "Total cost paid (>= 0), symbol's currency"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 500
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          }
+        },
+        "type": "object",
+        "required": [
+          "symbol"
+        ],
+        "title": "PositionInput"
+      },
+      "PositionsPreview": {
+        "properties": {
+          "rows": {
+            "items": {
+              "$ref": "#/components/schemas/PreviewRow"
+            },
+            "type": "array",
+            "title": "Rows"
+          },
+          "errors": {
+            "items": {
+              "$ref": "#/components/schemas/EntryError"
+            },
+            "type": "array",
+            "title": "Errors",
+            "description": "Book-level errors"
+          }
+        },
+        "type": "object",
+        "required": [
+          "rows"
+        ],
+        "title": "PositionsPreview"
+      },
+      "PositionsPreviewRequest": {
+        "properties": {
+          "positions": {
+            "items": {
+              "$ref": "#/components/schemas/PositionInput-Input"
+            },
+            "type": "array",
+            "title": "Positions"
+          }
+        },
+        "type": "object",
+        "title": "PositionsPreviewRequest"
       },
       "PostMessage": {
         "properties": {
@@ -4688,6 +5336,211 @@
           "text"
         ],
         "title": "PostMessage"
+      },
+      "PreviewRow": {
+        "properties": {
+          "index": {
+            "type": "integer",
+            "title": "Index"
+          },
+          "input_symbol": {
+            "type": "string",
+            "title": "Input Symbol"
+          },
+          "symbol": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Symbol"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "mode": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "qty_cost",
+                  "qty_pnl_pct",
+                  "qty_pnl_amount",
+                  "value_pnl_pct",
+                  "value_pnl_amount",
+                  "cost_total",
+                  "weight"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mode"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "ok",
+              "error"
+            ],
+            "title": "Status"
+          },
+          "quantity": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quantity"
+          },
+          "avg_cost": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Avg Cost"
+          },
+          "weight": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Weight",
+            "description": "Declared weight (weight mode)"
+          },
+          "price": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Price"
+          },
+          "price_as_of": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Price As Of"
+          },
+          "currency": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Currency"
+          },
+          "market_value": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Market Value"
+          },
+          "cost_basis": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cost Basis"
+          },
+          "unrealized_pnl": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unrealized Pnl"
+          },
+          "unrealized_pnl_pct": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unrealized Pnl Pct"
+          },
+          "provenance_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Provenance Id",
+            "description": "Valuation record; its inputs trace the price, the typed numbers, compute"
+          },
+          "provenance": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Provenance",
+            "description": "field → provenance id"
+          },
+          "errors": {
+            "items": {
+              "$ref": "#/components/schemas/EntryError"
+            },
+            "type": "array",
+            "title": "Errors"
+          }
+        },
+        "type": "object",
+        "required": [
+          "index",
+          "input_symbol",
+          "status"
+        ],
+        "title": "PreviewRow",
+        "description": "One row of ``POST …/positions/preview`` (contracts §11): nothing is saved."
       },
       "ReportRunRequest": {
         "properties": {
@@ -5008,7 +5861,7 @@
             "anyOf": [
               {
                 "type": "number",
-                "maximum": 0.05,
+                "maximum": 0.5,
                 "exclusiveMinimum": 0.0
               },
               {
@@ -5377,6 +6230,21 @@
             ],
             "title": "Language",
             "default": "th"
+          },
+          "use_ml": {
+            "type": "boolean",
+            "title": "Use Ml",
+            "default": true
+          },
+          "ml_only": {
+            "type": "boolean",
+            "title": "Ml Only",
+            "default": false
+          },
+          "use_smc": {
+            "type": "boolean",
+            "title": "Use Smc",
+            "default": false
           },
           "backtest_id": {
             "anyOf": [

@@ -128,7 +128,7 @@ export function ImportCsvDialog({
           >
             <FileUp className="size-5 text-muted" aria-hidden />
             <span>{fileName ?? "ลากไฟล์ CSV มาวาง หรือคลิกเพื่อเลือก"}</span>
-            <span className="num text-[11px] text-subtle">symbol,quantity,avg_cost,weight,note (+ value,pnl_pct,target_weight)</span>
+            <span className="num text-[11px] text-subtle">symbol,quantity,avg_cost,weight,note (+ value,pnl_pct,pnl_amount,cost_total,mode,target_weight)</span>
             <input
               ref={input}
               type="file"

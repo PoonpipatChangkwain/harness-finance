@@ -196,6 +196,7 @@ class TradingAgent:
         *,
         deep_model: str,
         quick_model: str,
+        deep_provider: str | None = None,
         sub_nodes: dict[str, tuple[str, str]] | None = None,
         phase: str = "analyze",
     ):
@@ -204,6 +205,7 @@ class TradingAgent:
         self.executor = executor
         self.deep_model = deep_model
         self.quick_model = quick_model
+        self.deep_provider = deep_provider
         self.sub_nodes = ANALYST_SUB_NODES if sub_nodes is None else sub_nodes
         self.phase = phase
 
@@ -233,7 +235,7 @@ class TradingAgent:
             services.tools,
             model=self.deep_model,
             summary_model=self.quick_model,
-            config=ContextConfig.from_settings(services.settings),
+            config=ContextConfig.from_settings(services.settings, provider=self.deep_provider),
             memory=None,
         )
         loop = AgentLoop(ctx, llm, executor, context)
@@ -304,8 +306,14 @@ def _build(ctx: RunContext) -> Any:
     )
     llm = base_llm.bind(emit=scoped, on_usage=on_usage)
     executor = ToolExecutor(services.tools, ctx, provenance=services.provenance)
+    deep_provider, deep_model = base_llm.primary("deep")
     agent = TradingAgent(
-        ctx, llm, executor, deep_model=base_llm.primary("deep")[1], quick_model=base_llm.primary("quick")[1]
+        ctx,
+        llm,
+        executor,
+        deep_model=deep_model,
+        quick_model=base_llm.primary("quick")[1],
+        deep_provider=deep_provider,
     )
     backtest = bool(ctx.input.get("backtest_id"))
     return make_node_context_factory(

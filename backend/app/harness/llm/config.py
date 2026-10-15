@@ -5,6 +5,8 @@ Ported from ``../TradingAgents/tradingagents/llm_clients/api_key_env.py``
 with base URLs). Three native APIs (Anthropic, Google AI Studio, OpenAI)
 plus OpenAI-compatible endpoints (xAI Grok, ThaiLLM, Ollama, DeepSeek,
 Groq, OpenRouter) that reuse the OpenAI client with a ``base_url``.
+(P16) ``claude_code`` is Claude through the user's own subscription, by
+spawning the locally installed Claude Code CLI (``claude_code.py``).
 """
 
 from __future__ import annotations
@@ -18,7 +20,7 @@ from app.domain.ports import Tier
 from app.harness.llm.errors import LLMNotConfigured
 from app.settings import Settings
 
-ClientKind = Literal["anthropic", "google", "openai"]
+ClientKind = Literal["anthropic", "google", "openai", "claude_code"]
 StructuredMethod = Literal["json_schema", "function_calling"]
 
 
@@ -34,6 +36,8 @@ class ProviderInfo:
     free: bool = False  # local / free endpoint: cost 0 is expected, not a catalog miss
     structured_method: StructuredMethod = "json_schema"
     env_hint: str = ""
+    key_optional: bool = False  # a missing key is not "not configured" (claude_code: local login)
+    note: str | None = None  # shown under the provider in the Settings page
 
 
 PROVIDERS: dict[str, ProviderInfo] = {
@@ -48,6 +52,18 @@ PROVIDERS: dict[str, ProviderInfo] = {
             "google",
             "google_api_key",
             env_hint="GOOGLE_API_KEY or GEMINI_API_KEY",
+        ),
+        ProviderInfo(
+            "claude_code",
+            "Claude (subscription via Claude Code)",
+            "claude_code",
+            "anthropic_api_sub_key",
+            # billed to the user's subscription, not per token (cost still comes from the catalog)
+            free=True,
+            structured_method="json_schema",
+            env_hint="ANTHROPIC_API_SUB_KEY (claude setup-token) + Claude Code CLI",
+            key_optional=True,
+            note="ใช้ subscription ของคุณผ่าน Claude Code CLI ที่ติดตั้งในเครื่อง — สำหรับใช้ส่วนตัวเท่านั้น",
         ),
         ProviderInfo("openai", "OpenAI (ChatGPT)", "openai", "openai_api_key", env_hint="OPENAI_API_KEY"),
         ProviderInfo(
@@ -131,6 +147,7 @@ PROVIDERS: dict[str, ProviderInfo] = {
 # (best quality per call), then the free OpenAI-compatible ones.
 AUTO_PICK_ORDER: tuple[str, ...] = (
     "anthropic",
+    "claude_code",
     "google",
     "openai",
     "groq",
@@ -144,6 +161,7 @@ AUTO_PICK_ORDER: tuple[str, ...] = (
 
 RECOMMENDED_QUICK: dict[str, str] = {
     "anthropic": "claude-haiku-4-5",
+    "claude_code": "claude-haiku-5-5",
     "google": "gemini-3.8-flash",  # 2.5-flash is closed to new AI Studio keys; 3.8 ~8x faster than 3.5
     "openai": "gpt-4o-mini",
     "xai": "grok-3-mini",
@@ -159,6 +177,7 @@ RECOMMENDED_QUICK: dict[str, str] = {
 RECOMMENDED_DEEP: dict[str, str] = {
     **RECOMMENDED_QUICK,
     "anthropic": "claude-sonnet-5",
+    "claude_code": "claude-opus-5-5",
     # Thinking model; slower (~10s) but still tool-call-capable, and deep
     # calls tolerate the extra latency.
     "thaillm": "Pathumma-ThaiLLM-qwen3-8b-think-3.0.0",
@@ -169,6 +188,15 @@ RECOMMENDED_DEEP: dict[str, str] = {
 # first). The picker also accepts any other model id the provider serves.
 MODEL_SUGGESTIONS: dict[str, list[str]] = {
     "anthropic": ["claude-sonnet-5", "claude-haiku-4-5", "claude-opus-5-5", "claude-fable-5-1"],
+    "claude_code": [
+        "claude-opus-5-5",
+        "claude-sonnet-5-5",
+        "claude-haiku-5-5",
+        "claude-fable-5-1",
+        "opus",
+        "sonnet",
+        "haiku",
+    ],
     "google": ["gemini-3.8-flash", "gemini-3.5-flash"],
     "openai": ["gpt-4o-mini"],
     "xai": ["grok-3-mini"],
@@ -216,6 +244,9 @@ _ALIASES = {
     "thai_llm": "thaillm",
     "ollama_local": "ollama",
     "ollamacloud": "ollama_cloud",
+    "claude_sub": "claude_code",
+    "claude_subscription": "claude_code",
+    "claude_code_cli": "claude_code",
 }
 
 
@@ -240,7 +271,7 @@ def resolve_endpoint(provider: str, settings: Settings) -> Endpoint:
     if info.key_setting is not None:
         secret = getattr(settings, info.key_setting, None)
         api_key = secret.get_secret_value() if secret is not None else None
-        if not api_key:
+        if not api_key and not info.key_optional:
             raise LLMNotConfigured(f"{info.label} is not configured (set {info.env_hint})", provider=info.id)
 
     base_url = info.base_url
@@ -252,15 +283,27 @@ def resolve_endpoint(provider: str, settings: Settings) -> Endpoint:
         raise LLMNotConfigured(f"{info.label} is not configured (set {info.env_hint})", provider=info.id)
     if info.id == "ollama" and base_url and not base_url.endswith("/v1"):
         base_url = f"{base_url}/v1"
-    return Endpoint(api_key=api_key, base_url=base_url)
+    return Endpoint(api_key=api_key or None, base_url=base_url)
+
+
+def provider_status(provider: str, settings: Settings) -> tuple[bool, str | None]:
+    """(configured, why not) — the reason names what to set, never a key value."""
+    try:
+        info = PROVIDERS[canonical_provider(provider)]
+        resolve_endpoint(info.id, settings)
+    except ValueError as exc:
+        return False, str(exc)
+    except LLMNotConfigured as exc:
+        return False, str(exc)
+    if info.kind == "claude_code":
+        from app.harness.llm.claude_code import claude_code_status  # lazy: avoids an import cycle
+
+        return claude_code_status(settings)
+    return True, None
 
 
 def is_provider_configured(provider: str, settings: Settings) -> bool:
-    try:
-        resolve_endpoint(provider, settings)
-    except (LLMNotConfigured, ValueError):
-        return False
-    return True
+    return provider_status(provider, settings)[0]
 
 
 class LLMTierConfig(BaseModel):

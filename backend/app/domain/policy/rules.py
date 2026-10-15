@@ -308,6 +308,80 @@ class CounterTrendRiskReward:
 
 
 @dataclass
+class SmcStructureAlignment:
+    """With a Smart Money Concepts block, a new position must follow the swing structure.
+
+    ``proposal.smc_swing_trend`` is the horizon timeframe's swing trend from
+    ``compute/smc.py`` (a CHoCH flips it at once, so a fresh reversal is already reflected).
+    Evidence (2026-10, XAUUSD intraday Aug-Sep backtest with SMC): the desk read "deep in
+    premium" during a rally as a reason to short and lost on 8 of 10 shorts taken against a
+    bullish swing. No SMC trend, or an action that opens no risk: passes.
+    """
+
+    id: str = "smc_structure_alignment"
+    description: str = "A new position must trade in the direction of the SMC swing structure."
+    severity: Severity = "block"
+
+    def evaluate(self, proposal: dict[str, Any], context: dict[str, Any]) -> PolicyResult:
+        trend = _get(proposal, "smc_swing_trend")
+        action = str(_get(proposal, "action") or "").lower()
+        if trend not in ("bullish", "bearish") or action not in _OPEN_ACTIONS:
+            return PolicyResult(
+                rule_id=self.id, passed=True, severity=self.severity, message="no SMC trend or no new risk"
+            )
+        side = "short" if action in ("sell", "open_short") else "long"
+        passed = (side == "long") == (trend == "bullish")
+        return PolicyResult(
+            rule_id=self.id,
+            passed=passed,
+            severity=self.severity,
+            message=f"{side} {'with' if passed else 'against'} the {trend} SMC swing structure"
+            + ("" if passed else " — trade with it (e.g. a limit into its order block / gap) or stay flat"),
+            values={"side": side, "smc_swing_trend": trend},
+        )
+
+
+@dataclass
+class SmcSetupRequired:
+    """The LLM-only SMC desk opens a position only on an active sweep-continuation setup.
+
+    ``proposal.smc_setup_side`` comes from ``compute/smc_setup.py``: ``None`` = the run has
+    no SMC setup gate (ML-led, opted out, SMC unavailable) → passes; ``"none"`` = no active
+    setup → a new position is blocked; ``"long"``/``"short"`` → only that side may open.
+    Evidence (2026-10-05 rule study, GC=F 1h 730 days): order-block retests, reversal sweeps
+    and every unfiltered SMC entry lost; only continuation sweeps with the swing trend and a
+    RSI/MACD momentum filter stayed positive. The LLM may still decline the setup (flat).
+    """
+
+    id: str = "smc_setup_required"
+    description: str = "A new position needs an active SMC sweep-continuation setup on the same side."
+    severity: Severity = "block"
+
+    def evaluate(self, proposal: dict[str, Any], context: dict[str, Any]) -> PolicyResult:
+        setup = _get(proposal, "smc_setup_side")
+        action = str(_get(proposal, "action") or "").lower()
+        if setup is None or action not in _OPEN_ACTIONS:
+            return PolicyResult(
+                rule_id=self.id, passed=True, severity=self.severity, message="no setup gate or no new risk"
+            )
+        side = "short" if action in ("sell", "open_short") else "long"
+        passed = setup == side
+        if passed:
+            message = f"{side} on an active {side} SMC setup"
+        elif setup == "none":
+            message = f"no active SMC setup — a {side} is not allowed; stay flat"
+        else:
+            message = f"the active SMC setup is {setup}, not {side} — take the {setup} or stay flat"
+        return PolicyResult(
+            rule_id=self.id,
+            passed=passed,
+            severity=self.severity,
+            message=message,
+            values={"side": side, "smc_setup_side": setup},
+        )
+
+
+@dataclass
 class ValidPendingOrder:
     """A limit/stop entry must pass its computed check (``proposal.order_error`` is ``None``).
 

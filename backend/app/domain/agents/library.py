@@ -125,8 +125,14 @@ LIBRARY: dict[str, RoleSpec] = {
         # (live/backtest showed frequent stop-outs from low-quality forced entries);
         # v6: judge entry quality by where price sits inside a stated range, not just the
         # trend — a 1-month XAUUSD backtest showed market-shorts taken near the range floor
-        # (and vice versa) getting stopped by the very bounce/pullback the range implied
-        RoleSpec(name="trade_trader", title="Trader", version="v6"),
+        # (and vice versa) getting stopped by the very bounce/pullback the range implied;
+        # v7: ML-led mode — ML signal is the PRIMARY input for direction, LLM filters
+        # (skip NFP/low-confidence) and adjusts (SL ±0.5 ATR, TP down to 1.0R for intraday
+        # when session/vol insufficient to reach 1.5R). Based on v0.3 ML research showing
+        # VIX/DXY/US10Y features improve AUC +0.018 (intraday) / +0.023 (swing).
+        # the workflow picks v6 when no ML signal leads (TRADER_LLM_ONLY_VERSION, the original
+        # desk); v8 = v6 + a Smart Money Concepts guide, only when the opt-in SMC block is on
+        RoleSpec(name="trade_trader", title="Trader", version="v7"),
         RoleSpec(
             name="trade_aggressive_debator", title="Aggressive Risk Debator", version="v2", tier="quick"
         ),

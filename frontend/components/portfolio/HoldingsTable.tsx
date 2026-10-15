@@ -2,8 +2,10 @@
 
 /**
  * Holdings table with inline editing (phase-13 §13.2, ui-spec §6).
- * - qty / avg cost / target % / note are edited in place; new rows are drafts (symbol via
- *   SymbolSearch, entered as quantity or as "value + % gain") until "บันทึก" PUTs the book
+ * - qty / avg cost / target % / note are edited in place; "+ เพิ่ม" opens the guided
+ *   AddPositionDialog (phase-16: 6 entry modes + live preview) whose rows are merged into
+ *   the book and PUT; draft rows still on the table (e.g. after leaving %-only mode) get a
+ *   small menu of the 6 entry modes
  * - a 422 comes back per row and is shown on that row
  * - "% อย่างเดียว" mode hides qty/cost/P&L and shows the live total of the declared %
  * - Price / Value / Weight / P&L come from the analytics only (F1), with provenance
@@ -27,26 +29,35 @@ import {
   type SortingState,
 } from "@tanstack/react-table";
 import { clsx } from "clsx";
-import { Columns3, FileUp, Percent, Plus, RotateCcw, Save, Trash2 } from "lucide-react";
+import { ClipboardPaste, Columns3, FileUp, Percent, Plus, RotateCcw, Save, Trash2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
 import { AssetBadge, SymbolSearch } from "@/components/trade/SymbolSearch";
 import type { SymbolInfo } from "@/lib/api";
 import {
+  ENTRY_MODES,
+  MODE_SPEC,
   buildPositions,
   convertRows,
   declaredTotalPct,
   emptyRow,
+  fieldLabel,
   groupErrors,
+  isGuidedMode,
   isPercentBook,
+  mergePositions,
+  modeLabel,
+  remapErrors,
   rowsFromBook,
   validateRows,
+  type DraftField,
   type DraftRow,
-  type EntryKind,
+  type EntryMode,
 } from "@/lib/holdings";
 import type { EntryError, HoldingAnalytics, PortfolioAnalytics, PortfolioData, PositionInput } from "@/lib/portfolio-api";
 import { formatQty, numberText } from "@/lib/portfolio-format";
 
+import { AddPositionDialog, type AddPositionApi } from "./AddPositionDialog";
 import { ProvValue } from "./ProvValue";
 
 type SymbolSearchFn = Parameters<typeof SymbolSearch>[0]["search"];
@@ -118,22 +129,47 @@ function CellInput({
 
 const num = (pv: { value: number } | null | undefined) => (pv ? pv.value : undefined);
 
+/** aria-label prefix of each draft input (kept stable for tests / screen readers) */
+const FIELD_ARIA: Record<DraftField, string> = {
+  quantity: "quantity",
+  value: "value",
+  avgCost: "avg cost",
+  pnlPct: "pnl percent",
+  pnlAmount: "pnl amount",
+  costTotal: "cost total",
+};
+
+const fieldPatch = (field: DraftField, value: string): Partial<DraftRow> => {
+  const patch: Partial<DraftRow> = {};
+  patch[field] = value;
+  return patch;
+};
+
 export function HoldingsTable({
   book,
   analytics,
   onSave,
   onImport,
+  onPaste,
   startWith,
   search,
+  portfolioId = null,
+  addApi,
 }: {
   book: PortfolioData | null;
   analytics: PortfolioAnalytics | null;
   /** PUT the book; resolves to per-row errors (422) or null when saved */
   onSave: (positions: PositionInput[], cash: string | null) => Promise<EntryError[] | null>;
   onImport: () => void;
+  /** "วางข้อความจากแอปโบรกเกอร์" (the parent owns the paste dialog) */
+  onPaste?: () => void;
   /** empty-state buttons: open a draft row of this kind (nonce re-triggers) */
-  startWith?: { kind: EntryKind; nonce: number } | null;
+  startWith?: { kind: EntryMode; nonce: number } | null;
   search?: SymbolSearchFn;
+  /** book id for the add dialog's preview (null = the default book) */
+  portfolioId?: string | null;
+  /** injectable preview/quote calls of the add dialog (tests) */
+  addApi?: AddPositionApi;
 }) {
   const [rows, setRows] = useState<DraftRow[]>(() => rowsFromBook(book));
   const [percent, setPercent] = useState(() => isPercentBook(book));
@@ -146,16 +182,18 @@ export function HoldingsTable({
   const [hidden, setHidden] = useState<Record<string, boolean>>({});
   const [showColumns, setShowColumns] = useState(false);
   const [symbols, setSymbols] = useState<Record<string, SymbolInfo>>({});
+  const [adding, setAdding] = useState(false);
 
   // a saved book (or another book) replaces the drafts unless the user is mid-edit
+  // (also right after a save, so the rows follow the book the parent just stored)
   const bookKey = `${book?.id ?? "new"}:${book?.updated_at ?? ""}`;
   useEffect(() => {
     if (dirty) return;
     setRows(rowsFromBook(book));
     setPercent(isPercentBook(book));
     setCash(book?.cash ?? "");
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- reset only when the saved book changes
-  }, [bookKey]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- reset only when the saved book changes or edits end
+  }, [bookKey, dirty]);
 
   useEffect(() => {
     if (!startWith) return;
@@ -174,7 +212,17 @@ export function HoldingsTable({
     setDirty(true);
   };
   const add = () => {
-    setRows((prev) => [...prev, emptyRow(percent ? "weight" : "value")]);
+    if (!percent) {
+      setAdding(true);
+      return;
+    }
+    setRows((prev) => [...prev, emptyRow("weight")]);
+    setDirty(true);
+  };
+  const startPercent = () => {
+    setAdding(false);
+    setPercent(true);
+    setRows((prev) => [...convertRows(prev, true), emptyRow("weight")]);
     setDirty(true);
   };
   const togglePercent = () => {
@@ -190,17 +238,35 @@ export function HoldingsTable({
     setErrors([]);
     setDirty(false);
   };
-  const save = async () => {
+  const check = (): EntryError[] => {
     const found = validateRows(rows);
     if (!percent && cash.trim() && (numberText(cash) === undefined || Number(numberText(cash)) < 0)) {
       found.push({ index: null, symbol: null, field: "cash", message: "เงินสดต้องเป็นตัวเลข ≥ 0" });
     }
+    return found;
+  };
+  const cashValue = () => (percent ? (book?.cash ?? null) : (numberText(cash) ?? null));
+  /** rows of the add dialog → merged into what the table shows (WYSIWYG) → PUT */
+  const saveAdded = async (added: PositionInput[]): Promise<EntryError[] | null> => {
+    const found = check();
+    if (found.length) {
+      setErrors(found);
+      return [{ index: null, symbol: null, field: null, message: "แก้แถวในตาราง Holdings ที่มีปัญหาก่อน แล้วค่อยบันทึก" }];
+    }
+    const merged = mergePositions(buildPositions(rows), added);
+    const result = await onSave(merged.positions, cashValue());
+    if (result) return remapErrors(result, merged.indexOf);
+    setErrors([]);
+    setDirty(false);
+    return null;
+  };
+  const save = async () => {
+    const found = check();
     setErrors(found);
     if (found.length) return;
     setSaving(true);
     try {
-      const cashValue = percent ? (book?.cash ?? null) : (numberText(cash) ?? null);
-      const result = await onSave(buildPositions(rows), cashValue);
+      const result = await onSave(buildPositions(rows), cashValue());
       if (result) setErrors(result);
       else {
         setErrors([]);
@@ -219,6 +285,23 @@ export function HoldingsTable({
   );
 
   const rowErr = (r: Row, field: string) => (grouped.rows.get(r.index) ?? []).some((e) => e.field === field);
+  const currencyOf = (d: DraftRow) => symbols[d.key]?.currency ?? holdings.get(d.symbol)?.currency ?? null;
+
+  /** the two inputs of a row's entry mode (Qty / Avg cost columns) */
+  const draftInput = (r: Row, rowIndex: number, slot: "first" | "second") => {
+    const d = r.draft;
+    const spec = d.kind === "weight" ? MODE_SPEC.qty_cost : MODE_SPEC[d.kind];
+    const { field, api } = slot === "first" ? spec.first : spec.second;
+    return (
+      <CellInput
+        label={`${FIELD_ARIA[field]} ${d.symbol || rowIndex + 1}`}
+        placeholder={d.isNew ? fieldLabel(field, currencyOf(d)) : undefined}
+        value={d[field]}
+        invalid={rowErr(r, api)}
+        onChange={(v) => edit(d.key, fieldPatch(field, v))}
+      />
+    );
+  };
 
   const columns = col.columns([
     col.accessor((r) => r.draft.symbol, {
@@ -259,56 +342,12 @@ export function HoldingsTable({
     col.display({
       id: "qty",
       header: "Qty",
-      cell: (c) => {
-        const r = c.row.original;
-        const d = r.draft;
-        if (d.kind === "value") {
-          return (
-            <CellInput
-              label={`value ${d.symbol || c.row.index + 1}`}
-              placeholder={`มูลค่า${symbols[d.key] ? ` (${symbols[d.key]!.currency})` : ""}`}
-              value={d.value}
-              invalid={rowErr(r, "value")}
-              onChange={(v) => edit(d.key, { value: v })}
-            />
-          );
-        }
-        return (
-          <CellInput
-            label={`quantity ${d.symbol || c.row.index + 1}`}
-            value={d.quantity}
-            invalid={rowErr(r, "quantity")}
-            onChange={(v) => edit(d.key, { quantity: v })}
-          />
-        );
-      },
+      cell: (c) => draftInput(c.row.original, c.row.index, "first"),
     }),
     col.display({
       id: "avg",
       header: "Avg cost",
-      cell: (c) => {
-        const r = c.row.original;
-        const d = r.draft;
-        if (d.kind === "value") {
-          return (
-            <CellInput
-              label={`pnl percent ${d.symbol || c.row.index + 1}`}
-              placeholder="% กำไร เช่น 14.5"
-              value={d.pnlPct}
-              invalid={rowErr(r, "pnl_pct")}
-              onChange={(v) => edit(d.key, { pnlPct: v })}
-            />
-          );
-        }
-        return (
-          <CellInput
-            label={`avg cost ${d.symbol || c.row.index + 1}`}
-            value={d.avgCost}
-            invalid={rowErr(r, "avg_cost")}
-            onChange={(v) => edit(d.key, { avgCost: v })}
-          />
-        );
-      },
+      cell: (c) => draftInput(c.row.original, c.row.index, "second"),
     }),
     col.display({
       id: "declared",
@@ -401,14 +440,23 @@ export function HoldingsTable({
         return (
           <div className="flex items-center justify-end gap-1">
             {d.isNew && d.kind !== "weight" ? (
-              <button
-                type="button"
-                title="สลับการกรอก: จำนวนหุ้น ⇄ มูลค่า + % กำไร"
-                onClick={() => edit(d.key, { kind: d.kind === "qty" ? "value" : "qty" })}
-                className="rounded-sm px-1 text-[11px] text-accent hover:bg-layer-2"
+              <select
+                aria-label={`โหมดกรอก ${d.symbol || c.row.index + 1}`}
+                data-testid="row-mode"
+                title="คุณเห็นอะไรในแอปโบรกเกอร์?"
+                value={d.kind}
+                onChange={(e) => {
+                  const kind = e.target.value;
+                  if (isGuidedMode(kind)) edit(d.key, { kind });
+                }}
+                className="max-w-32 rounded-sm border border-transparent bg-transparent px-0.5 text-[11px] text-accent outline-none hover:border-line focus:border-accent"
               >
-                {d.kind === "qty" ? "qty" : "มูลค่า"}
-              </button>
+                {ENTRY_MODES.map((m) => (
+                  <option key={m} value={m}>
+                    {modeLabel(m, currencyOf(d))}
+                  </option>
+                ))}
+              </select>
             ) : null}
             <button
               type="button"
@@ -590,6 +638,18 @@ export function HoldingsTable({
         <button type="button" onClick={onImport} className="inline-flex items-center gap-1 rounded-md bg-layer-2 px-2 py-1 text-[12.5px]">
           <FileUp className="size-3.5" aria-hidden /> Import CSV
         </button>
+        {onPaste ? (
+          <button
+            type="button"
+            data-testid="paste-holdings"
+            disabled={dirty}
+            title={dirty ? "บันทึกหรือยกเลิกการแก้ไขในตารางก่อน" : "วางข้อความจากแอปโบรกเกอร์ ให้ AI แปลงเป็นแถว"}
+            onClick={onPaste}
+            className="inline-flex items-center gap-1 rounded-md bg-layer-2 px-2 py-1 text-[12.5px] disabled:opacity-50"
+          >
+            <ClipboardPaste className="size-3.5" aria-hidden /> วางข้อความ
+          </button>
+        ) : null}
         <button
           type="button"
           data-testid="percent-mode"
@@ -621,6 +681,17 @@ export function HoldingsTable({
           </span>
         )}
       </div>
+
+      {adding ? (
+        <AddPositionDialog
+          portfolioId={portfolioId}
+          onClose={() => setAdding(false)}
+          onSave={saveAdded}
+          onPercentMode={startPercent}
+          api={addApi}
+          search={search}
+        />
+      ) : null}
     </section>
   );
 }

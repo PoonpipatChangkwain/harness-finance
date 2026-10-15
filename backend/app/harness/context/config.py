@@ -19,7 +19,7 @@ MC_CLEARED_MESSAGE = "[Old tool result content cleared — full result in scratc
 
 
 class ContextConfig(BaseModel):
-    mc_count_trigger: int = 8
+    mc_count_trigger: int | None = 8  # None = count trigger off (token trigger only)
     mc_keep_recent: int = 4
     mc_token_trigger: int = 80_000
     # Read-only tools in these categories may have their results cleared.
@@ -36,7 +36,11 @@ class ContextConfig(BaseModel):
     check_pairing: bool = False
 
     @classmethod
-    def from_settings(cls, settings: Settings, **overrides: Any) -> ContextConfig:
+    def from_settings(
+        cls, settings: Settings, *, provider: str | None = None, **overrides: Any
+    ) -> ContextConfig:
+        """``provider`` is the agent's (deep tier) LLM provider; claude_code gets its own
+        count trigger (``CLAUDE_CODE_MC_COUNT_TRIGGER``, default off)."""
         mapping = {
             "mc_count_trigger": settings.context_mc_count_trigger,
             "mc_keep_recent": settings.context_mc_keep_recent,
@@ -50,4 +54,6 @@ class ContextConfig(BaseModel):
             "check_pairing": settings.context_check_pairing,
         }
         values = {k: v for k, v in {**mapping, **overrides}.items() if v is not None}
+        if provider == "claude_code" and "mc_count_trigger" not in overrides:
+            values["mc_count_trigger"] = settings.claude_code_mc_count_trigger
         return cls(**values)

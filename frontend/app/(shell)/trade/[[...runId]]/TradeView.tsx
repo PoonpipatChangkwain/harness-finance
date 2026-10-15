@@ -17,6 +17,7 @@ import remarkGfm from "remark-gfm";
 import { useInspectorTabs } from "@/components/shell/InspectorRegistry";
 import { DecisionCard } from "@/components/trade/DecisionCard";
 import { EventRiskList } from "@/components/trade/EventRiskList";
+import { MlSignalCard } from "@/components/trade/MlSignalCard";
 import { TradeOutcomePanel } from "@/components/trade/TradeOutcomePanel";
 import { PipelineGraph } from "@/components/trade/PipelineGraph";
 import { PriceChart, type PriceLineSpec } from "@/components/trade/PriceChart";
@@ -311,6 +312,7 @@ export function TradeView({ runId }: { runId: string | null }) {
             onSelect={(n) => selectNode(n)}
           />
         ) : null}
+        {runId && detail?.ml_signal ? <MlSignalCard ml={detail.ml_signal} /> : null}
         {runId && detail?.decision ? <DecisionCard detail={detail} runId={runId} /> : null}
         {runId && detail?.trade_result ? (
           <TradeOutcomePanel
