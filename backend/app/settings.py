@@ -107,6 +107,13 @@ class Settings(BaseSettings):
     # Portfolio (Phase 12): weekly report every Friday 03:00 Asia/Bangkok (+ catch-up at startup)
     portfolio_weekly_enabled: bool = True
 
+    # Long-term memory + ReasoningBank + 5 Whys (Phase 17, contracts.md §13)
+    memory_enabled: bool = True
+    memory_profile_max_tokens: int = 600
+    reasoning_bank_min_sources: int = 1  # k-anonymity gate; 3 once there are several users
+    discovery_max_whys: int = 5
+    discovery_confidence: float = 0.7
+
     # Graph engine (Phase 09, T1-T3)
     graph_recursion_limit: int = 100
     graph_keep_checkpoints_on_success: bool = True

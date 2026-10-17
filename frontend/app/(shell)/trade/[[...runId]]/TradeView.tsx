@@ -320,9 +320,9 @@ export function TradeView({ runId }: { runId: string | null }) {
             result={detail.trade_result}
             onSettle={async (body) => {
               try {
-                await tradeApi.settle(runId, body);
+                const res = await tradeApi.settle(runId, body);
                 await useTradeStore.getState().load(runId);
-                return null;
+                return { distilled: res.distilled ?? [] };
               } catch (err) {
                 return err instanceof Error ? err.message : String(err);
               }

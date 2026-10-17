@@ -18,6 +18,10 @@ from app.harness.config.overrides import Overrides, SettingsOverrides
 from app.harness.events.bus import EventBus
 from app.harness.executor.registry import ToolRegistry
 from app.harness.graph.checkpoint import CheckpointerCache
+from app.harness.memory.bank import ReasoningBank
+from app.harness.memory.engine import MemoryEngine
+from app.harness.memory.store import UserMemoryStore
+from app.harness.memory.tools import user_memory_tool
 from app.harness.portfolio.service import PortfolioService
 from app.harness.portfolio.tools import portfolio_analytics_tool
 from app.harness.provenance.store import ProvenanceStore
@@ -38,6 +42,7 @@ class HarnessServices:
     memory: MemoryStore = field(default_factory=MemoryStore)
     skills: SkillRegistry = field(default_factory=SkillRegistry)
     portfolio: PortfolioService = field(default_factory=PortfolioService)
+    user_memory: UserMemoryStore = field(default_factory=UserMemoryStore)  # (P17) long-term user memory
     llm: Any = None  # LLMPort with bind()/primary(); HarnessLLM unless a test injects FakeLLM
     # tests inject a factory for per-message model choices; production builds a HarnessLLM
     llm_for_choice: Callable[[str, str], Any] | None = None
@@ -46,6 +51,9 @@ class HarnessServices:
     runs: RunManager = field(init=False)
     checkpoints: CheckpointerCache = field(init=False)
     weekly: Any = field(init=False)  # (P12) WeeklyReportJob: Friday 03:00 portfolio report
+    # (P17) memory engine (MemoryPort for workflow nodes: ctx.config["memory"]) + the shared ReasoningBank
+    memory_engine: MemoryEngine = field(init=False)
+    reasoning_bank: ReasoningBank = field(init=False)
     # (P13) Settings-page overrides on top of env; tests may pass their own data router
     overrides: SettingsOverrides = field(init=False)
     data_router: DataRouter | None = None
@@ -58,6 +66,9 @@ class HarnessServices:
         self.runs = RunManager(self.bus, self.settings, services=self)
         self.checkpoints = CheckpointerCache(self.settings.data_dir)
         self.weekly = WeeklyReportJob(self)
+        # the LLM is resolved lazily on each memory call (the app starts without an LLM key)
+        self.reasoning_bank = ReasoningBank(self.get_llm, self.settings)
+        self.memory_engine = MemoryEngine(self.get_llm, self.user_memory, self.reasoning_bank, self.settings)
         from app.harness.runtime.demo import echo_tools
         from app.harness.runtime.graph_demo import graph_demo, graph_demo_resume
         from app.harness.workflow.backtest import backtest_workflow, backtest_workflow_resume
@@ -135,9 +146,14 @@ class HarnessServices:
 
 
 def default_tools(
-    memory: MemoryStore, skills: SkillRegistry, portfolio: PortfolioService | None = None
+    memory: MemoryStore,
+    skills: SkillRegistry,
+    portfolio: PortfolioService | None = None,
+    user_memory: UserMemoryStore | None = None,
 ) -> list[ToolSpec]:
     extra = [portfolio_analytics_tool(portfolio)] if portfolio is not None else []
+    if user_memory is not None:
+        extra.append(user_memory_tool(user_memory))
     return [*domain_tools(), *memory_tools(memory), skill_tool(skills), *extra]
 
 
@@ -147,13 +163,17 @@ def build_services(settings: Settings | None = None, tools: list[ToolSpec] | Non
     memory = MemoryStore()
     skills = SkillRegistry()
     portfolio = PortfolioService()
+    user_memory = UserMemoryStore()
     return HarnessServices(
         settings=settings,
         bus=EventBus(),
-        tools=ToolRegistry(tools if tools is not None else default_tools(memory, skills, portfolio)),
+        tools=ToolRegistry(
+            tools if tools is not None else default_tools(memory, skills, portfolio, user_memory)
+        ),
         memory=memory,
         skills=skills,
         portfolio=portfolio,
+        user_memory=user_memory,
         reload_llm_keys=reload_llm_keys,
     )
 

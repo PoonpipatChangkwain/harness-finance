@@ -1,5 +1,30 @@
 {
   "$defs": {
+    "AnswerDiscovery": {
+      "additionalProperties": false,
+      "description": "(P17) The answer ends with a 5-Whys question: progress ``whys_asked``/``max`` + the question.",
+      "properties": {
+        "whys_asked": {
+          "title": "Whys Asked",
+          "type": "integer"
+        },
+        "max": {
+          "title": "Max",
+          "type": "integer"
+        },
+        "question": {
+          "title": "Question",
+          "type": "string"
+        }
+      },
+      "required": [
+        "whys_asked",
+        "max",
+        "question"
+      ],
+      "title": "AnswerDiscovery",
+      "type": "object"
+    },
     "AnswerFinal": {
       "additionalProperties": false,
       "properties": {
@@ -20,6 +45,17 @@
           },
           "title": "Unverified Numbers",
           "type": "array"
+        },
+        "discovery": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/AnswerDiscovery"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
         }
       },
       "required": [
@@ -460,6 +496,102 @@
         "percent"
       ],
       "title": "ContextUsage",
+      "type": "object"
+    },
+    "DiscoveryAssessed": {
+      "additionalProperties": false,
+      "description": "(P17) The 5-Whys assessment of this turn.",
+      "properties": {
+        "whys_asked": {
+          "title": "Whys Asked",
+          "type": "integer"
+        },
+        "root_goal_identified": {
+          "title": "Root Goal Identified",
+          "type": "boolean"
+        },
+        "confidence": {
+          "title": "Confidence",
+          "type": "number"
+        },
+        "stop_reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Stop Reason"
+        },
+        "advice_mode": {
+          "default": "normal",
+          "enum": [
+            "normal",
+            "stabilise",
+            "educate"
+          ],
+          "title": "Advice Mode",
+          "type": "string"
+        },
+        "next_question": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Next Question"
+        },
+        "root_goal": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/DiscoveryRootGoal"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "whys_asked",
+        "root_goal_identified",
+        "confidence"
+      ],
+      "title": "DiscoveryAssessed",
+      "type": "object"
+    },
+    "DiscoveryRootGoal": {
+      "additionalProperties": false,
+      "properties": {
+        "text": {
+          "title": "Text",
+          "type": "string"
+        },
+        "category": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Category"
+        }
+      },
+      "required": [
+        "text"
+      ],
+      "title": "DiscoveryRootGoal",
       "type": "object"
     },
     "Event_answer_final": {
@@ -1332,6 +1464,93 @@
       "title": "Event_context_usage",
       "type": "object"
     },
+    "Event_discovery_assessed": {
+      "properties": {
+        "seq": {
+          "title": "Seq",
+          "type": "integer"
+        },
+        "run_id": {
+          "title": "Run Id",
+          "type": "string"
+        },
+        "session_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Session Id"
+        },
+        "ts": {
+          "format": "date-time",
+          "title": "Ts",
+          "type": "string"
+        },
+        "type": {
+          "const": "discovery.assessed",
+          "title": "Type",
+          "type": "string"
+        },
+        "node": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Node"
+        },
+        "call_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Call Id"
+        },
+        "parent_call_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Parent Call Id"
+        },
+        "payload": {
+          "$ref": "#/$defs/DiscoveryAssessed"
+        },
+        "ephemeral": {
+          "default": false,
+          "title": "Ephemeral",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "seq",
+        "run_id",
+        "ts",
+        "type",
+        "payload"
+      ],
+      "title": "Event_discovery_assessed",
+      "type": "object"
+    },
     "Event_guard_limit": {
       "properties": {
         "seq": {
@@ -1680,6 +1899,180 @@
       "title": "Event_llm_started",
       "type": "object"
     },
+    "Event_memory_recalled": {
+      "properties": {
+        "seq": {
+          "title": "Seq",
+          "type": "integer"
+        },
+        "run_id": {
+          "title": "Run Id",
+          "type": "string"
+        },
+        "session_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Session Id"
+        },
+        "ts": {
+          "format": "date-time",
+          "title": "Ts",
+          "type": "string"
+        },
+        "type": {
+          "const": "memory.recalled",
+          "title": "Type",
+          "type": "string"
+        },
+        "node": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Node"
+        },
+        "call_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Call Id"
+        },
+        "parent_call_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Parent Call Id"
+        },
+        "payload": {
+          "$ref": "#/$defs/MemoryRecalled"
+        },
+        "ephemeral": {
+          "default": false,
+          "title": "Ephemeral",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "seq",
+        "run_id",
+        "ts",
+        "type",
+        "payload"
+      ],
+      "title": "Event_memory_recalled",
+      "type": "object"
+    },
+    "Event_memory_updated": {
+      "properties": {
+        "seq": {
+          "title": "Seq",
+          "type": "integer"
+        },
+        "run_id": {
+          "title": "Run Id",
+          "type": "string"
+        },
+        "session_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Session Id"
+        },
+        "ts": {
+          "format": "date-time",
+          "title": "Ts",
+          "type": "string"
+        },
+        "type": {
+          "const": "memory.updated",
+          "title": "Type",
+          "type": "string"
+        },
+        "node": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Node"
+        },
+        "call_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Call Id"
+        },
+        "parent_call_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Parent Call Id"
+        },
+        "payload": {
+          "$ref": "#/$defs/MemoryUpdated"
+        },
+        "ephemeral": {
+          "default": false,
+          "title": "Ephemeral",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "seq",
+        "run_id",
+        "ts",
+        "type",
+        "payload"
+      ],
+      "title": "Event_memory_updated",
+      "type": "object"
+    },
     "Event_node_finished": {
       "properties": {
         "seq": {
@@ -1852,6 +2245,93 @@
         "payload"
       ],
       "title": "Event_node_started",
+      "type": "object"
+    },
+    "Event_reasoning_distilled": {
+      "properties": {
+        "seq": {
+          "title": "Seq",
+          "type": "integer"
+        },
+        "run_id": {
+          "title": "Run Id",
+          "type": "string"
+        },
+        "session_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Session Id"
+        },
+        "ts": {
+          "format": "date-time",
+          "title": "Ts",
+          "type": "string"
+        },
+        "type": {
+          "const": "reasoning.distilled",
+          "title": "Type",
+          "type": "string"
+        },
+        "node": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Node"
+        },
+        "call_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Call Id"
+        },
+        "parent_call_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Parent Call Id"
+        },
+        "payload": {
+          "$ref": "#/$defs/ReasoningDistilled"
+        },
+        "ephemeral": {
+          "default": false,
+          "title": "Ephemeral",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "seq",
+        "run_id",
+        "ts",
+        "type",
+        "payload"
+      ],
+      "title": "Event_reasoning_distilled",
       "type": "object"
     },
     "Event_run_finished": {
@@ -2509,6 +2989,151 @@
       "title": "LLMStarted",
       "type": "object"
     },
+    "MemoryChangePayload": {
+      "additionalProperties": false,
+      "properties": {
+        "op": {
+          "enum": [
+            "ADD",
+            "UPDATE",
+            "SUPERSEDE",
+            "RETIRE",
+            "NOOP"
+          ],
+          "title": "Op",
+          "type": "string"
+        },
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "category": {
+          "title": "Category",
+          "type": "string"
+        },
+        "text": {
+          "title": "Text",
+          "type": "string"
+        },
+        "previous_text": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Previous Text"
+        },
+        "status": {
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "op",
+        "id",
+        "category",
+        "text",
+        "status"
+      ],
+      "title": "MemoryChangePayload",
+      "type": "object"
+    },
+    "MemoryRecalled": {
+      "additionalProperties": false,
+      "description": "(P17) What the run got from long-term memory (before any ``llm.*`` of the run).",
+      "properties": {
+        "items": {
+          "items": {
+            "$ref": "#/$defs/MemoryRecalledItem"
+          },
+          "title": "Items",
+          "type": "array"
+        },
+        "reasoning": {
+          "items": {
+            "$ref": "#/$defs/MemoryRecalledReasoning"
+          },
+          "title": "Reasoning",
+          "type": "array"
+        }
+      },
+      "required": [
+        "items",
+        "reasoning"
+      ],
+      "title": "MemoryRecalled",
+      "type": "object"
+    },
+    "MemoryRecalledItem": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "category": {
+          "title": "Category",
+          "type": "string"
+        },
+        "text": {
+          "title": "Text",
+          "type": "string"
+        },
+        "status": {
+          "default": "active",
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "category",
+        "text"
+      ],
+      "title": "MemoryRecalledItem",
+      "type": "object"
+    },
+    "MemoryRecalledReasoning": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "title": {
+          "title": "Title",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "title"
+      ],
+      "title": "MemoryRecalledReasoning",
+      "type": "object"
+    },
+    "MemoryUpdated": {
+      "additionalProperties": false,
+      "description": "(P17) What ``learn`` wrote (NOOPs are not sent).",
+      "properties": {
+        "changes": {
+          "items": {
+            "$ref": "#/$defs/MemoryChangePayload"
+          },
+          "title": "Changes",
+          "type": "array"
+        }
+      },
+      "required": [
+        "changes"
+      ],
+      "title": "MemoryUpdated",
+      "type": "object"
+    },
     "NodeFinished": {
       "additionalProperties": false,
       "properties": {
@@ -2572,6 +3197,53 @@
         "phase"
       ],
       "title": "NodeStarted",
+      "type": "object"
+    },
+    "ReasoningDistilled": {
+      "additionalProperties": false,
+      "description": "(P17) Lessons added to (or merged into) the ReasoningBank.",
+      "properties": {
+        "items": {
+          "items": {
+            "$ref": "#/$defs/ReasoningDistilledItem"
+          },
+          "title": "Items",
+          "type": "array"
+        }
+      },
+      "required": [
+        "items"
+      ],
+      "title": "ReasoningDistilled",
+      "type": "object"
+    },
+    "ReasoningDistilledItem": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "title": {
+          "title": "Title",
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "strategy",
+            "pitfall",
+            "coaching"
+          ],
+          "title": "Kind",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "title",
+        "kind"
+      ],
+      "title": "ReasoningDistilledItem",
       "type": "object"
     },
     "RunFinished": {
@@ -2835,12 +3507,16 @@
       "context.compaction": "#/$defs/Event_context_compaction",
       "context.microcompact": "#/$defs/Event_context_microcompact",
       "context.usage": "#/$defs/Event_context_usage",
+      "discovery.assessed": "#/$defs/Event_discovery_assessed",
       "guard.limit": "#/$defs/Event_guard_limit",
       "llm.delta": "#/$defs/Event_llm_delta",
       "llm.finished": "#/$defs/Event_llm_finished",
       "llm.started": "#/$defs/Event_llm_started",
+      "memory.recalled": "#/$defs/Event_memory_recalled",
+      "memory.updated": "#/$defs/Event_memory_updated",
       "node.finished": "#/$defs/Event_node_finished",
       "node.started": "#/$defs/Event_node_started",
+      "reasoning.distilled": "#/$defs/Event_reasoning_distilled",
       "run.finished": "#/$defs/Event_run_finished",
       "run.started": "#/$defs/Event_run_started",
       "tool.finished": "#/$defs/Event_tool_finished",
@@ -2916,6 +3592,18 @@
     },
     {
       "$ref": "#/$defs/Event_checkpoint_saved"
+    },
+    {
+      "$ref": "#/$defs/Event_memory_recalled"
+    },
+    {
+      "$ref": "#/$defs/Event_discovery_assessed"
+    },
+    {
+      "$ref": "#/$defs/Event_memory_updated"
+    },
+    {
+      "$ref": "#/$defs/Event_reasoning_distilled"
     }
   ],
   "title": "EventEnvelope"

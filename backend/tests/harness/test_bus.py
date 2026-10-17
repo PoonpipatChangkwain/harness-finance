@@ -110,7 +110,9 @@ async def test_invalid_payload_rejected() -> None:
 
 def test_schema_export(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     schema = envelope_json_schema()
-    assert len(schema["oneOf"]) == len(PAYLOADS) == 22  # (P15) + backtest.progress/cell/sim
+    assert (
+        len(schema["oneOf"]) == len(PAYLOADS) == 26
+    )  # (P15) + backtest.*, (P17) + memory/discovery/reasoning
     out = tmp_path / "events.schema.json"
     monkeypatch.setattr(export, "OUT", out)
     export.main()

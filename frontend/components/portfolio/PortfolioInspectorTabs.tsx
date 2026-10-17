@@ -32,4 +32,5 @@ export const PORTFOLIO_TABS: InspectorTab[] = [
   { id: "provenance", label: "Lineage", render: () => <LineageTab /> },
   runTab("trajectory"),
   runTab("scratchpad"),
+  runTab("memory"),
 ];

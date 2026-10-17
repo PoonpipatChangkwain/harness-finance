@@ -62,6 +62,12 @@ interface UiState {
   /** model picked in the composer; null = the backend's configured default chain */
   llmChoice: LlmChoice | null;
   setLlmChoice: (choice: LlmChoice | null) => void;
+  /**
+   * (P17) "ข้าม — วิเคราะห์เลย" on a DiscoveryCard: the NEXT message is sent with
+   * `skip_discovery: true` (shown as a pill in the Composer), then it resets. Never persisted.
+   */
+  skipDiscovery: boolean;
+  setSkipDiscovery: (skip: boolean) => void;
   /** < 1024px the inspector is a drawer: its open state is separate and never persisted */
   drawerMode: boolean;
   drawerOpen: boolean;
@@ -108,6 +114,8 @@ export const useUiStore = create<UiState>()(
       paletteOpen: false,
       llmChoice: null,
       setLlmChoice: (llmChoice) => set({ llmChoice }),
+      skipDiscovery: false,
+      setSkipDiscovery: (skipDiscovery) => set({ skipDiscovery }),
       drawerMode: false,
       drawerOpen: false,
       setDrawerMode: (drawerMode) => set({ drawerMode, drawerOpen: false }),

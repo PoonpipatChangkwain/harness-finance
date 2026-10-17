@@ -1,6 +1,9 @@
 "use client";
 
-/** One turn: user bubble (+ scenario chip) → TurnProcess → Answer → StatsPills (ui-spec §4.1). */
+/**
+ * One turn: user bubble (+ scenario chip) → TurnProcess → Answer → (P17) DiscoveryCard ·
+ * goal chip · memory chips → StatsPills (ui-spec §4.1, §Memory).
+ */
 
 import { clsx } from "clsx";
 import { Bot, Briefcase, Puzzle } from "lucide-react";
@@ -9,6 +12,8 @@ import { useRun } from "@/stores/run-store";
 import { useUiStore } from "@/stores/ui-store";
 
 import { Answer } from "./Answer";
+import { DiscoveryCard, GoalChip } from "./DiscoveryCard";
+import { MemoryChips } from "./MemoryChip";
 import { StatsPills } from "./StatsPills";
 import { TurnProcess } from "./TurnProcess";
 
@@ -23,7 +28,18 @@ export interface TurnData {
   portfolios?: string[] | null;
 }
 
-export function Turn({ turn, now, skillLabel }: { turn: TurnData; now: number; skillLabel?: (s: string) => string }) {
+export function Turn({
+  turn,
+  now,
+  skillLabel,
+  latest = false,
+}: {
+  turn: TurnData;
+  now: number;
+  skillLabel?: (s: string) => string;
+  /** (P17) the newest turn: only its DiscoveryCard offers "ข้าม" */
+  latest?: boolean;
+}) {
   const view = useRun(turn.runId);
   const selected = useUiStore((s) => s.selectedRunId === turn.runId && turn.runId !== null);
   const selectRun = useUiStore((s) => s.selectRun);
@@ -71,6 +87,13 @@ export function Turn({ turn, now, skillLabel }: { turn: TurnData; now: number; s
         />
       ) : draft ? (
         <Answer markdown={draft} citations={[]} unverified={[]} runId={view?.runId ?? ""} streaming />
+      ) : null}
+      {view?.answer && view.memory.discovery ? <DiscoveryCard discovery={view.memory.discovery} interactive={latest} /> : null}
+      {view && (view.memory.discovery?.rootGoalIdentified || view.memory.changes.length) ? (
+        <div className="flex flex-wrap gap-1.5">
+          {view.memory.discovery ? <GoalChip discovery={view.memory.discovery} changes={view.memory.changes} /> : null}
+          <MemoryChips changes={view.memory.changes} />
+        </div>
       ) : null}
       {view && (view.answer || view.usage.llmCalls > 0) ? <StatsPills usage={view.usage} /> : null}
     </article>

@@ -49,7 +49,10 @@ def research_services(
     llm: FakeLLM | None = None,
     extra_tools: list[ToolSpec] | None = None,
     capability_available: Callable[[Capability], bool] = lambda cap: True,
+    long_term_memory: bool = False,
 ) -> HarnessServices:
+    # (P17) memory/5-Whys add LLM calls to the scripted sequence; off unless a test asks for it
+    settings.memory_enabled = long_term_memory
     memory = MemoryStore()
     skills = SkillRegistry(provider_ok=lambda provider: provider != "x_api")
     tools = [*fake_tools.all_tools(), skill_tool(skills), *memory_tools(memory), *(extra_tools or [])]

@@ -9,11 +9,12 @@ from __future__ import annotations
 
 import re
 from datetime import datetime
-from typing import Any, Literal
+from typing import Annotated, Any, Literal
 
-from fastapi import APIRouter, HTTPException, Query
-from pydantic import BaseModel, Field
+from fastapi import APIRouter, Depends, HTTPException, Query
+from pydantic import BaseModel, Field, ValidationError
 
+from app.api.deps import current_user_id
 from app.harness.llm.config import PROVIDERS, canonical_provider, is_provider_configured
 from app.harness.runtime.services import get_services
 from app.harness.storage import portfolio_repo, runs_repo, sessions_repo
@@ -47,6 +48,30 @@ class PostMessage(BaseModel):
     # (P12 §12.7) "use portfolio data": the books whose snapshot goes into this turn; empty = none
     # (a portfolio session falls back to its own books)
     portfolio_ids: list[str] = Field(default_factory=list, max_length=20)
+    # (P17) "ข้าม — วิเคราะห์เลย": answer now, no 5-Whys question this turn (the chain is closed)
+    skip_discovery: bool = False
+
+
+class WhyStepOut(BaseModel):
+    q: str
+    a: str
+
+
+class RootGoalOut(BaseModel):
+    text: str
+    category: str | None = None
+
+
+class SessionDiscoveryOut(BaseModel):
+    """(P17) The session's 5-Whys state (``session.meta["discovery"]``) after its latest turn."""
+
+    whys_asked: int
+    chain: list[WhyStepOut]
+    root_goal: RootGoalOut | None = None
+    root_goal_identified: bool
+    confidence: float
+    stop_reason: str | None = None
+    advice_mode: str
 
 
 class SessionOut(BaseModel):
@@ -89,6 +114,7 @@ class SessionDetail(BaseModel):
     session: SessionOut
     messages: list[MessageOut]
     runs: list[RunBrief]
+    discovery: SessionDiscoveryOut | None = None  # (P17) null = no 5-Whys state yet / memory off
 
 
 class MessageAccepted(BaseModel):
@@ -159,7 +185,18 @@ async def get_session(session_id: str) -> SessionDetail:
         session=SessionOut.model_validate(session.model_dump()),
         messages=[MessageOut.model_validate(m.model_dump()) for m in messages],
         runs=[_run_brief(r) for r in runs],
+        discovery=_session_discovery(session),
     )
+
+
+def _session_discovery(session: sessions_repo.SessionRecord) -> SessionDiscoveryOut | None:
+    raw = (session.meta or {}).get("discovery")
+    if not isinstance(raw, dict):
+        return None
+    try:
+        return SessionDiscoveryOut.model_validate(raw)
+    except ValidationError:
+        return None
 
 
 class SessionDeleted(BaseModel):
@@ -199,7 +236,9 @@ def _check_llm_choice(choice: LLMChoice) -> dict[str, str]:
 
 
 @router.post("/sessions/{session_id}/messages", response_model=MessageAccepted)
-async def post_message(session_id: str, body: PostMessage) -> MessageAccepted:
+async def post_message(
+    session_id: str, body: PostMessage, user_id: Annotated[str, Depends(current_user_id)]
+) -> MessageAccepted:
     session = await _require_session(session_id)
     services = get_services()
     portfolio_ids = await _check_portfolios(body.portfolio_ids)
@@ -227,7 +266,16 @@ async def post_message(session_id: str, body: PostMessage) -> MessageAccepted:
         -HISTORY_MESSAGES:
     ]
     meta: dict[str, Any] = {"skill": body.skill}
-    run_input: dict[str, Any] = {"text": body.text, "skill": body.skill, "history": history}
+    run_input: dict[str, Any] = {
+        "text": body.text,
+        "skill": body.skill,
+        "history": history,
+        "user_id": user_id,  # (P17) whose memory; also read by the user_memory_search tool
+        "discovery": (session.meta or {}).get("discovery"),
+    }
+    if body.skip_discovery:
+        meta["skip_discovery"] = True
+        run_input["skip_discovery"] = True
     if portfolio_ids:
         meta["portfolio_ids"] = portfolio_ids  # the UI's "used portfolio X" chip on this turn
         run_input["portfolio_ids"] = portfolio_ids

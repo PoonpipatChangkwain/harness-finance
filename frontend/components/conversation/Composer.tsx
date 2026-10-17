@@ -3,14 +3,16 @@
 /**
  * Composer (ui-spec §4.1): auto-growing textarea (Enter sends, Shift+Enter
  * new line), scenario picker from /skills (unavailable ones greyed with the
- * reason), Send ↔ Stop while a run is live.
+ * reason), Send ↔ Stop while a run is live. (P17) a "ข้ามคำถาม" pill while the next
+ * message will be sent with `skip_discovery: true` (ui-store flag, × removes it).
  */
 
 import { clsx } from "clsx";
-import { Send, Square } from "lucide-react";
+import { FastForward, Send, Square, X } from "lucide-react";
 import { forwardRef, useEffect, useImperativeHandle, useRef, type KeyboardEvent, type ReactNode } from "react";
 
 import type { SkillInfo } from "@/lib/api";
+import { useUiStore } from "@/stores/ui-store";
 
 const CATEGORY_LABEL: Record<string, string> = {
   research: "Research",
@@ -92,6 +94,8 @@ export const Composer = forwardRef<
   const { text, onText, skill, onSkill, skills, running, disabled, disabledReason, busy, modelPicker, notice, onSend, onStop } =
     props;
   const area = useRef<HTMLTextAreaElement>(null);
+  const skipDiscovery = useUiStore((s) => s.skipDiscovery);
+  const setSkipDiscovery = useUiStore((s) => s.setSkipDiscovery);
   useImperativeHandle(ref, () => ({ focus: () => area.current?.focus() }), []);
 
   useEffect(() => {
@@ -124,6 +128,24 @@ export const Composer = forwardRef<
       <div className="mt-1 flex flex-wrap items-center gap-2">
         <ScenarioPicker skills={skills} value={skill} onChange={onSkill} disabled={running} />
         {modelPicker}
+        {skipDiscovery ? (
+          <span
+            data-testid="skip-discovery-pill"
+            title="ข้อความถัดไปส่งพร้อม skip_discovery: AI จะวิเคราะห์ทันทีโดยไม่ถามเป้าหมายต่อ"
+            className="inline-flex items-center gap-1 rounded-full border border-accent/40 bg-accent-muted px-2 py-0.5 text-[11.5px] text-accent"
+          >
+            <FastForward className="size-3" aria-hidden /> ข้ามคำถาม
+            <button
+              type="button"
+              aria-label="ยกเลิกการข้ามคำถาม"
+              data-testid="skip-discovery-clear"
+              onClick={() => setSkipDiscovery(false)}
+              className="rounded-full p-px hover:bg-layer-2"
+            >
+              <X className="size-3" aria-hidden />
+            </button>
+          </span>
+        ) : null}
         {disabled && disabledReason ? <span className="truncate text-[12px] text-warning">{disabledReason}</span> : null}
         <span className="flex-1" />
         {running ? (

@@ -7,15 +7,22 @@
  * - "เสนอ rebalance"      → the `portfolio_advisor` workflow (ends at approval in the main column)
  * - "หาจุดอ่อน"           → skill `portfolio-weakness`
  * The chat session id per book is remembered in localStorage (lost storage = a new chat).
+ * (P17) one line "ใช้โปรไฟล์ของคุณ: …" from /memory/profile, 5 Whys in the chat turns
+ * (same DiscoveryCard / memory chips as Research), and a toast when a run distils lessons
+ * into the ReasoningBank (after approve / reject).
  */
 
-import { ChevronDown, ShieldCheck, Sparkles, Target } from "lucide-react";
+import { Brain, ChevronDown, ShieldCheck, Sparkles, Target } from "lucide-react";
+import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { Composer, skillTitle } from "@/components/conversation/Composer";
 import { Turn, type TurnData } from "@/components/conversation/Turn";
+import { ReasoningToast } from "@/components/memory/ReasoningToast";
 import { api, ApiError, type SessionDetail, type SkillInfo } from "@/lib/api";
+import { sendChatMessage } from "@/lib/chat";
 import { useNow } from "@/lib/hooks";
+import { memoryApi, profileSummary, type MemoryProfileOut } from "@/lib/memory-api";
 import { portfolioApi, type AdvisorRun, type RiskProfile } from "@/lib/portfolio-api";
 import { isTerminal } from "@/stores/run-reducer";
 import { useRun } from "@/stores/run-store";
@@ -163,7 +170,7 @@ export function AdvisorPanel() {
     setError(null);
     try {
       const sid = await ensureSession();
-      const { run_id } = await api.postMessage(sid, { text: body.trim(), skill: withSkill, llm: llmChoice, portfolio_ids: [id] });
+      const { run_id } = await sendChatMessage(sid, { text: body.trim(), skill: withSkill, llm: llmChoice, portfolio_ids: [id] });
       setLocal((l) => [...l, { key: run_id, text: body.trim(), skill: withSkill, runId: run_id, at: new Date().toISOString() }]);
       setText("");
       selectRun(run_id);
@@ -208,6 +215,7 @@ export function AdvisorPanel() {
         <div className="text-[11.5px] text-muted">
           AI Advisor · <span className="text-fg">{book?.name}</span>
         </div>
+        <ProfileLine refreshKey={`${latestRunId ?? ""}:${latest?.status ?? ""}`} />
         <div className="flex flex-wrap gap-1">
           <button
             type="button"
@@ -284,7 +292,15 @@ export function AdvisorPanel() {
         {turns.length === 0 ? (
           <p className="px-2 text-[12.5px] text-subtle">ถามเกี่ยวกับพอร์ตนี้ หรือกดปุ่มด่วนด้านบน — AI เห็นข้อมูล analytics ของพอร์ตพร้อม provenance</p>
         ) : (
-          turns.map((t) => <Turn key={t.key} turn={t} now={now} skillLabel={(s) => (s === "portfolio_advisor" ? "Portfolio advisor" : skillTitle(s))} />)
+          turns.map((t, i) => (
+            <Turn
+              key={t.key}
+              turn={t}
+              now={now}
+              latest={i === turns.length - 1}
+              skillLabel={(s) => (s === "portfolio_advisor" ? "Portfolio advisor" : skillTitle(s))}
+            />
+          ))
         )}
         <div ref={bottom} />
       </div>
@@ -303,6 +319,44 @@ export function AdvisorPanel() {
           onStop={() => latestRunId && void api.cancelRun(latestRunId).catch(() => {})}
         />
       </div>
+      <ReasoningToast view={latest} />
+    </div>
+  );
+}
+
+/**
+ * (P17) "ใช้โปรไฟล์ของคุณ: …" — first line of the profile the advisor really gets
+ * (`GET /memory/profile`), refreshed after each run, with a link to /memory.
+ */
+export function ProfileLine({ refreshKey }: { refreshKey?: string }) {
+  const [profile, setProfile] = useState<MemoryProfileOut | null | undefined>(undefined);
+  useEffect(() => {
+    let cancelled = false;
+    memoryApi
+      .profile()
+      .then((p) => !cancelled && setProfile(p))
+      .catch(() => !cancelled && setProfile(null));
+    return () => {
+      cancelled = true;
+    };
+  }, [refreshKey]);
+  if (profile === undefined) return null;
+  const summary = profileSummary(profile);
+  return (
+    <div data-testid="advisor-profile" className="flex min-w-0 items-center gap-1 text-[11.5px] text-muted">
+      <Brain className="size-3 shrink-0 text-accent" aria-hidden />
+      <span className="min-w-0 truncate" title={profile?.profile_text}>
+        {summary ? (
+          <>
+            ใช้โปรไฟล์ของคุณ: <span className="text-fg">{summary}</span>
+          </>
+        ) : (
+          "ยังไม่มีโปรไฟล์ในความจำ — AI จะจำจากที่คุยกัน"
+        )}
+      </span>
+      <Link href="/memory" className="shrink-0 text-accent hover:underline">
+        Memory
+      </Link>
     </div>
   );
 }

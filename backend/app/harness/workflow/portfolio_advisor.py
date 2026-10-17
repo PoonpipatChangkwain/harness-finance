@@ -79,6 +79,8 @@ def _build(ctx: RunContext) -> Any:
         config={
             "portfolio_loader": load_portfolio_json,
             "plan_store": RepoPlanStore(),
+            # (P17) MemoryPort for recall_memory / learn; None = memory off
+            "memory": services.memory_engine if services.settings.memory_enabled else None,
             **advisor_policy_config(services.settings),  # (P13) Settings-page policy limits
         },
     )
@@ -86,6 +88,7 @@ def _build(ctx: RunContext) -> Any:
 
 STATE_KEYS = (
     "portfolio", "analytics", "diagnoses", "proposal", "plan", "policy", "approval", "saved_plan", "outcome",
+    "memory", "learned",
 )  # fmt: skip
 
 

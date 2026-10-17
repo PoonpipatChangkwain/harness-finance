@@ -38,6 +38,15 @@ describe("TradeOutcomePanel", () => {
     );
   });
 
+  it("notes the ReasoningBank lessons the backend distilled (P17)", async () => {
+    const onSettle = vi.fn(async () => ({
+      distilled: [{ id: "rb_1", title: "Wider stop at the London open", kind: "pitfall" as const }],
+    }));
+    render(<TradeOutcomePanel result={result} onSettle={onSettle} />);
+    fireEvent.click(screen.getByText(/SL @ 208.4/));
+    expect((await screen.findByTestId("distilled-note")).textContent).toBe("บันทึกบทเรียน 1 ข้อลง ReasoningBank");
+  });
+
   it("shows R and the lesson once settled", () => {
     const settled: TradeResult = {
       ...result,

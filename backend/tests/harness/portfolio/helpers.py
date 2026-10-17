@@ -32,8 +32,14 @@ BOOK = [("PTT", "1000", "30"), ("AAPL", "10", "150")]
 
 
 def portfolio_services(
-    settings: Settings, llm: FakeLLM | None = None, *, extra_tools: list[ToolSpec] | None = None
+    settings: Settings,
+    llm: FakeLLM | None = None,
+    *,
+    extra_tools: list[ToolSpec] | None = None,
+    long_term_memory: bool = False,
 ) -> HarnessServices:
+    # (P17) memory adds LLM calls (distill, privacy judge) to the scripted sequence: off by default
+    settings.memory_enabled = long_term_memory
     service = PortfolioService()
     tools = [*PORTFOLIO_TOOLS, portfolio_analytics_tool(service), *(extra_tools or [])]
     return HarnessServices(

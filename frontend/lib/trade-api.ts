@@ -162,6 +162,15 @@ export interface TradeResult {
   reflection_error: string | null;
 }
 
+/** (P17) a ReasoningBank lesson distilled from a settled trade (`POST …/outcome` → `distilled`) */
+export interface DistilledLesson {
+  id: string;
+  title: string;
+  kind: "strategy" | "pitfall" | "coaching";
+}
+
+export type TradeSettleResult = TradeResult & { distilled?: DistilledLesson[] };
+
 export interface PolicyResult {
   rule_id: string;
   passed: boolean;
@@ -339,7 +348,7 @@ export const tradeApi = {
   state: (runId: string) =>
     request<{ values: Record<string, unknown>; next: string[]; thread_id: string }>(`/runs/${runId}/state`),
   settle: (runId: string, body: TradeOutcomeBody) =>
-    request<TradeResult>(`/trade/runs/${runId}/outcome`, json(body)),
+    request<TradeSettleResult>(`/trade/runs/${runId}/outcome`, json(body)),
   decisions: (symbol?: string, openOnly = false) =>
     request<{ decisions: TradeResult[] }>(`/trade/decisions${query({ symbol, open_only: openOnly ? "true" : undefined })}`),
   ohlcv: (symbol: string, interval: ChartInterval, range: ChartRange, asOf?: string | null) =>

@@ -25,6 +25,34 @@ export interface Citation {
   provenance_id: string;
 }
 
+/** (P17) research §B.4 */
+export type DiscoveryStopReason =
+  | "root_goal"
+  | "max_whys"
+  | "resistance"
+  | "urgency"
+  | "informational"
+  | "memory_already_known"
+  | (string & {});
+export type AdviceMode = "normal" | "stabilise" | "educate";
+
+export interface AnswerDiscovery {
+  whys_asked: number;
+  max: number;
+  question: string;
+}
+
+export type MemoryOp = "NOOP" | "ADD" | "UPDATE" | "SUPERSEDE" | "RETIRE";
+
+export interface MemoryChangeEvent {
+  op: MemoryOp;
+  id: string;
+  category: string;
+  text: string;
+  previous_text?: string | null;
+  status: string;
+}
+
 export interface EventPayloads {
   "run.started": { workflow: string; input: Record<string, unknown>; graph?: Record<string, unknown> | null };
   "run.finished": { status: RunStatus; error?: string | null; reason?: string | null };
@@ -85,8 +113,34 @@ export interface EventPayloads {
     outcome: "approved" | "rejected" | "edited";
     edits?: Record<string, unknown> | null;
   };
-  "answer.final": { markdown: string; citations: Citation[]; unverified_numbers: string[] };
+  "answer.final": {
+    markdown: string;
+    citations: Citation[];
+    unverified_numbers: string[];
+    /** (P17) the answer ends with a 5 Whys question: progress n/max + the question asked */
+    discovery?: AnswerDiscovery | null;
+  };
   "checkpoint.saved": { node: string; thread_id: string };
+  /** (P17 §17.2) what memory was recalled for this run (before any llm.*) */
+  "memory.recalled": {
+    items: { id: string; category: string; text: string; status?: string }[];
+    reasoning: { id: string; title: string }[];
+  };
+  /** (P17) 5 Whys assessment of this message */
+  "discovery.assessed": {
+    whys_asked: number;
+    root_goal_identified: boolean;
+    confidence: number;
+    stop_reason?: DiscoveryStopReason | null;
+    advice_mode?: AdviceMode;
+    next_question?: string | null;
+    /** latest known goal (also before it is identified) — the chip shows it only once identified */
+    root_goal?: { text: string; category?: string | null } | null;
+  };
+  /** (P17) what the `learn` node changed in the user's memory (after answer.final) */
+  "memory.updated": { changes: MemoryChangeEvent[] };
+  /** (P17) lessons distilled into the ReasoningBank */
+  "reasoning.distilled": { items: { id: string; title: string; kind: string }[] };
   /** (P15) */
   "backtest.progress": {
     phase: "preload" | "decisions" | "simulate" | "done";
@@ -138,7 +192,12 @@ export const EVENT_TYPES = [
   "backtest.progress",
   "backtest.cell",
   "backtest.sim",
+  "memory.recalled",
+  "discovery.assessed",
+  "memory.updated",
+  "reasoning.distilled",
 ] as const satisfies readonly EventType[];
+
 
 export type EventEnvelope<T extends EventType = EventType> = {
   [K in T]: {

@@ -23,6 +23,7 @@ const PAGES: Item[] = [
   { id: "p-research", label: "Research", kind: "page", href: "/research" },
   { id: "p-portfolio", label: "Portfolio", kind: "page", href: "/portfolio" },
   { id: "p-trade", label: "Trade", kind: "page", href: "/trade" },
+  { id: "p-memory", label: "Memory", kind: "page", href: "/memory" },
   { id: "p-settings", label: "Settings", kind: "page", href: "/settings" },
 ];
 

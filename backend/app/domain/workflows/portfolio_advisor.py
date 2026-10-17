@@ -1,9 +1,15 @@
 """``portfolio_advisor`` workflow (P12 §12.3, F1, T4, T5): diagnose a book, propose a rebalance.
 
-    load_portfolio → compute_analytics → diagnose (risk officer ∥ allocation strategist)
-    → propose_rebalance (deep, structured ``RebalanceProposal``: target weights + reasons only)
+    load_portfolio → compute_analytics → recall_memory (P17) → diagnose (risk officer ∥ allocation
+    strategist) → propose_rebalance (deep, structured ``RebalanceProposal``: target weights + reasons)
     → compute_trades (internal ``rebalance_plan``: lot-rounded trades, cash, post-trade metrics)
-    → policy_gate → approval (interrupt) → save_plan → report
+    → policy_gate → approval (interrupt) → save_plan → report → learn (P17)
+
+- (P17 v2) ``recall_memory`` puts the user's INVESTOR PROFILE + ≤ 2 ReasoningBank lessons into the
+  diagnose / propose prompts (after the limits) and supplies the goal from memory when the run has
+  none (the report says so); ``learn`` turns the reviewer's answer into a lesson (approved/edited →
+  strategy, rejected with a comment → pitfall + the comment's facts as memory). Memory off
+  (``ctx.config["memory"]`` None) → both nodes do nothing;
 
 - the two diagnosticians run concurrently inside one node (like the trading analysts):
   one checkpoint for the step, no fan-in races;
@@ -29,6 +35,9 @@ from ulid import ULID
 
 from app.domain.agents.library import get_role, role_profile
 from app.domain.agents.schemas import RebalanceProposal
+from app.domain.memory.messages import context_blocks
+from app.domain.memory.ports import MemoryPort
+from app.domain.memory.schemas import OutcomeJudgement
 from app.domain.models.decision import Decision, Verdict, route_decision
 from app.domain.models.symbol import normalize_symbol, safe_path_component
 from app.domain.policy import (
@@ -59,6 +68,7 @@ MAX_POLICY_ATTEMPTS = 2  # first proposal + one retry (§12.6)
 WEIGHT_TOLERANCE = 0.001
 CASH_ALIASES = frozenset({"CASH", "เงินสด"})
 DEFAULT_PORTFOLIO_ID = "pf_default"
+DEFAULT_USER_ID = "usr_default"
 
 # Limits per risk profile; config (Settings page) replaces the profile default, a run's own
 # constraint wins over both.
@@ -89,6 +99,8 @@ class AdviseInput(BaseModel):
     language: Literal["th", "en"] = "th"
     # Set by the API from the book at start time: a different book is a different graph thread (T3).
     portfolio_hash: str | None = None
+    # (P17) whose memory (profile, goal fallback, what ``learn`` writes); not in the graph signature
+    user_id: str = DEFAULT_USER_ID
 
 
 class AdviseOutput(BaseModel):
@@ -110,6 +122,8 @@ class AdvisorState(TypedDict, total=False):
     saved_plan: dict[str, Any]
     report_md: str
     outcome: dict[str, Any]
+    memory: dict[str, Any]
+    learned: dict[str, Any]
 
 
 class PortfolioLoaderPort(Protocol):
@@ -158,14 +172,34 @@ def _analytics(state: dict[str, Any]) -> PortfolioAnalytics:
     return PortfolioAnalytics.model_validate(state["analytics"]["data"])
 
 
-def _limits_text(inp: AdviseInput, limits: dict[str, float]) -> str:
+def goal_of(state: dict[str, Any]) -> tuple[str | None, bool]:
+    """(P17) The run's goal, or the user's goal from memory when none was given → (goal, from_memory)."""
+    given = (state["input"].get("goal") or "").strip()
+    if given:
+        return given, False
+    remembered = (state.get("memory") or {}).get("goal")
+    return (str(remembered), True) if remembered else (None, False)
+
+
+def _limits_text(inp: AdviseInput, limits: dict[str, float], state: dict[str, Any] | None = None) -> str:
     no_sell = ", ".join(inp.constraints.no_sell) or "none"
-    return (
-        f"Risk profile: {inp.risk_profile}. Goal: {inp.goal or '(not given)'}.\n"
+    goal, from_memory = goal_of(state) if state is not None else (inp.goal, False)
+    text = (
+        f"Risk profile: {inp.risk_profile}. Goal: {goal or '(not given)'}"
+        + (" (from the user's memory)" if from_memory else "")
+        + ".\n"
         f"Policy: max weight per symbol {limits['max_weight']:.0%}, "
         f"max sector {limits['max_sector']:.0%}, min cash {limits['min_cash']:.0%}, "
         f"max turnover {limits['max_turnover']:.0%}, never sell: {no_sell}."
     )
+    if state is not None:  # (P17) INVESTOR PROFILE + LESSONS right after the limits
+        mem = state.get("memory") or {}
+        blocks = context_blocks(
+            profile_text=mem.get("profile_text") or "", lessons=mem.get("reasoning") or []
+        )
+        if blocks:
+            text += "\n\n" + "\n\n".join(blocks)
+    return text
 
 
 async def _warn(ctx: NodeContext, code: str, message: str) -> None:
@@ -217,6 +251,58 @@ def route_after_analytics(state: dict[str, Any]) -> str:
     return "ok" if a.get("valued") else "unvalued"
 
 
+# -- nodes: memory (P17) ------------------------------------------------------------------------
+
+
+def _memory_port(ctx: NodeContext) -> MemoryPort | None:
+    memory: MemoryPort | None = ctx.config.get("memory")
+    return memory
+
+
+async def recall_memory(state: dict[str, Any], ctx: NodeContext) -> dict[str, Any]:
+    """The user's profile + ≤ 2 ReasoningBank lessons (``workflow=portfolio``) for diagnose/propose.
+
+    Not part of the thread id: a resumed run recalls again.
+    """
+    memory = _memory_port(ctx)
+    if memory is None:
+        return {"memory": {"enabled": False}, "_summary": "memory off"}
+    inp = _input(state)
+    query = " ".join(
+        [inp.goal or "portfolio rebalance goal เป้าหมาย", inp.risk_profile]
+        + [h.symbol for h in _analytics(state).holdings[:10]]
+    )
+    try:
+        recall = await memory.recall(inp.user_id, query, workflow="portfolio")
+        if recall.reasoning:
+            await memory.bank.record_use([r.id for r in recall.reasoning], ctx.run_id, inp.user_id)
+    except Exception as exc:  # memory never breaks a run
+        await _warn(ctx, "memory_recall_failed", f"{type(exc).__name__}: {exc}")
+        return {"memory": {"enabled": True, "error": str(exc)}, "_summary": "recall failed"}
+    goals = [i for i in recall.profile_items if i.category == "goal" and i.status == "active"]
+    items = [{"id": i.id, "category": i.category, "text": i.text, "status": i.status} for i in recall.items]
+    reasoning = [
+        {"id": r.id, "title": r.title, "description": r.description, "content": r.content}
+        for r in recall.reasoning
+    ]
+    await ctx.emit.emit(
+        "memory.recalled",
+        {"items": items, "reasoning": [{"id": r["id"], "title": r["title"]} for r in reasoning]},
+    )
+    value = {
+        "enabled": True,
+        "profile_text": recall.profile_text,
+        "items": items,
+        "reasoning": reasoning,
+        "goal": goals[0].text if goals else None,
+        "provenance": recall.provenance,
+    }
+    summary = f"profile {recall.token_estimate} tokens · {len(reasoning)} lessons" + (
+        " · goal from memory" if not inp.goal and goals else ""
+    )
+    return {"memory": value, "_summary": summary}
+
+
 # -- nodes: diagnose (concurrent) ---------------------------------------------------------------
 
 
@@ -225,7 +311,7 @@ async def diagnose(state: dict[str, Any], ctx: NodeContext) -> dict[str, Any]:
     limits = effective_limits(inp, ctx.config)
     base = (
         f"PORTFOLIO ANALYTICS (computed ground truth; provenance ids in [^…]):\n"
-        f"{summary_text(_analytics(state))}\n\n{_limits_text(inp, limits)}"
+        f"{summary_text(_analytics(state))}\n\n{_limits_text(inp, limits, state)}"
     )
 
     async def run(key: str, role: str) -> dict[str, Any]:
@@ -378,7 +464,7 @@ async def propose_rebalance(state: dict[str, Any], ctx: NodeContext) -> dict[str
     attempt = int(previous.get("attempts") or 0) + 1
     user = (
         f"PORTFOLIO ANALYTICS:\n{summary_text(a)}\n\n## Current weights\n{_weights_table(a)}\n\n"
-        f"{_limits_text(inp, limits)}\n\n## Diagnoses\n{_diagnoses_text(state)}\n\n"
+        f"{_limits_text(inp, limits, state)}\n\n## Diagnoses\n{_diagnoses_text(state)}\n\n"
         + (
             "## Your previous proposal was blocked by the policy — fix it:\n"
             + "\n".join(f"- {f['rule_id']}: {f['message']}" for f in failures)
@@ -663,6 +749,9 @@ async def approval(state: dict[str, Any], ctx: NodeContext) -> dict[str, Any]:
         "outcome": response.outcome,
         "comment": response.comment,
         "edits": response.edits,
+        # what the human answered, before an invalid/blocked edit turns it into "rejected" (P17 learn)
+        "human_outcome": response.outcome,
+        "human_comment": response.comment,
     }
     if response.outcome == "edited":
         # The human edits target weights only; trades, cash and metrics are recomputed and
@@ -797,6 +886,9 @@ async def report(state: dict[str, Any], ctx: NodeContext) -> dict[str, Any]:
     parts = [f"# Rebalance — {name} — {outcome['status']}"]
     if outcome.get("reason"):
         parts.append(f"> {outcome['reason']}")
+    goal, from_memory = goal_of(state)
+    if from_memory:  # (P17) say so: the user did not type this goal for this run
+        parts.append(f"_Goal from your memory: {goal}_")
     diag = state.get("diagnoses") or {}
     if diag:
         body = "\n\n".join(
@@ -818,6 +910,86 @@ async def report(state: dict[str, Any], ctx: NodeContext) -> dict[str, Any]:
     markdown = "\n\n".join(parts)
     await ctx.emit.emit("answer.final", {"markdown": markdown, "citations": [], "unverified_numbers": []})
     return {"report_md": markdown, "outcome": outcome, "_summary": outcome["status"]}
+
+
+def _advisor_summary(state: dict[str, Any], *, success: bool, comment: str | None) -> str:
+    p = state.get("proposal") or {}
+    plan = (state.get("approval") or {}).get("plan") or state.get("plan") or {}
+    policy = (state.get("approval") or {}).get("policy") or state.get("policy") or {}
+    checks = ", ".join(f"{r['rule_id']} {'ok' if r['passed'] else 'fail'}" for r in policy.get("results", []))
+    trades = sum(1 for leg in plan.get("legs") or [] if leg.get("action") != "hold")
+    goal, from_memory = goal_of(state)
+    return "\n".join(
+        [
+            f"Risk profile: {state['input'].get('risk_profile')} · goal: {goal or 'none'}"
+            + (" (from memory)" if from_memory else ""),
+            f"Diagnoses:\n{_diagnoses_text(state)[:2500]}",
+            f"Proposal: {p.get('summary') or ''} (verdict {p.get('verdict')})",
+            f"Plan: {trades} trades, turnover {plan.get('turnover', 0) or 0:.1%}",
+            f"Policy: {checks or 'not evaluated'}",
+            "Reviewer: " + ("approved" if success else "rejected") + (f' — "{comment}"' if comment else ""),
+        ]
+    )
+
+
+async def learn(state: dict[str, Any], ctx: NodeContext) -> dict[str, Any]:
+    """(P17) After the report: approved/edited → a strategy lesson; rejected → the recalled lessons
+    failed, and with a comment → a pitfall lesson + facts from the comment ("never sell KBANK")."""
+    memory = _memory_port(ctx)
+    appr = state.get("approval") or {}
+    human = appr.get("human_outcome") or appr.get("outcome")
+    if memory is None or human is None:
+        return {"learned": {"enabled": memory is not None, "judged": False}, "_summary": "nothing to learn"}
+    inp = _input(state)
+    success = human in ("approved", "edited") and appr.get("outcome") in ("approved", "edited")
+    comment = (appr.get("human_comment") or "").strip() if human == "rejected" else ""
+    out: dict[str, Any] = {
+        "enabled": True,
+        "judged": True,
+        "success": success,
+        "changes": [],
+        "distilled": [],
+    }
+    if comment:
+        try:
+            changes = await memory.learn(
+                inp.user_id,
+                user_messages=[comment],
+                source_ref={"run_id": ctx.run_id, "entered": "advisor_rejection"},
+                llm=ctx.llm,
+                emit=ctx.emit,
+                node="learn",
+            )
+            out["changes"] = [
+                {"op": c.op, "id": c.item.id, "category": c.item.category, "text": c.item.text}
+                for c in changes
+                if c.op != "NOOP"
+            ]
+        except Exception as exc:
+            await _warn(ctx, "memory_learn_failed", f"{type(exc).__name__}: {exc}")
+    try:
+        if success or comment:
+            items = await memory.bank.distill(
+                run_summary=_advisor_summary(state, success=success, comment=comment or None),
+                outcome=OutcomeJudgement(
+                    success=success,
+                    score=1.0 if success else 0.0,
+                    reason="plan approved by the user" if success else "plan rejected by the user",
+                ),
+                tags={"workflow": "portfolio"},
+                source_run_id=ctx.run_id,
+                user_id=inp.user_id,
+                max_items=2,
+                llm=ctx.llm,
+                emit=ctx.emit,
+                node="learn",
+            )
+            out["distilled"] = [{"id": i.id, "title": i.title, "kind": i.kind} for i in items]
+        await memory.bank.settle(ctx.run_id, success)
+    except Exception as exc:
+        await _warn(ctx, "memory_learn_failed", f"ReasoningBank: {type(exc).__name__}: {exc}")
+    summary = ("success" if success else "failure") + f" · {len(out['distilled'])} lessons"
+    return {"learned": out, "_summary": summary}
 
 
 def output_of(state: dict[str, Any]) -> AdviseOutput:
@@ -844,7 +1016,7 @@ def _router(source: str, fn: Any, path_map: dict[str, str]) -> RouterSpec:
 
 PORTFOLIO_ADVISOR_WORKFLOW = WorkflowSpec(
     id="portfolio_advisor",
-    version="1",
+    version="2",
     input_model=AdviseInput,
     output_model=AdviseOutput,
     state_model=AdvisorState,
@@ -855,6 +1027,7 @@ PORTFOLIO_ADVISOR_WORKFLOW = WorkflowSpec(
         _node(
             "compute_analytics", "Analytics", NodeKind.COMPUTE, "compute", compute_analytics, {"analytics"}
         ),
+        _node("recall_memory", "Recall memory", NodeKind.COMPUTE, "retrieve", recall_memory, {"memory"}),
         _node("diagnose", "Diagnose", NodeKind.AGENT, "analyze", diagnose, {"diagnoses"}),
         _node(
             "propose_rebalance",
@@ -871,8 +1044,15 @@ PORTFOLIO_ADVISOR_WORKFLOW = WorkflowSpec(
             "save_plan", "Save plan", NodeKind.COMPUTE, "report", save_plan, {"saved_plan"}, idempotent=False
         ),
         _node("report", "Report", NodeKind.REPORT, "report", report, {"report_md", "outcome"}),
+        _node("learn", "Learn", NodeKind.COMPUTE, "report", learn, {"learned"}, idempotent=False),
     ],
-    edges=[("diagnose", "propose_rebalance"), ("save_plan", "report"), ("report", "END")],
+    edges=[
+        ("recall_memory", "diagnose"),
+        ("diagnose", "propose_rebalance"),
+        ("save_plan", "report"),
+        ("report", "learn"),
+        ("learn", "END"),
+    ],
     routers=[
         _router(
             "load_portfolio",
@@ -882,7 +1062,7 @@ PORTFOLIO_ADVISOR_WORKFLOW = WorkflowSpec(
         _router(
             "compute_analytics",
             route_after_analytics,
-            {"ok": "diagnose", "unvalued": "report", "unavailable": "report", "__fallback__": "report"},
+            {"ok": "recall_memory", "unvalued": "report", "unavailable": "report", "__fallback__": "report"},
         ),
         _router(
             "propose_rebalance",

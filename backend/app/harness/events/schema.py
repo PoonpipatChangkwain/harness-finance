@@ -147,10 +147,19 @@ class Citation(_Payload):
     provenance_id: str
 
 
+class AnswerDiscovery(_Payload):
+    """(P17) The answer ends with a 5-Whys question: progress ``whys_asked``/``max`` + the question."""
+
+    whys_asked: int
+    max: int
+    question: str
+
+
 class AnswerFinal(_Payload):
     markdown: str
     citations: list[Citation]
     unverified_numbers: list[str]
+    discovery: AnswerDiscovery | None = None  # (P17)
 
 
 class CheckpointSaved(_Payload):
@@ -195,6 +204,69 @@ class BacktestSim(_Payload):
     trades: int
 
 
+class MemoryRecalledItem(_Payload):
+    id: str
+    category: str
+    text: str
+    status: str = "active"
+
+
+class MemoryRecalledReasoning(_Payload):
+    id: str
+    title: str
+
+
+class MemoryRecalled(_Payload):
+    """(P17) What the run got from long-term memory (before any ``llm.*`` of the run)."""
+
+    items: list[MemoryRecalledItem]
+    reasoning: list[MemoryRecalledReasoning]
+
+
+class DiscoveryRootGoal(_Payload):
+    text: str
+    category: str | None = None
+
+
+class DiscoveryAssessed(_Payload):
+    """(P17) The 5-Whys assessment of this turn."""
+
+    whys_asked: int
+    root_goal_identified: bool
+    confidence: float
+    stop_reason: str | None = None
+    advice_mode: Literal["normal", "stabilise", "educate"] = "normal"
+    next_question: str | None = None
+    root_goal: DiscoveryRootGoal | None = None  # the "เข้าใจเป้าหมายแล้ว: …" chip
+
+
+class MemoryChangePayload(_Payload):
+    op: Literal["ADD", "UPDATE", "SUPERSEDE", "RETIRE", "NOOP"]
+    id: str
+    category: str
+    text: str
+    previous_text: str | None = None
+    status: str
+
+
+class MemoryUpdated(_Payload):
+    """(P17) What ``learn`` wrote (NOOPs are not sent)."""
+
+    changes: list[MemoryChangePayload]
+
+
+class ReasoningDistilledItem(_Payload):
+    id: str
+    title: str
+    kind: Literal["strategy", "pitfall", "coaching"]
+
+
+class ReasoningDistilled(_Payload):
+    """(P17) Lessons added to (or merged into) the ReasoningBank."""
+
+    items: list[ReasoningDistilledItem]
+
+
 PAYLOADS: dict[str, type[_Payload]] = {
     "backtest.progress": BacktestProgress,
     "backtest.cell": BacktestCell,
@@ -218,6 +290,10 @@ PAYLOADS: dict[str, type[_Payload]] = {
     "approval.resolved": ApprovalResolved,
     "answer.final": AnswerFinal,
     "checkpoint.saved": CheckpointSaved,
+    "memory.recalled": MemoryRecalled,
+    "discovery.assessed": DiscoveryAssessed,
+    "memory.updated": MemoryUpdated,
+    "reasoning.distilled": ReasoningDistilled,
 }
 
 EventType = str

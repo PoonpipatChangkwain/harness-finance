@@ -1111,6 +1111,24 @@
               "type": "string",
               "title": "Session Id"
             }
+          },
+          {
+            "name": "X-User-Id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "User id (usr_…); missing = usr_default",
+              "title": "X-User-Id"
+            },
+            "description": "User id (usr_…); missing = usr_default"
           }
         ],
         "requestBody": {
@@ -2230,6 +2248,24 @@
               "type": "string",
               "title": "Portfolio Id"
             }
+          },
+          {
+            "name": "X-User-Id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "User id (usr_…); missing = usr_default",
+              "title": "X-User-Id"
+            },
+            "description": "User id (usr_…); missing = usr_default"
           }
         ],
         "requestBody": {
@@ -2783,6 +2819,26 @@
         ],
         "summary": "Advise Default",
         "operationId": "advise_default_api_portfolio_advise_post",
+        "parameters": [
+          {
+            "name": "X-User-Id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "User id (usr_…); missing = usr_default",
+              "title": "X-User-Id"
+            },
+            "description": "User id (usr_…); missing = usr_default"
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -3351,6 +3407,820 @@
                   "type": "object",
                   "additionalProperties": true,
                   "title": "Response Get Sim Api Backtests  Backtest Id  Sims  Sim Id  Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/memory": {
+      "get": {
+        "tags": [
+          "memory"
+        ],
+        "summary": "List Memory",
+        "operationId": "list_memory_api_memory_get",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "active",
+                "candidate",
+                "superseded",
+                "retired",
+                "rejected",
+                "all"
+              ],
+              "type": "string",
+              "default": "all",
+              "title": "Status"
+            }
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "investment_style",
+                    "risk_tolerance",
+                    "risk_capacity",
+                    "goal",
+                    "constraint",
+                    "preference",
+                    "life_fact",
+                    "behavioral_pattern",
+                    "knowledge_level"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Category"
+            }
+          },
+          {
+            "name": "X-User-Id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "User id (usr_…); missing = usr_default",
+              "title": "X-User-Id"
+            },
+            "description": "User id (usr_…); missing = usr_default"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MemoryList"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "memory"
+        ],
+        "summary": "Add Memory",
+        "operationId": "add_memory_api_memory_post",
+        "parameters": [
+          {
+            "name": "X-User-Id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "User id (usr_…); missing = usr_default",
+              "title": "X-User-Id"
+            },
+            "description": "User id (usr_…); missing = usr_default"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MemoryCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MemoryChangesOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/memory/profile": {
+      "get": {
+        "tags": [
+          "memory"
+        ],
+        "summary": "Memory Profile",
+        "operationId": "memory_profile_api_memory_profile_get",
+        "parameters": [
+          {
+            "name": "X-User-Id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "User id (usr_…); missing = usr_default",
+              "title": "X-User-Id"
+            },
+            "description": "User id (usr_…); missing = usr_default"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MemoryProfileOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/memory/{memory_id}": {
+      "patch": {
+        "tags": [
+          "memory"
+        ],
+        "summary": "Edit Memory",
+        "operationId": "edit_memory_api_memory__memory_id__patch",
+        "parameters": [
+          {
+            "name": "memory_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Memory Id"
+            }
+          },
+          {
+            "name": "X-User-Id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "User id (usr_…); missing = usr_default",
+              "title": "X-User-Id"
+            },
+            "description": "User id (usr_…); missing = usr_default"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MemoryPatch"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MemoryItemOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "memory"
+        ],
+        "summary": "Forget Memory",
+        "operationId": "forget_memory_api_memory__memory_id__delete",
+        "parameters": [
+          {
+            "name": "memory_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Memory Id"
+            }
+          },
+          {
+            "name": "cascade",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Cascade"
+            }
+          },
+          {
+            "name": "X-User-Id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "User id (usr_…); missing = usr_default",
+              "title": "X-User-Id"
+            },
+            "description": "User id (usr_…); missing = usr_default"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MemoryDeleted"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/memory/{memory_id}/confirm": {
+      "post": {
+        "tags": [
+          "memory"
+        ],
+        "summary": "Confirm Memory",
+        "operationId": "confirm_memory_api_memory__memory_id__confirm_post",
+        "parameters": [
+          {
+            "name": "memory_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Memory Id"
+            }
+          },
+          {
+            "name": "X-User-Id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "User id (usr_…); missing = usr_default",
+              "title": "X-User-Id"
+            },
+            "description": "User id (usr_…); missing = usr_default"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MemoryItemOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/memory/{memory_id}/reject": {
+      "post": {
+        "tags": [
+          "memory"
+        ],
+        "summary": "Reject Memory",
+        "operationId": "reject_memory_api_memory__memory_id__reject_post",
+        "parameters": [
+          {
+            "name": "memory_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Memory Id"
+            }
+          },
+          {
+            "name": "X-User-Id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "User id (usr_…); missing = usr_default",
+              "title": "X-User-Id"
+            },
+            "description": "User id (usr_…); missing = usr_default"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MemoryItemOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/memory/{memory_id}/retire": {
+      "post": {
+        "tags": [
+          "memory"
+        ],
+        "summary": "Retire Memory",
+        "operationId": "retire_memory_api_memory__memory_id__retire_post",
+        "parameters": [
+          {
+            "name": "memory_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Memory Id"
+            }
+          },
+          {
+            "name": "X-User-Id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "User id (usr_…); missing = usr_default",
+              "title": "X-User-Id"
+            },
+            "description": "User id (usr_…); missing = usr_default"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MemoryItemOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/memory/{memory_id}/history": {
+      "get": {
+        "tags": [
+          "memory"
+        ],
+        "summary": "Memory History",
+        "operationId": "memory_history_api_memory__memory_id__history_get",
+        "parameters": [
+          {
+            "name": "memory_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Memory Id"
+            }
+          },
+          {
+            "name": "X-User-Id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "User id (usr_…); missing = usr_default",
+              "title": "X-User-Id"
+            },
+            "description": "User id (usr_…); missing = usr_default"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MemoryHistory"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/reasoning-bank": {
+      "get": {
+        "tags": [
+          "memory"
+        ],
+        "summary": "List Reasoning",
+        "operationId": "list_reasoning_api_reasoning_bank_get",
+        "parameters": [
+          {
+            "name": "workflow",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "research",
+                    "portfolio",
+                    "trade"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Workflow"
+            }
+          },
+          {
+            "name": "kind",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "strategy",
+                    "pitfall",
+                    "coaching"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Kind"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "candidate",
+                    "active",
+                    "retired"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 200
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Q"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 1,
+              "default": 50,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReasoningList"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/reasoning-bank/stats": {
+      "get": {
+        "tags": [
+          "memory"
+        ],
+        "summary": "Reasoning Stats",
+        "operationId": "reasoning_stats_api_reasoning_bank_stats_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReasoningStats"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/reasoning-bank/{item_id}": {
+      "get": {
+        "tags": [
+          "memory"
+        ],
+        "summary": "Get Reasoning",
+        "operationId": "get_reasoning_api_reasoning_bank__item_id__get",
+        "parameters": [
+          {
+            "name": "item_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Item Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReasoningDetail"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/reasoning-bank/{item_id}/retire": {
+      "post": {
+        "tags": [
+          "memory"
+        ],
+        "summary": "Retire Reasoning",
+        "operationId": "retire_reasoning_api_reasoning_bank__item_id__retire_post",
+        "parameters": [
+          {
+            "name": "item_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Item Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReasoningItem"
                 }
               }
             }
@@ -4189,6 +5059,473 @@
           "OTHER"
         ],
         "title": "Market"
+      },
+      "MemoryChangeOut": {
+        "properties": {
+          "op": {
+            "type": "string",
+            "enum": [
+              "NOOP",
+              "ADD",
+              "UPDATE",
+              "SUPERSEDE",
+              "RETIRE"
+            ],
+            "title": "Op"
+          },
+          "item": {
+            "$ref": "#/components/schemas/MemoryItemOut"
+          },
+          "previous": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MemoryItemOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          }
+        },
+        "type": "object",
+        "required": [
+          "op",
+          "item"
+        ],
+        "title": "MemoryChangeOut"
+      },
+      "MemoryChangesOut": {
+        "properties": {
+          "changes": {
+            "items": {
+              "$ref": "#/components/schemas/MemoryChangeOut"
+            },
+            "type": "array",
+            "title": "Changes"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Warnings"
+          }
+        },
+        "type": "object",
+        "required": [
+          "changes"
+        ],
+        "title": "MemoryChangesOut"
+      },
+      "MemoryCounts": {
+        "properties": {
+          "active": {
+            "type": "integer",
+            "title": "Active",
+            "default": 0
+          },
+          "candidate": {
+            "type": "integer",
+            "title": "Candidate",
+            "default": 0
+          },
+          "superseded": {
+            "type": "integer",
+            "title": "Superseded",
+            "default": 0
+          },
+          "retired": {
+            "type": "integer",
+            "title": "Retired",
+            "default": 0
+          },
+          "rejected": {
+            "type": "integer",
+            "title": "Rejected",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "title": "MemoryCounts"
+      },
+      "MemoryCreate": {
+        "properties": {
+          "category": {
+            "type": "string",
+            "enum": [
+              "investment_style",
+              "risk_tolerance",
+              "risk_capacity",
+              "goal",
+              "constraint",
+              "preference",
+              "life_fact",
+              "behavioral_pattern",
+              "knowledge_level"
+            ],
+            "title": "Category"
+          },
+          "text": {
+            "type": "string",
+            "maxLength": 800,
+            "minLength": 3,
+            "title": "Text"
+          },
+          "key": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 120
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Key"
+          },
+          "value_json": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value Json"
+          }
+        },
+        "type": "object",
+        "required": [
+          "category",
+          "text"
+        ],
+        "title": "MemoryCreate"
+      },
+      "MemoryDeleted": {
+        "properties": {
+          "deleted": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Deleted"
+          }
+        },
+        "type": "object",
+        "required": [
+          "deleted"
+        ],
+        "title": "MemoryDeleted"
+      },
+      "MemoryHistory": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/MemoryItemOut"
+            },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items"
+        ],
+        "title": "MemoryHistory"
+      },
+      "MemoryItemOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "investment_style",
+              "risk_tolerance",
+              "risk_capacity",
+              "goal",
+              "constraint",
+              "preference",
+              "life_fact",
+              "behavioral_pattern",
+              "knowledge_level"
+            ],
+            "title": "Category"
+          },
+          "key": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Key"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "value_json": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value Json"
+          },
+          "confidence": {
+            "type": "number",
+            "title": "Confidence"
+          },
+          "importance": {
+            "type": "integer",
+            "title": "Importance"
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "user_stated",
+              "user_confirmed",
+              "inferred_behavior",
+              "questionnaire",
+              "portfolio_data",
+              "manual"
+            ],
+            "title": "Source"
+          },
+          "source_ref": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Source Ref"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "candidate",
+              "active",
+              "superseded",
+              "retired",
+              "rejected"
+            ],
+            "title": "Status"
+          },
+          "supersedes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Supersedes"
+          },
+          "superseded_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Superseded By"
+          },
+          "valid_from": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Valid From"
+          },
+          "valid_to": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Valid To"
+          },
+          "sensitivity": {
+            "type": "string",
+            "enum": [
+              "normal",
+              "financial",
+              "pii"
+            ],
+            "title": "Sensitivity"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          },
+          "last_accessed_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Accessed At"
+          },
+          "access_count": {
+            "type": "integer",
+            "title": "Access Count"
+          },
+          "flags": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Flags",
+            "description": "e.g. \"stated_vs_revealed\""
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "category",
+          "key",
+          "text",
+          "value_json",
+          "confidence",
+          "importance",
+          "source",
+          "source_ref",
+          "status",
+          "supersedes",
+          "superseded_by",
+          "valid_from",
+          "valid_to",
+          "sensitivity",
+          "created_at",
+          "updated_at",
+          "last_accessed_at",
+          "access_count"
+        ],
+        "title": "MemoryItemOut"
+      },
+      "MemoryList": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/MemoryItemOut"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "counts": {
+            "$ref": "#/components/schemas/MemoryCounts"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "counts"
+        ],
+        "title": "MemoryList"
+      },
+      "MemoryPatch": {
+        "properties": {
+          "text": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 800,
+                "minLength": 3
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Text"
+          },
+          "value_json": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value Json"
+          }
+        },
+        "type": "object",
+        "title": "MemoryPatch"
+      },
+      "MemoryProfileOut": {
+        "properties": {
+          "profile_text": {
+            "type": "string",
+            "title": "Profile Text"
+          },
+          "token_estimate": {
+            "type": "integer",
+            "title": "Token Estimate"
+          },
+          "items_used": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Items Used"
+          },
+          "updated_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "profile_text",
+          "token_estimate",
+          "items_used",
+          "updated_at"
+        ],
+        "title": "MemoryProfileOut"
       },
       "MessageAccepted": {
         "properties": {
@@ -5329,6 +6666,11 @@
             "type": "array",
             "maxItems": 20,
             "title": "Portfolio Ids"
+          },
+          "skip_discovery": {
+            "type": "boolean",
+            "title": "Skip Discovery",
+            "default": false
           }
         },
         "type": "object",
@@ -5542,6 +6884,252 @@
         "title": "PreviewRow",
         "description": "One row of ``POST …/positions/preview`` (contracts §11): nothing is saved."
       },
+      "ReasoningCounts": {
+        "properties": {
+          "total": {
+            "type": "integer",
+            "title": "Total",
+            "default": 0
+          },
+          "candidate": {
+            "type": "integer",
+            "title": "Candidate",
+            "default": 0
+          },
+          "active": {
+            "type": "integer",
+            "title": "Active",
+            "default": 0
+          },
+          "retired": {
+            "type": "integer",
+            "title": "Retired",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "title": "ReasoningCounts"
+      },
+      "ReasoningDetail": {
+        "properties": {
+          "item": {
+            "$ref": "#/components/schemas/ReasoningItem"
+          },
+          "uses": {
+            "items": {
+              "$ref": "#/components/schemas/UseOut"
+            },
+            "type": "array",
+            "title": "Uses"
+          }
+        },
+        "type": "object",
+        "required": [
+          "item",
+          "uses"
+        ],
+        "title": "ReasoningDetail"
+      },
+      "ReasoningItem": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "content": {
+            "type": "string",
+            "title": "Content"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "strategy",
+              "pitfall",
+              "coaching"
+            ],
+            "title": "Kind"
+          },
+          "outcome_signal": {
+            "type": "string",
+            "enum": [
+              "success",
+              "failure",
+              "mixed"
+            ],
+            "title": "Outcome Signal"
+          },
+          "judge_score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Judge Score"
+          },
+          "tags": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Tags"
+          },
+          "use_count": {
+            "type": "integer",
+            "title": "Use Count",
+            "default": 0
+          },
+          "success_count": {
+            "type": "integer",
+            "title": "Success Count",
+            "default": 0
+          },
+          "success_rate": {
+            "type": "number",
+            "title": "Success Rate",
+            "default": 0.5
+          },
+          "source_count": {
+            "type": "integer",
+            "title": "Source Count",
+            "default": 1
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "candidate",
+              "active",
+              "retired"
+            ],
+            "title": "Status"
+          },
+          "prompt_version": {
+            "type": "string",
+            "title": "Prompt Version"
+          },
+          "model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model"
+          },
+          "source_run_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Run Id"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "description",
+          "content",
+          "kind",
+          "outcome_signal",
+          "status",
+          "prompt_version",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "ReasoningItem",
+        "description": "One ``reasoning_bank`` row as callers see it (the producing user is never exposed)."
+      },
+      "ReasoningList": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ReasoningItem"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "counts": {
+            "$ref": "#/components/schemas/ReasoningCounts"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "counts"
+        ],
+        "title": "ReasoningList"
+      },
+      "ReasoningStats": {
+        "properties": {
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "active": {
+            "type": "integer",
+            "title": "Active"
+          },
+          "by_kind": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "By Kind"
+          },
+          "by_workflow": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "By Workflow"
+          },
+          "avg_success_rate": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Avg Success Rate"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total",
+          "active",
+          "by_kind",
+          "by_workflow",
+          "avg_success_rate"
+        ],
+        "title": "ReasoningStats"
+      },
       "ReportRunRequest": {
         "properties": {
           "portfolio_ids": {
@@ -5561,6 +7149,30 @@
         },
         "type": "object",
         "title": "ReportRunRequest"
+      },
+      "RootGoalOut": {
+        "properties": {
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "category": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category"
+          }
+        },
+        "type": "object",
+        "required": [
+          "text"
+        ],
+        "title": "RootGoalOut"
       },
       "RunBrief": {
         "properties": {
@@ -5670,6 +7282,16 @@
             },
             "type": "array",
             "title": "Runs"
+          },
+          "discovery": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SessionDiscoveryOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "type": "object",
@@ -5679,6 +7301,64 @@
           "runs"
         ],
         "title": "SessionDetail"
+      },
+      "SessionDiscoveryOut": {
+        "properties": {
+          "whys_asked": {
+            "type": "integer",
+            "title": "Whys Asked"
+          },
+          "chain": {
+            "items": {
+              "$ref": "#/components/schemas/WhyStepOut"
+            },
+            "type": "array",
+            "title": "Chain"
+          },
+          "root_goal": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RootGoalOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "root_goal_identified": {
+            "type": "boolean",
+            "title": "Root Goal Identified"
+          },
+          "confidence": {
+            "type": "number",
+            "title": "Confidence"
+          },
+          "stop_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stop Reason"
+          },
+          "advice_mode": {
+            "type": "string",
+            "title": "Advice Mode"
+          }
+        },
+        "type": "object",
+        "required": [
+          "whys_asked",
+          "chain",
+          "root_goal_identified",
+          "confidence",
+          "advice_mode"
+        ],
+        "title": "SessionDiscoveryOut",
+        "description": "(P17) The session's 5-Whys state (``session.meta[\"discovery\"]``) after its latest turn."
       },
       "SessionList": {
         "properties": {
@@ -6293,6 +7973,42 @@
         ],
         "title": "TradeRunStarted"
       },
+      "UseOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "run_id": {
+            "type": "string",
+            "title": "Run Id"
+          },
+          "outcome": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Outcome"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "run_id",
+          "outcome",
+          "created_at"
+        ],
+        "title": "UseOut"
+      },
       "ValidationError": {
         "properties": {
           "loc": {
@@ -6332,6 +8048,24 @@
           "type"
         ],
         "title": "ValidationError"
+      },
+      "WhyStepOut": {
+        "properties": {
+          "q": {
+            "type": "string",
+            "title": "Q"
+          },
+          "a": {
+            "type": "string",
+            "title": "A"
+          }
+        },
+        "type": "object",
+        "required": [
+          "q",
+          "a"
+        ],
+        "title": "WhyStepOut"
       }
     }
   }

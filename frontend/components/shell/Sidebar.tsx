@@ -3,7 +3,7 @@
 /** Left column (ui-spec §3): logo, nav, research sessions (+ New), theme and provider status. */
 
 import { clsx } from "clsx";
-import { Briefcase, ChartCandlestick, FlaskConical, History, Plus, Settings, Trash2 } from "lucide-react";
+import { Brain, Briefcase, ChartCandlestick, FlaskConical, History, Plus, Settings, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -24,6 +24,7 @@ const NAV = [
   { href: "/portfolio", label: "Portfolio", icon: Briefcase },
   { href: "/trade", label: "Trade", icon: ChartCandlestick },
   { href: "/backtest", label: "Backtest", icon: History },
+  { href: "/memory", label: "Memory", icon: Brain },
   { href: "/settings", label: "Settings", icon: Settings },
 ] as const;
 

@@ -12,7 +12,14 @@
  *   next stored `llm.delta` of the same channel (contracts §10 coalescing).
  */
 
-import { parseTs, type EventEnvelope, type EventPayloads, type GuardKind, type ToolStatus } from "@/lib/events";
+import {
+  parseTs,
+  type EventEnvelope,
+  type EventPayloads,
+  type GuardKind,
+  type MemoryChangeEvent,
+  type ToolStatus,
+} from "@/lib/events";
 
 export type RunViewStatus = "pending" | "running" | EventPayloads["run.finished"]["status"];
 
@@ -132,6 +139,50 @@ export interface NodeRunView {
   checkpointed: boolean;
 }
 
+/** (P17) 5 Whys state of this run: `discovery.assessed` + `answer.final.discovery`. */
+export interface DiscoveryView {
+  whysAsked: number;
+  max: number;
+  /** the question the answer ended with (set only by `answer.final.discovery`) */
+  question: string | null;
+  rootGoalIdentified: boolean;
+  rootGoal: string | null;
+  confidence: number | null;
+  stopReason: string | null;
+  adviceMode: string | null;
+  nextQuestion: string | null;
+}
+
+/** (P17) memory activity of one run, all from events (inspector tab Memory, chips in the turn). */
+export interface MemoryView {
+  /** user memory items recalled into the prompt */
+  recalled: { id: string; category: string; text: string; status?: string }[];
+  /** ReasoningBank items used in this run */
+  reasoning: { id: string; title: string }[];
+  /** what the `learn` node changed (NOOP included; the UI hides it) */
+  changes: MemoryChangeEvent[];
+  /** lessons this run distilled into the ReasoningBank */
+  distilled: { id: string; title: string; kind: string }[];
+  discovery: DiscoveryView | null;
+}
+
+/** DISCOVERY_MAX_WHYS default (phase-17 §17.4) until a payload says otherwise */
+export const DISCOVERY_MAX = 5;
+
+export function emptyDiscovery(): DiscoveryView {
+  return {
+    whysAsked: 0,
+    max: DISCOVERY_MAX,
+    question: null,
+    rootGoalIdentified: false,
+    rootGoal: null,
+    confidence: null,
+    stopReason: null,
+    adviceMode: null,
+    nextQuestion: null,
+  };
+}
+
 export interface RunView {
   runId: string;
   sessionId: string | null;
@@ -158,6 +209,8 @@ export interface RunView {
   nodes: Record<string, NodeRunView>;
   path: string[];
   usage: UsageView;
+  /** (P17) memory recalled / learned and the 5 Whys state */
+  memory: MemoryView;
   /** stored events in seq order (Trajectory tab, scratchpad download) */
   events: EventEnvelope[];
   /** out-of-order events waiting for the gap before them */
@@ -190,6 +243,7 @@ export function emptyRunView(runId: string): RunView {
     nodes: {},
     path: [],
     usage: { in: 0, out: 0, cacheRead: 0, cost: 0, llmCalls: 0, toolCalls: 0, durationMs: null, byPurpose: {} },
+    memory: { recalled: [], reasoning: [], changes: [], distilled: [], discovery: null },
     events: [],
     buffered: [],
   };
@@ -359,8 +413,74 @@ function reduceNodes(view: RunView, e: EventEnvelope, ts: number): RunView {
   }
 }
 
+/** Merge by id: a repeated event never duplicates a row. */
+function mergeById<T extends { id: string }>(prev: T[], next: T[]): T[] {
+  const out = prev.slice();
+  for (const item of next) {
+    const i = out.findIndex((p) => p.id === item.id);
+    if (i >= 0) out[i] = item;
+    else out.push(item);
+  }
+  return out;
+}
+
+/** (P17) memory.* / discovery.* / reasoning.* events and `answer.final.discovery`. */
+function reduceMemory(view: RunView, e: EventEnvelope): RunView {
+  const m = view.memory;
+  switch (e.type) {
+    case "memory.recalled":
+      return {
+        ...view,
+        memory: {
+          ...m,
+          recalled: mergeById(m.recalled, e.payload.items),
+          reasoning: mergeById(m.reasoning, e.payload.reasoning),
+        },
+      };
+    case "memory.updated": {
+      const changes = m.changes.slice();
+      for (const c of e.payload.changes) {
+        const i = changes.findIndex((p) => p.id === c.id && p.op === c.op);
+        if (i >= 0) changes[i] = c;
+        else changes.push(c);
+      }
+      return { ...view, memory: { ...m, changes } };
+    }
+    case "reasoning.distilled":
+      return { ...view, memory: { ...m, distilled: mergeById(m.distilled, e.payload.items) } };
+    case "discovery.assessed": {
+      const p = e.payload;
+      const prev = m.discovery ?? emptyDiscovery();
+      return {
+        ...view,
+        memory: {
+          ...m,
+          discovery: {
+            ...prev,
+            whysAsked: p.whys_asked,
+            rootGoalIdentified: p.root_goal_identified,
+            rootGoal: p.root_goal?.text ?? prev.rootGoal,
+            confidence: p.confidence,
+            stopReason: p.stop_reason ?? null,
+            adviceMode: p.advice_mode ?? null,
+            nextQuestion: p.next_question ?? null,
+          },
+        },
+      };
+    }
+    case "answer.final": {
+      const d = e.payload.discovery;
+      if (!d) return view;
+      const prev = m.discovery ?? emptyDiscovery();
+      return { ...view, memory: { ...m, discovery: { ...prev, whysAsked: d.whys_asked, max: d.max, question: d.question } } };
+    }
+    default:
+      return view;
+  }
+}
+
 function reduce(view: RunView, e: EventEnvelope): RunView {
-  return reduceItems(reduceNodes(view, e, parseTs(e.ts)), e);
+  return reduceMemory(reduceItems(reduceNodes(view, e, parseTs(e.ts)), e), e);
 }
 
 function reduceItems(view: RunView, e: EventEnvelope): RunView {

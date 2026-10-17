@@ -16,7 +16,14 @@ from __future__ import annotations
 from typing import Any, Protocol
 
 from app.domain.ports import EventPort, LLMUsage
-from app.domain.workflows.research import RESEARCH_WORKFLOW, ResearchInput, output_of
+from app.domain.workflows.research import (
+    LIMIT_KINDS,
+    RESEARCH_WORKFLOW,
+    RESET_STOP_REASONS,
+    ResearchInput,
+    discovery_payload,
+    output_of,
+)
 from app.harness.context.config import ContextConfig
 from app.harness.context.manager import ContextManager
 from app.harness.executor.executor import ToolExecutor
@@ -26,8 +33,6 @@ from app.harness.runtime.research_agent import HistoryItem, ResearchAgent, histo
 from app.harness.storage import sessions_repo
 from app.harness.workflow.runner import GraphRunner
 from app.harness.workflow.sequential import ScopedEmitter
-
-LIMIT_KINDS = ("iterations", "tool_calls", "similar_query", "timeout", "budget")
 
 
 class BindableLLM(Protocol):
@@ -97,14 +102,44 @@ def _build(ctx: RunContext) -> tuple[Any, ResearchAgent, ContextManager]:
         history=history_messages([HistoryItem(role=h.role, content=h.content) for h in inp.history]),
         portfolio_ids=inp.portfolio_ids,
     )
+    settings = services.settings
     node_ctx_factory = make_node_context_factory(
         llm=llm,
         tools=executor,
         agent=agent,
         run_id=ctx.run_id,
-        config={"skills": [s.model_dump() for s in services.skills.info()]},
+        config={
+            "skills": [s.model_dump() for s in services.skills.info()],
+            # (P17) MemoryPort for recall_memory / learn; None = memory off (the run behaves as v1)
+            "memory": services.memory_engine if settings.memory_enabled else None,
+            "discovery": {
+                "max_whys": settings.discovery_max_whys,
+                "confidence": settings.discovery_confidence,
+            },
+            "session_id": ctx.session_id,
+        },
     )
     return node_ctx_factory, agent, context
+
+
+def next_session_discovery(discovery: dict[str, Any]) -> dict[str, Any]:
+    """What the session carries into the next turn (contracts.md §11 ``GET /sessions/{id}.discovery``).
+
+    The chain starts over once the root goal is understood or the asking stops for good
+    (``max_whys`` / ``resistance`` — a skip click counts as resistance); the goal itself is kept.
+    """
+    value = {
+        "whys_asked": int(discovery.get("whys_asked") or 0),
+        "chain": list(discovery.get("chain") or []),
+        "root_goal": discovery.get("root_goal"),
+        "root_goal_identified": bool(discovery.get("root_goal_identified")),
+        "confidence": float(discovery.get("confidence") or 0.0),
+        "stop_reason": discovery.get("stop_reason"),
+        "advice_mode": discovery.get("advice_mode") or "normal",
+    }
+    if value["root_goal_identified"] or value["stop_reason"] in RESET_STOP_REASONS:
+        value.update(whys_asked=0, chain=[])
+    return value
 
 
 async def _finish(
@@ -112,18 +147,21 @@ async def _finish(
 ) -> dict[str, Any]:
     out = output_of(state)
     if ctx.session_id is not None:
+        meta: dict[str, Any] = {
+            "citations": out.citations,
+            "unverified_numbers": out.unverified_numbers,
+            "skill": out.skill,
+            "role": out.role,
+            "stop_reason": out.stop_reason,
+        }
+        if out.discovery is not None:  # (P17) memory on
+            meta["memory_changes"] = out.memory_changes
+            meta["discovery"] = discovery_payload(state)
+            await sessions_repo.update_meta(
+                ctx.session_id, {"discovery": next_session_discovery(out.discovery)}
+            )
         await sessions_repo.add_message(
-            ctx.session_id,
-            "assistant",
-            out.markdown,
-            run_id=ctx.run_id,
-            meta={
-                "citations": out.citations,
-                "unverified_numbers": out.unverified_numbers,
-                "skill": out.skill,
-                "role": out.role,
-                "stop_reason": out.stop_reason,
-            },
+            ctx.session_id, "assistant", out.markdown, run_id=ctx.run_id, meta=meta
         )
     kind = (out.stop_reason or "").split(":", 1)[0]
     if kind in LIMIT_KINDS:

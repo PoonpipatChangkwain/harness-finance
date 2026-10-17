@@ -15,6 +15,7 @@
 from __future__ import annotations
 
 import copy
+import logging
 import time
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
@@ -25,22 +26,32 @@ from app.domain.agents.library import get_role, role_profile
 from app.domain.data.backtest import PointInTimeRouter, PriceStore, preload_prices
 from app.domain.data.registry import get_router, use_router
 from app.domain.data.router import DataRouter
+from app.domain.memory.schemas import OutcomeJudgement
 from app.domain.models.horizon import horizon
 from app.domain.models.symbol import normalize_symbol, safe_path_component
 from app.domain.ports import AgentRunRequest, AgentRunResult, AnswerCheck, LLMUsage
-from app.domain.workflows.trade_outcome import TradeOutcomeInput, reflection_messages, resolve_outcome
+from app.domain.workflows.trade_outcome import (
+    TradeOutcomeInput,
+    reflection_messages,
+    resolve_outcome,
+    trade_lesson_inputs,
+)
 from app.domain.workflows.trading import ANALYST_ROLES, TRADING_WORKFLOW, output_of
 from app.harness.config.overrides import trading_policy_config
 from app.harness.context.config import ContextConfig
 from app.harness.context.manager import ContextManager
 from app.harness.executor.executor import ToolExecutor
 from app.harness.graph.context import make_node_context_factory
+from app.harness.memory.store import DEFAULT_USER_ID
 from app.harness.runtime.agent_loop import AgentLoop
 from app.harness.runtime.context import RunContext
 from app.harness.runtime.prompts import current_date, tool_section
 from app.harness.state.memory import MemoryStore
+from app.harness.storage import runs_repo
 from app.harness.workflow.runner import GraphRunner
 from app.harness.workflow.sequential import ScopedEmitter
+
+logger = logging.getLogger(__name__)
 
 DECISIONS_NS = "trade_decisions"
 # role → (sub-node id, label) for the UI; the portfolio advisor passes its own map
@@ -153,6 +164,33 @@ async def settle_trade(services: Any, run_id: str, inp: TradeOutcomeInput) -> di
     return {"key": key, **value}
 
 
+async def distill_trade_lesson(services: Any, record: dict[str, Any]) -> list[dict[str, Any]]:
+    """(P17) After the reflection: an anonymised ReasoningBank lesson from the settled trade
+    (tags ``workflow=trade, market, horizon``; signal from R). The ``trade_decisions`` lessons are
+    untouched. Never raises: the outcome is already saved."""
+    inputs = trade_lesson_inputs(record)
+    if inputs is None or not services.settings.memory_enabled:
+        return []
+    try:
+        run = await runs_repo.get_run(str(record.get("run_id") or ""))
+        user_id = (run.input.get("user_id") if run is not None else None) or DEFAULT_USER_ID
+        items = await services.reasoning_bank.distill(
+            run_summary=inputs["run_summary"],
+            outcome=OutcomeJudgement(
+                success=inputs["success"], score=inputs["score"], reason="realised R of the settled trade"
+            ),
+            tags=inputs["tags"],
+            source_run_id=record.get("run_id"),
+            user_id=str(user_id),
+            outcome_signal=inputs["signal"],
+            max_items=1,
+        )
+    except Exception as exc:
+        logger.warning("trade lesson not distilled: %s: %s", type(exc).__name__, exc)
+        return []
+    return [{"id": i.id, "title": i.title, "kind": i.kind} for i in items]
+
+
 def _settled_before(value: dict[str, Any], day: date) -> bool:
     """Settled strictly before ``day``; an undated settlement cannot be proven past, so it is dropped."""
     settled_at = str((value.get("outcome") or {}).get("settled_at") or "")
@@ -217,6 +255,8 @@ class TradingAgent:
             f"{role_profile(role)}\n\nCurrent date: {current_date()}\n\n"
             f"## Available Tools\n\n{tool_section(tools)}"
         )
+        if req.context_blocks:  # (P17) e.g. the advisor's INVESTOR PROFILE / LESSONS
+            system = f"{system}\n\n" + "\n\n".join(req.context_blocks)
         # each concurrent analyst tags its events with its own sub-node (``analyst.<name>``)
         # so the UI can show one live node per analyst inside the single ``analysts`` node
         sub, label = self.sub_nodes.get(req.role, (None, None))
@@ -276,7 +316,15 @@ class TradingAgent:
     async def check(self, markdown: str) -> AnswerCheck:
         return AnswerCheck(markdown=markdown)
 
-    async def final_answer(self, *, role: str, stop_reason: str | None) -> AnswerCheck:
+    async def final_answer(
+        self,
+        *,
+        role: str,
+        stop_reason: str | None,
+        context_blocks: list[str] | None = None,
+        closing_question: str | None = None,
+        discovery: dict[str, Any] | None = None,
+    ) -> AnswerCheck:
         raise NotImplementedError("the trading workflow writes its own report")
 
 

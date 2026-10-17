@@ -87,7 +87,7 @@ export function Conversation({
       {header}
       <div ref={scroller} data-testid="transcript" className="relative min-h-0 flex-1 overflow-y-auto">
         <div className="mx-auto w-full max-w-3xl space-y-6 px-4 py-4">
-          {turns.length === 0 ? empty : turns.map((t) => <Turn key={t.key} turn={t} now={now} skillLabel={skillLabel} />)}
+          {turns.length === 0 ? empty : turns.map((t, i) => <Turn key={t.key} turn={t} now={now} skillLabel={skillLabel} latest={i === turns.length - 1} />)}
         </div>
       </div>
       <div className="relative mx-auto w-full max-w-3xl px-4 pb-4">

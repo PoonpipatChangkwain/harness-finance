@@ -22,6 +22,7 @@ from app.harness.workflow.runner import graph_state_snapshot
 from app.harness.workflow.trading import (
     DecisionNotFound,
     MemoryDecisionLog,
+    distill_trade_lesson,
     settle_trade,
     trade_date,
     trade_scope,
@@ -192,13 +193,16 @@ def _result(record: dict[str, Any]) -> dict[str, Any]:
 async def settle_trade_run(run_id: str, body: TradeOutcomeInput) -> dict[str, Any]:
     """The trader ticks how an approved trade ended (TP/SL/manual/time stop/not filled/cancelled);
     the system computes R and writes the lesson future runs on this symbol will read."""
+    services = get_services()
     try:
-        record = await settle_trade(get_services(), run_id, body)
+        record = await settle_trade(services, run_id, body)
     except DecisionNotFound as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
     except OutcomeError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
-    return _result(record)
+    # (P17) + an anonymised ReasoningBank lesson (non-fatal; trade_decisions lessons unchanged)
+    distilled = await distill_trade_lesson(services, record)
+    return {**_result(record), "distilled": distilled}
 
 
 @router.get("/trade/decisions")

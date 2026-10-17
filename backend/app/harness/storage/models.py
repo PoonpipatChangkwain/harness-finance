@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from typing import Any
 
-from sqlalchemy import JSON, DateTime, ForeignKey, Index, Integer, String, Text
+from sqlalchemy import DDL, JSON, DateTime, Float, ForeignKey, Index, Integer, String, Text, event
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.harness.storage.db import Base
@@ -233,3 +233,88 @@ class BacktestSimRow(Base):
     result: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)  # trades, skipped, curves
     engine_version: Mapped[str] = mapped_column(String(16))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class UserMemoryRow(Base):
+    """(P17) One durable fact about a user (contracts.md §13.1). Never edited in place: a change is
+    a new row that ``supersedes`` the old one; only an explicit "forget" deletes."""
+
+    __tablename__ = "user_memory"
+
+    id: Mapped[str] = mapped_column(String(40), primary_key=True)
+    user_id: Mapped[str] = mapped_column(String(40), index=True)
+    category: Mapped[str] = mapped_column(String(32))
+    key: Mapped[str | None] = mapped_column(String(120), nullable=True)
+    text: Mapped[str] = mapped_column(Text)
+    value_json: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
+    confidence: Mapped[float] = mapped_column(Float)
+    importance: Mapped[int] = mapped_column(Integer)
+    source: Mapped[str] = mapped_column(String(24))
+    source_ref: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
+    status: Mapped[str] = mapped_column(String(16), index=True)
+    supersedes: Mapped[str | None] = mapped_column(String(40), nullable=True)
+    superseded_by: Mapped[str | None] = mapped_column(String(40), nullable=True)
+    valid_from: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    valid_to: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    sensitivity: Mapped[str] = mapped_column(String(12), default="normal")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    last_accessed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    access_count: Mapped[int] = mapped_column(Integer, default=0)
+
+
+class ReasoningBankRow(Base):
+    """(P17) One anonymised lesson shared across users (ReasoningBank: title/description/content).
+    ``success_rate`` is computed on read from ``success_count``/``use_count``; ``user_id`` is the
+    producer, kept for audit only."""
+
+    __tablename__ = "reasoning_bank"
+
+    id: Mapped[str] = mapped_column(String(40), primary_key=True)
+    title: Mapped[str] = mapped_column(String(120))
+    description: Mapped[str] = mapped_column(Text)
+    content: Mapped[str] = mapped_column(Text)
+    kind: Mapped[str] = mapped_column(String(16))
+    outcome_signal: Mapped[str] = mapped_column(String(16))
+    judge_score: Mapped[float | None] = mapped_column(Float, nullable=True)
+    tags: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
+    use_count: Mapped[int] = mapped_column(Integer, default=0)
+    success_count: Mapped[int] = mapped_column(Integer, default=0)
+    source_count: Mapped[int] = mapped_column(Integer, default=1)
+    status: Mapped[str] = mapped_column(String(16), index=True)
+    prompt_version: Mapped[str] = mapped_column(String(40))
+    model: Mapped[str | None] = mapped_column(String(120), nullable=True)
+    source_run_id: Mapped[str | None] = mapped_column(String(40), nullable=True)
+    user_id: Mapped[str] = mapped_column(String(40))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class ReasoningBankUseRow(Base):
+    """(P17) A run that had a ReasoningBank item injected; ``outcome`` is filled by ``settle``."""
+
+    __tablename__ = "reasoning_bank_uses"
+
+    id: Mapped[str] = mapped_column(String(40), primary_key=True)
+    item_id: Mapped[str] = mapped_column(String(40), index=True)
+    run_id: Mapped[str] = mapped_column(String(40), index=True)
+    user_id: Mapped[str] = mapped_column(String(40))
+    outcome: Mapped[str | None] = mapped_column(String(16), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+# FTS5 tables (trigram: substring search that works for Thai, which has no spaces). Alembic 0006
+# creates them in real databases; this hook does the same for ``create_all()`` in tests. The store
+# keeps them in sync with the main rows (no triggers).
+USER_MEMORY_FTS_DDL = (
+    "CREATE VIRTUAL TABLE IF NOT EXISTS user_memory_fts "
+    "USING fts5(id UNINDEXED, user_id UNINDEXED, text, tokenize='trigram')"
+)
+REASONING_BANK_FTS_DDL = (
+    "CREATE VIRTUAL TABLE IF NOT EXISTS reasoning_bank_fts "
+    "USING fts5(id UNINDEXED, title, description, content, tokenize='trigram')"
+)
+FTS_TABLES = ("user_memory_fts", "reasoning_bank_fts")
+
+for _ddl in (USER_MEMORY_FTS_DDL, REASONING_BANK_FTS_DDL):
+    event.listen(Base.metadata, "after_create", DDL(_ddl).execute_if(dialect="sqlite"))  # type: ignore[no-untyped-call]

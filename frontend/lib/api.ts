@@ -10,12 +10,15 @@ import type { components } from "./api-types";
 type Schemas = components["schemas"];
 export type SessionOut = Schemas["SessionOut"];
 export type SessionListItem = Schemas["SessionListItem"];
-export type SessionDetail = Schemas["SessionDetail"];
 export type MessageOut = Schemas["MessageOut"];
 export type RunBrief = Schemas["RunBrief"];
 export type SkillInfo = Schemas["SkillInfo"];
 export type MessageAccepted = Schemas["MessageAccepted"];
-export type PostMessage = Schemas["PostMessage"];
+export type SessionDetail = Schemas["SessionDetail"];
+/** (P17 §17.2) the 5 Whys chain of a session, kept in `session.meta["discovery"]`. */
+export type SessionDiscovery = Schemas["SessionDiscoveryOut"];
+/** `skip_discovery` has a server default (false) — optional for callers */
+export type PostMessage = Omit<Schemas["PostMessage"], "skip_discovery"> & { skip_discovery?: boolean };
 
 /** backend app/domain/models/provenance.py ProvenanceRecord (a type alias: table rows must be records) */
 export type ProvenanceRecord = {

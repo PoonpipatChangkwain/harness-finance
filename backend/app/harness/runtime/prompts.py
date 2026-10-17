@@ -55,7 +55,7 @@ def build_system_prompt(role: RoleSpec, tools: list[ToolSpec], skills: SkillRegi
         memory_part = """
 ## Memory
 
-Before personalized advice (buy/sell, sizing, portfolio changes) call memory_search on user_prefs and decisions. Only call memory_update when the user explicitly asks you to remember something.
+The user's long-term profile is already in the INVESTOR PROFILE section when one exists: use it to tailor advice without reciting it back. Call user_memory_search when you need more detail about what the user said before (e.g. what they said about KBANK). Never call memory_update to remember what the user tells you — the system learns it automatically after the turn; memory_update is only for the decisions and research_notes namespaces, when the user explicitly asks.
 """
     return f"""{role_profile(role)}
 
@@ -98,3 +98,8 @@ Rules:
 8. Accuracy over comfort: if the data contradicts the user's premise, say so plainly. Use a professional, objective tone without excessive praise.
 9. Don't narrate the research process, don't ask the user for raw data, and don't expose implementation details (tool names, JSON, provenance ids outside the citation markers); if data is incomplete, answer with what you have.
 10. End with one short disclaimer line: the answer is information, not investment advice (Thai: "ข้อมูลนี้ไม่ใช่คำแนะนำการลงทุน")."""
+
+# (P17 §17.2) research_then_ask: answer first, then the discovery question as the only question.
+CLOSING_QUESTION_RULE = """## Closing question
+Answer the question completely first (rules above). Then, as the very last line after the disclaimer, ask exactly this one question, word for word, and ask no other question anywhere in the answer:
+{question}"""

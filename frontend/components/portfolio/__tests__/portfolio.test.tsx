@@ -411,7 +411,8 @@ describe("advisor run (recorded fixture)", () => {
     const done = replay(runId, events);
     expect(Object.values(done.approvals)[0]!.outcome).toBe("edited");
     expect(done.status).toBe("completed");
-    expect(done.path.at(-1)).toBe("report");
+    // portfolio_advisor v2 (P17): report → learn → END
+    expect(done.path.slice(-2)).toEqual(["report", "learn"]);
   });
 
   it("ProposalTable renders the card and Edit → the approval body", () => {

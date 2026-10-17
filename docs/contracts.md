@@ -360,11 +360,17 @@ type EventEnvelope<T extends EventType = EventType> = {
 | `warning` | `{code, message}` (partial failure เช่น provider unavailable) | warning row |
 | `approval.required` | `{approval_id, kind, title, proposal, policy_results, provenance_ids}` | ApprovalPanel takeover |
 | `approval.resolved` | `{approval_id, outcome: "approved"\|"rejected"\|"edited", edits?}` | ApprovalPanel |
-| `answer.final` | `{markdown, citations: [{marker, provenance_id}], unverified_numbers: string[]}` | Answer + citation chips |
+| `answer.final` | `{markdown, citations: [{marker, provenance_id}], unverified_numbers: string[], discovery?: {whys_asked, max, question} \| null}` — (P17) `discovery` มีค่าเมื่อคำตอบจบด้วยคำถาม 5 Whys (`write_question` หรือ `research_then_ask`; `whys_asked` นับรวมคำถามนี้แล้ว) ไม่งั้น `null` | Answer + citation chips, DiscoveryCard |
 | `checkpoint.saved` | `{node, thread_id}` | graph view (icon) |
 | `backtest.progress` | (P15) `{phase: "preload"\|"decisions"\|"simulate"\|"done", total, done, cached, failed, running, cost_usd, message?}` | แถบ progress ของหน้า Backtest |
 | `backtest.cell` | (P15) `{cell_id, symbol, day, status: "pending"\|"running"\|"done"\|"failed", run_id?, rating?, side?, outcome?, cached, error?}` | CellGrid |
 | `backtest.sim` | (P15) `{sim_id, final_equity (decimal string), total_return, trades}` | reload ผลลัพธ์ |
+| `memory.recalled` | (P17) `{items: [{id, category, text, status}], reasoning: [{id, title}]}` — node `recall_memory` (research: หลัง `plan` ซึ่งเป็น LLM call เดียวที่มาก่อน — ก่อน `llm.*` อื่นทั้งหมดของ run; advisor: หลัง `compute_analytics`); ส่งเฉพาะเมื่อ memory เปิด (ว่างได้) | inspector tab Memory |
+| `discovery.assessed` | (P17) `{whys_asked, root_goal_identified, confidence, stop_reason, advice_mode, next_question?, root_goal?: {text, category?}}` — `whys_asked` = จำนวนคำถาม why ที่ถามแล้วรวมคำถามของ turn นี้; `next_question` มีค่าเฉพาะเมื่อ turn นี้ถาม; `root_goal` = เป้าหมายที่รู้ล่าสุด (ของ session ถ้า turn นี้ไม่ได้ระบุ); กด "ข้าม" → `stop_reason="resistance"` | chip "เข้าใจเป้าหมายแล้ว: `root_goal.text`" |
+| `memory.updated` | (P17) `{changes: [{op: "ADD"\|"UPDATE"\|"SUPERSEDE"\|"RETIRE", id, category, text, previous_text?, status}]}` — หลัง `answer.final` (node `learn`); NOOP ไม่ส่ง และไม่ส่ง event ถ้าไม่มี change; `status` ของ item ใหม่ (`candidate` = รอผู้ใช้ยืนยัน) | MemoryChip ใน Turn |
+| `reasoning.distilled` | (P17) `{items: [{id, title, kind}]}` | toast "บันทึกบทเรียนลง ReasoningBank" |
+
+(P17) research workflow v2 node ใหม่: `recall_memory`, `assess_discovery`, `write_question` (ask-only: ส่ง `llm.delta` + `answer.final` เอง), `learn` (ส่ง `memory.updated` / `reasoning.distilled` / `warning memory_learn_failed`); portfolio_advisor v2: `recall_memory`, `learn` — ดู §13.5
 
 (P12) portfolio_advisor: node `diagnose` มี sub-node `diagnose.risk` / `diagnose.allocation` แบบเดียวกัน; `approval.required.kind = "rebalance_plan"` (proposal = card: rows current/target/after/action/shares/value, cash, turnover, metrics_before/after, warnings); edits = `{target_weights: {symbol: w}, cash_target?}` → คำนวณ + ตรวจ policy ใหม่
 
@@ -420,9 +426,9 @@ Base: `/api` ทุก response เป็น JSON ยกเว้น SSE แล�
 | GET | `/market/{symbol}/quote` | ราคาล่าสุด | 2 |
 | GET | `/skills` | รายการ scenario/skill | 6 |
 | POST | `/sessions` `{kind: "research"\|"portfolio", title?}` | สร้าง session | 6 |
-| GET | `/sessions?kind=` / `/sessions/{id}` | list / detail (messages + runs) | 6 |
+| GET | `/sessions?kind=` / `/sessions/{id}` | list / detail (messages + runs); (P17) detail + `discovery: {whys_asked, chain: [{q, a}], root_goal?: {text, category?}, root_goal_identified, confidence, stop_reason?, advice_mode} \| null` (= `session.meta["discovery"]` หลัง turn ล่าสุด; chain/whys รีเซ็ตเป็น 0/[] เมื่อ identified หรือ `stop_reason ∈ {max_whys, resistance}` — goal ยังเก็บไว้; null = ยังไม่มี/ memory ปิด) | 6, 17 |
 | DELETE | `/sessions/{id}` | ลบ session พร้อม messages, runs, events, provenance, approvals และไฟล์ scratchpad ของ run นั้น (memory ไม่ลบ) → `{deleted, runs}`; 409 ถ้ายังมี run ทำงานอยู่ | 8 |
-| POST | `/sessions/{id}/messages` `{text, skill?, llm?: {provider, model}, portfolio_ids?}` (P12: `portfolio_ids` = toggle "ใช้ข้อมูลพอร์ต" → preload tool `get_portfolio_analytics` ต่อพอร์ต และ tool ถูกซ่อนเมื่อว่าง; session `kind=portfolio` ใช้พอร์ตของ session/ทุกพอร์ตอัตโนมัติ, 400 ถ้ายังไม่มีพอร์ต) | เริ่ม run → `{run_id}`; `llm` = ใช้โมเดลนี้เป็น tier deep (agent + คำตอบสุดท้าย) แบบไม่มี failover ส่วน tier quick (plan, compaction) ใช้ตาม `.env` (400 ถ้า provider ยังไม่มี key พร้อมบอก env ที่ต้องตั้ง) | 6, 8 |
+| POST | `/sessions/{id}/messages` `{text, skill?, llm?: {provider, model}, portfolio_ids?, skip_discovery?}` (P12: `portfolio_ids` = toggle "ใช้ข้อมูลพอร์ต" → preload tool `get_portfolio_analytics` ต่อพอร์ต และ tool ถูกซ่อนเมื่อว่าง; session `kind=portfolio` ใช้พอร์ตของ session/ทุกพอร์ตอัตโนมัติ, 400 ถ้ายังไม่มีพอร์ต; P17: `skip_discovery=true` = ปุ่ม "ข้าม — วิเคราะห์เลย" ไม่ถาม why ใน turn นี้และปิด chain, header `X-User-Id` → run input `user_id`, run input ได้ `discovery` = `session.meta["discovery"]`, user message meta `skip_discovery`) | เริ่ม run → `{run_id}`; `llm` = ใช้โมเดลนี้เป็น tier deep (agent + คำตอบสุดท้าย) แบบไม่มี failover ส่วน tier quick (plan, compaction) ใช้ตาม `.env` (400 ถ้า provider ยังไม่มี key พร้อมบอก env ที่ต้องตั้ง) | 6, 8 |
 | GET | `/llm/providers` | ข้อมูลตัวเลือกโมเดล: `{default, providers: [{id, label, configured, env_hint, free, recommended, models}]}` (อ่าน key จาก `.env` ใหม่ทุกครั้ง ไม่ส่ง key ออก) | 8 |
 | GET | `/runs/{id}/events` (SSE, `Last-Event-ID`) | stream + replay | 4 |
 | POST | `/runs/{id}/cancel` | ยกเลิก | 4 |
@@ -439,7 +445,7 @@ Base: `/api` ทุก response เป็น JSON ยกเว้น SSE แล�
 | GET/PUT | `/portfolio` | อ่าน/บันทึกพอร์ต `pf_default` → `{portfolio, state, portfolio_hash}`; GET 404 = ยังไม่เคยบันทึก (not_provided ≠ พอร์ตว่าง); PUT = replace ทั้งพอร์ต `{name?, base_currency?, icon?, color?, cash, positions: [PositionInput]}` → 422 `{error, errors: [{index, symbol, field, message}], converted}` | 12 |
 | POST | `/portfolio/import?commit=0\|1` (body `text/csv`) | preview `{rows, positions, converted, errors}` / commit (แทนที่ positions, cash คงเดิม, revision `import`) | 12 |
 | GET | `/portfolio/analytics?fresh=` | `PortfolioAnalytics` (cache 60s ตาม portfolio_hash) | 12 |
-| POST | `/portfolio/advise` `{goal?, risk_profile, constraints?, language?, llm?}` | เริ่ม `portfolio_advisor` → `{run_id, thread_id}`; 404 ไม่มีพอร์ต, 400 ไม่มี position, 409 run ของพอร์ต+settings เดียวกันยังเปิดอยู่ | 12 |
+| POST | `/portfolio/advise` `{goal?, risk_profile, constraints?, language?, llm?}` | เริ่ม `portfolio_advisor` → `{run_id, thread_id}`; 404 ไม่มีพอร์ต, 400 ไม่มี position, 409 run ของพอร์ต+settings เดียวกันยังเปิดอยู่; (P17) header `X-User-Id` → input `user_id` (ไม่อยู่ใน graph signature) | 12, 17 |
 | GET | `/portfolio/plans` / POST `/portfolio/plans/{id}/apply?dry_run=&force=` | แผนที่ approve แล้ว / apply → revision `apply_plan` + diff; 409 ถ้า apply แล้ว หรือพอร์ตเปลี่ยนหลังทำแผน (เว้น `force=1`) | 12 |
 | GET | `/portfolio/revisions` | ประวัติการแก้พอร์ต (snapshot + provenance id) | 12 |
 | GET/POST | `/portfolios` | (P12 §12.7) รายการพอร์ต / สร้างพอร์ตใหม่ (`name` จำเป็น) | 12 |
@@ -456,6 +462,17 @@ Base: `/api` ทุก response เป็น JSON ยกเว้น SSE แล�
 | GET | `/backtests`, `/backtests/{id}` | รายการ (brief + final_equity/total_return/cost) / รายละเอียด `{…brief, run, config, output, running, cells[], sims[] (brief), latest_sim (+result)}` | 15 |
 | POST | `/backtests/{id}/simulate` `SimConfig` | จำลองใหม่จากการตัดสินใจที่เก็บไว้ (ไม่เรียก LLM) → `{sim_id, created_at, config, metrics, result: {trades, skipped, equity_curve, benchmark, intervals, baseline?}}`; ไม่มี FX ของสกุลเงินฐาน → 422 | 15 |
 | GET / DELETE | `/backtests/{id}/sims/{sim_id}` / `/backtests/{id}` | ผล sim หนึ่งตัว / ลบ backtest + cells + sims (trading run ของแต่ละ cell ยังอยู่เป็น cache); กำลังรัน → 409 | 15 |
+| GET | `/memory?status=active\|candidate\|superseded\|retired\|rejected\|all&category=` | (P17) ความจำของผู้ใช้ (`X-User-Id`) → `{items: [MemoryItemOut], counts: {active, candidate, superseded, retired, rejected}}` เรียง category (ลำดับ §13) → importance desc; default `status=all` | 17 |
+| GET | `/memory/profile` | (P17) สิ่งที่ถูกฉีดเข้า prompt จริง → `{profile_text, token_estimate, items_used: [id], updated_at}` | 17 |
+| POST | `/memory` `{category, text, key?, value_json?}` | (P17) ผู้ใช้พิมพ์เอง → guards + reconcile (source `manual`, confidence 0.95) → `{changes: [MemoryChange], warnings: [str]}`; LLM ใช้ไม่ได้ → ADD ตรง + warning | 17 |
+| PATCH | `/memory/{id}` `{text?, value_json?}` | (P17) แก้ = แถวใหม่ `supersedes` เดิม (source `manual`) → `MemoryItemOut` ใหม่; 404 / 409 (ไม่ใช่ active/candidate) / 422 (ไม่มีฟิลด์) | 17 |
+| POST | `/memory/{id}/confirm` · `/memory/{id}/reject` · `/memory/{id}/retire` | (P17) candidate → active (`user_confirmed`, 0.95; ถ้า `supersedes` แถว active → แถวนั้น superseded) / candidate → rejected / active\|candidate → retired (`valid_to=now`) → `MemoryItemOut`; 404 / 409 สถานะไม่ถูก | 17 |
+| DELETE | `/memory/{id}?cascade=0\|1` | (P17) **ลืมจริง** ลบแถว (+ ทั้ง chain เมื่อ `cascade=1`) + FTS → `{deleted: [id]}`; 404 | 17 |
+| GET | `/memory/{id}/history` | (P17) chain ทั้งเส้น (เก่า→ใหม่) `{items: [MemoryItemOut]}`; 404 | 17 |
+| GET | `/reasoning-bank?workflow=&kind=&status=&q=&limit=` | (P17) `{items: [ReasoningItemOut], counts: {total, candidate, active, retired}}` (`q` = FTS) | 17 |
+| GET | `/reasoning-bank/stats` | (P17) `{total, active, by_kind, by_workflow, avg_success_rate}` | 17 |
+| GET | `/reasoning-bank/{id}` | (P17) `{item: ReasoningItemOut, uses: [{id, run_id, outcome, created_at}] (ล่าสุด 20)}`; 404 | 17 |
+| POST | `/reasoning-bank/{id}/retire` | (P17) ปิด item → `ReasoningItemOut`; 404 | 17 |
 
 (P15) `SimConfig` (เงินเป็น decimal string, สัดส่วน 0–1): `initial_capital=100000, base_currency=THB, risk_pct=0.01 (≤0.05), max_position_weight=0.20 (null = ไม่จำกัด), max_open_positions=5, leverage={forex: 10}, compounding=true, shortable=["forex"], commission_pct=0 (ต่อข้าง), min_commission=0, slippage_bps=5, intrabar_rule=stop_first|target_first, scale_out=first_target|equal_split, default_order_valid_bars=5`. `TradeRunInput.backtest_id` (ภายใน: `POST /trade/runs` ที่ส่งมา → 400) = auto-approval (APPROVE → approved, อื่น ๆ → rejected), ไม่อ่าน/เขียน decision log จริง, อยู่ใน `signature_fields`. trading run ที่มี `analysis_date` ในอดีตรันหลัง `PointInTimeRouter` เสมอ (PRICES/QUOTE ตัดที่วันนั้น, capability อื่น clamp `as_of`)
 
@@ -464,8 +481,100 @@ Base: `/api` ทุก response เป็น JSON ยกเว้น SSE แล�
 ## 12. Storage
 
 - `DATA_DIR` (default `backend/.data/`, gitignored)
-  - `app.db` (SQLite ผ่าน SQLAlchemy 2.0 + Alembic): `sessions`, `messages`, `runs`, `events`, `provenance`, `portfolios`, `positions`, `portfolio_revisions`, `plans`, `portfolio_snapshots` (P12, migration 0003; เงินเก็บเป็น decimal string), `approvals`, `memory`, `settings`, `backtest_cells` + `backtest_sims` (P15, migration 0005: ตัว backtest เป็นแถวใน `runs` workflow `backtest`; cell มี `cache_key` = hash(symbol, วัน, horizon, analysts, rounds, ภาษา, LLM, prompt `trade_*.md`) ให้ backtest อื่นใช้ผลซ้ำ)
+  - `app.db` (SQLite ผ่าน SQLAlchemy 2.0 + Alembic): `sessions`, `messages`, `runs`, `events`, `provenance`, `portfolios`, `positions`, `portfolio_revisions`, `plans`, `portfolio_snapshots` (P12, migration 0003; เงินเก็บเป็น decimal string), `approvals`, `memory`, `settings`, `backtest_cells` + `backtest_sims` (P15, migration 0005: ตัว backtest เป็นแถวใน `runs` workflow `backtest`; cell มี `cache_key` = hash(symbol, วัน, horizon, analysts, rounds, ภาษา, LLM, prompt `trade_*.md`) ให้ backtest อื่นใช้ผลซ้ำ), `user_memory` + `user_memory_fts`, `reasoning_bank` + `reasoning_bank_fts`, `reasoning_bank_uses` (P17, migration 0006 — ดู §13; ตาราง `memory` KV เดิมยังอยู่)
   - `scratchpad/{run_id}.jsonl` เป็น append-only (D2)
   - `checkpoints/{SAFE_SYMBOL}.db` สำหรับ LangGraph SqliteSaver แยกตาม symbol (T3); research/portfolio ใช้ `checkpoints/_workflow_{id}.db`
   - `cache/` สำหรับ HTTP cache ของ data provider
-- ทุก ID ใช้ ULID พร้อม prefix: `ses_`, `run_`, `prov_`, `call_`, `apr_`, `pf_`, `plan_`, `rev_`, `snap_`, `cell_`, `sim_` (พอร์ตหลักใช้ id คงที่ `pf_default`)
+- ทุก ID ใช้ ULID พร้อม prefix: `ses_`, `run_`, `prov_`, `call_`, `apr_`, `pf_`, `plan_`, `rev_`, `snap_`, `cell_`, `sim_`, `mem_`, `rb_`, `rbu_` (P17) (พอร์ตหลักใช้ id คงที่ `pf_default`; ผู้ใช้ `usr_default` จนกว่าจะมี multi-user)
+
+---
+
+## 13. Memory (P17)
+
+ผู้ใช้ระบุด้วย `user_id` (`^usr_[A-Za-z0-9_-]{1,40}$`, ค่าเริ่มต้น `usr_default`) — API อ่าน header `X-User-Id` (ไม่มี = `usr_default`, รูปแบบผิด = 400) ผ่าน dependency `app/api/deps.py::current_user_id`. ทุก query ของ `user_memory` scope ด้วย `user_id` ใน SQL เสมอ
+
+### 13.1 ตาราง (migration `0006_memory`)
+
+`user_memory`: `id` (`mem_<ULID>`), `user_id` (index), `category`, `key?` (slot ค่าเดียว เช่น `risk_tolerance.score`, `style.primary`, `goal:house_2028`, `horizon.years`, `pace` — key ชนกัน = ขัดแย้ง), `text` (ประโยคเดียว "User …"/"ผู้ใช้ …" ภาษาเดียวกับผู้ใช้), `value_json?`, `confidence` (0–1), `importance` (1–10), `source`, `source_ref` (JSON `{session_id?, message_id?, run_id?, prompt_version?, flags?: ["stated_vs_revealed"], conflicts_with?}`), `status` (index), `supersedes?`, `superseded_by?`, `valid_from`, `valid_to?`, `sensitivity`, `created_at`, `updated_at`, `last_accessed_at?`, `access_count`
+
+- `category` ∈ `investment_style, risk_tolerance, risk_capacity, goal, constraint, preference, life_fact, behavioral_pattern, knowledge_level` (ลำดับนี้ใช้เรียงใน API)
+- `source` ∈ `user_stated (0.9), user_confirmed (0.95), inferred_behavior (0.5–0.7), questionnaire (0.9), portfolio_data (0.8), manual (0.95)`
+- `status` ∈ `candidate, active, superseded, retired, rejected`; `sensitivity` ∈ `normal, financial, pii` (`pii`/`financial` ห้ามไป ReasoningBank และ redact ใน log)
+- ไม่แก้แบบ in-place: แก้/ขัดแย้ง = แถวใหม่ (`supersedes` = เก่า) + เก่า `superseded` (`superseded_by`, `valid_to`); ลบจริงเฉพาะ `DELETE /memory/{id}`
+
+`user_memory_fts` = `fts5(id UNINDEXED, user_id UNINDEXED, text, tokenize='trigram')` (ภาษาไทยไม่มีเว้นวรรค → substring ≥ 3 ตัวอักษร); store เขียนคู่กับตารางหลักทุก insert/delete (ทุกแถวทุกสถานะอยู่ใน FTS; กรองสถานะตอน query)
+
+`reasoning_bank`: `id` (`rb_<ULID>`), `title` (≤120), `description` (1 ประโยค), `content` (≤150 คำ), `kind` (`strategy` จาก success, `pitfall` จาก failure, `coaching`), `outcome_signal` (`success, failure, mixed`), `judge_score`, `tags` (JSON `{workflow: research|portfolio|trade, scenario?, asset_class?, market?: SET|US|FX|CRYPTO, regime?, investor_style?, bias?, horizon?}`), `use_count`, `success_count`, `source_count`, `status` (`candidate, active, retired`), `prompt_version`, `model?`, `source_run_id?`, `user_id` (ผู้ผลิต — audit เท่านั้น ไม่ส่งออก API), `created_at`, `updated_at`. `success_rate = (success_count+1)/(use_count+2)` คำนวณตอนอ่าน (ไม่เก็บ)
+
+`reasoning_bank_fts` = `fts5(id UNINDEXED, title, description, content, tokenize='trigram')`; `reasoning_bank_uses`: `id` (`rbu_<ULID>`), `item_id` (index), `run_id` (index), `user_id`, `outcome?` (`success|failure`, null = ยังไม่ settle), `created_at`
+
+### 13.2 Domain (`app/domain/memory/`, ไม่ import framework)
+
+- `schemas.py`: `MemoryItemModel` (= แถว `user_memory` + `flags`), `ExtractedFacts{facts ≤ 5: [{category, key?, text, value_json?, confidence, importance, source: user_stated|inferred_behavior, sensitivity}]}`, `ReconcileOps{ops: [{op, target_id?, text, value_json?, confidence, importance, reason}]}`, `DiscoveryAssessment` (research §B.4 + `answers_pending_question`), `DistilledLessons{items ≤ 3: [{title, description, content, kind, tags}]}`, `PrivacyVerdict{identifies_person_or_holdings, reason}`, `OutcomeJudgement{success, score 0–1, reason}`, `ReasoningItem` (แถว bank + `success_rate`, ไม่มี `user_id`), `Recall{profile_text, token_estimate, profile_items, items, reasoning, provenance}` (`profile_items` = active items ที่อยู่ใน `profile_text`; advisor ใช้หา goal), `MemoryChange{op, item, previous?, reason?}`
+- `profile.py`: `render_profile(items, max_tokens=600) -> ProfileRender{text, token_estimate, items_used}` (active เท่านั้น, เรียง importance×confidence, ตัดเมื่อเกิน budget), `render_items(items)` (candidate ต่อท้าย "(ยังไม่ยืนยัน)"), `estimate_tokens(text)`
+- `scrub.py`: `scrub_text(text) -> (clean, hits: [ScrubHit{kind, replacement}])` kinds `email, phone, thai_id, account` (= PII, item ถูกทิ้ง) + `amount` (→ bucket `<THB 100k` / `THB 100k-1m` / `>THB 1m`; USD `<USD 3k` / `USD 3k-30k` / `>USD 30k`), `quantity` ("2,000 หุ้น" → "a position"), `percent` (ปัดเป็นทวีคูณ 5), `ticker` (นอก allowlist → "{sector} large-cap" หรือ "a single stock")
+- `discovery.py`: `should_ask(assessment, whys_asked, skip, *, max_whys=5, confidence_threshold=0.7) -> "ask_only" | "research" | "research_then_ask"` (None/parse fail → `research`), `advice_mode_of(assessment) -> "normal"|"stabilise"|"educate"`
+- `ports.py`: `MemoryPort` / `ReasoningBankPort` (13.4)
+- `messages.py`: `load_prompt(id)` + message builders `extract_messages`, `reconcile_messages`, `discovery_messages(question, history, state, profile_text, max_whys)` (สำหรับ node `assess_discovery` ของ 17.2), `distill_messages`, `privacy_messages`, `outcome_judge_messages`; ข้อความผู้ใช้ถูกครอบเป็น data เสมอ
+- `prompts/`: `memory_extract.v1`, `memory_reconcile.v1`, `discovery_assess.v1`, `rb_distill.v1`, `rb_privacy_judge.v1`, `rb_outcome_judge.v1` (version ลง `source_ref.prompt_version` / `reasoning_bank.prompt_version`)
+
+### 13.3 Engine (`app/harness/memory/`)
+
+- ทุก LLM call: tier `quick`, `purpose="memory"`, ผ่าน `LLMPort.structured` (หรือ LLM ที่ node ส่งมา — bound กับ emit/usage ของ run); structured ล้มเหลว → ไม่เขียนอะไรเลย คืน `[]` + warning `memory_learn_failed` (fail-safe)
+- `learn`: extract (ข้อความ **ผู้ใช้** ≤ 10 ล่าสุด + `memory_candidates` ของ discovery ที่ `root_goal_identified` เป็น fact `user_stated` — หมวดของ candidate เหล่านี้ "เป็นของ" root goal ใน batch นั้น: fact ที่ extract ได้ในหมวดเดียวกันถูกทิ้ง กันซ้ำเพราะ extractor เห็น goal เดียวกันเป็น context; ทิ้ง confidence < 0.4) → ต่อ fact หา neighbours (active/candidate, user + หมวดเดียวกัน, `key` ตรงหรือ FTS top-5) → **guards ชนะ LLM**: (1) `inferred_behavior` ห้าม supersede/update/retire แถว `user_stated/user_confirmed/manual/questionnaire` → ADD เป็น `behavioral_pattern` แยก + `flags=["stated_vs_revealed"]`; (2) `key` เดียวกัน + value ต่าง → SUPERSEDE (ไม่เรียก LLM), value เหมือน → NOOP; (3) ไม่มี neighbour → ADD (ไม่เรียก LLM); (4) `risk_tolerance/goal/constraint` ที่ไม่ใช่ `user_stated/user_confirmed/manual` → `status=candidate` (candidate ไม่ supersede แถว active จนกว่าผู้ใช้กด confirm) → ที่เหลือ reconcile (LLM) → plan ทั้งหมดก่อน แล้วค่อย apply (มี reconcile ตัวไหนล้ม = ไม่เขียนเลย)
+- `ReasoningBank.distill`: LLM `rb_distill.v1` (≤ 3) → ต่อ item: `scrub_text` ทุกฟิลด์ (+ tag) → มี PII hit = ทิ้ง → privacy judge (`rb_privacy_judge.v1`; ตอบไม่ได้หรือ identifies = ทิ้ง) → dedupe (title เหมือนแบบไม่สนตัวพิมพ์ หรือ Jaccard ของ trigram ของ title+description ≥ 0.8 กับผล FTS top-5) = `source_count += 1` แทน insert → `status=active` เมื่อ `source_count ≥ REASONING_BANK_MIN_SOURCES` (ค่าเริ่มต้น 1)
+- `retrieve`: active + `tags.workflow` ตรง (+ `market`/`asset_class` ถ้า query ระบุ — item ที่ไม่มี tag นั้นถือว่าใช้ได้ทั่วไป) → FTS top-10 → `bm25_norm × (0.5 + success_rate)` → top-k; FTS ไม่เจอเลยแต่มี item ผ่าน filter → เรียงด้วย `0.5 × (0.5 + success_rate)` แล้ว recency (ReasoningBank ฉีด top-1 เสมอ); ไม่มี item → `[]`
+- `record_use(item_ids, run_id, user_id)` เพิ่มแถว `reasoning_bank_uses`; `settle(run_id, success)` ใส่ outcome ให้แถวที่ยังไม่ settle ของ run นั้น → `use_count += 1` (+ `success_count`) → retire อัตโนมัติเมื่อ `use_count ≥ 10 และ success_rate < 0.35` (เรียกซ้ำ = ไม่มีผล)
+- Tool `user_memory_search(query, category?, limit ≤ 10)` (category `memory`, read_only, 3 ครั้ง/run) คืน items active ของ `run.input.user_id` (ไม่มี = `usr_default`)
+- Settings: `MEMORY_ENABLED=true`, `MEMORY_PROFILE_MAX_TOKENS=600`, `REASONING_BANK_MIN_SOURCES=1`, `DISCOVERY_MAX_WHYS=5`, `DISCOVERY_CONFIDENCE=0.7`
+
+### 13.4 Ports (workflow node ใช้ผ่าน `ctx.config["memory"]`)
+
+```python
+# domain/memory/ports.py
+class ReasoningBankPort(Protocol):
+    async def retrieve(self, query: str, tags: Mapping[str, Any] | None = None, *, k: int = 2) -> list[ReasoningItem]: ...
+    async def record_use(self, item_ids: Sequence[str], run_id: str, user_id: str) -> None: ...
+    async def settle(self, run_id: str, success: bool) -> list[ReasoningItem]: ...
+    async def distill(self, *, run_summary: str, outcome: OutcomeJudgement, tags: Mapping[str, Any],
+                      source_run_id: str | None, user_id: str, outcome_signal: OutcomeSignal | None = None,
+                      max_items: int = 3, llm: LLMPort | None = None, emit: EventPort | None = None,
+                      node: str | None = None) -> list[ReasoningItem]: ...
+
+class MemoryPort(Protocol):
+    @property
+    def bank(self) -> ReasoningBankPort: ...
+    async def recall(self, user_id: str, query: str, *, workflow: str,
+                     tags: Mapping[str, Any] | None = None) -> Recall: ...
+    async def learn(self, user_id: str, *, user_messages: Sequence[str], assistant_text: str = "",
+                    discovery: DiscoveryAssessment | None = None, source_ref: Mapping[str, Any] | None = None,
+                    observation_date: date | None = None, llm: LLMPort | None = None,
+                    emit: EventPort | None = None, node: str | None = None) -> list[MemoryChange]: ...
+```
+- `emit` ส่งมา → `learn` ส่ง `memory.updated` (เมื่อมี change ที่ไม่ใช่ NOOP; ค่าที่คืนรวม NOOP), `distill` ส่ง `reasoning.distilled` (เมื่อมี item), ล้มเหลว → `warning` (`memory_learn_failed` / `reasoning_distill_failed`); `recall` ไม่ส่ง event (node `recall_memory` ของ 17.2 ส่ง `memory.recalled` เอง) และไม่เรียก `record_use` (node เรียกเอง)
+- นอก port: `MemoryEngine.profile(user_id) -> (ProfileRender, updated_at)`, `.add_manual(...)` (POST /memory), `.edit(...)` (PATCH); `ReasoningBank.judge_outcome(request, trajectory, output, llm?) -> OutcomeJudgement | None` (LLM-as-judge `rb_outcome_judge.v1` สำหรับ run ที่ตัดสินแบบ deterministic ไม่ได้)
+- `HarnessServices.memory_engine: MemoryEngine`, `HarnessServices.reasoning_bank: ReasoningBank` (= `memory_engine.bank`)
+
+### 13.5 Workflow integration (17.2)
+
+**research v2** (`domain/workflows/research.py`, `version="2"`; reducers `memory`, `discovery`, `question`, `learned` = replace):
+
+```
+plan → recall_memory → assess_discovery ─┬─ ask_only          → write_question ─────────────────────┐
+                                         ├─ research          → retrieve_analyze → verify → synthesize_report ─┼→ learn → END
+                                         └─ research_then_ask → (เหมือน research; คำตอบจบด้วยคำถาม 1 ข้อ) ┘
+```
+
+- `ResearchInput` + `skip_discovery: bool = false`, `user_id = "usr_default"`, `discovery: dict | null` (สถานะ 5 Whys ของ session) · `ResearchOutput` + `discovery` (state ของ turn, null เมื่อ memory ปิด), `memory_changes`
+- node อ่าน `ctx.config["memory"]` (MemoryPort; **None = `MEMORY_ENABLED=false`** → `recall_memory`/`assess_discovery`/`learn` ไม่เรียก LLM ไม่ส่ง event — run เหมือน v1 แต่ node ยังปรากฏใน graph), `ctx.config["discovery"] = {max_whys, confidence}`, `ctx.config["session_id"]`
+- `recall_memory`: `recall(user_id, text, workflow="research", tags={market จาก plan.symbols})` → `bank.record_use(reasoning ids)` → `memory.recalled`; state `memory = {enabled, profile_text, items[{id, category, text, status}], reasoning[{id, title, description, content}], market, provenance}`; ล้ม → `warning memory_recall_failed`
+- `assess_discovery`: quick structured `discovery_assess.v1` (purpose `memory`; ข้ามเมื่อ `skip_discovery`) → `should_ask()`; ไม่มี `next_question` → `research`; คำถามของ turn นี้ถูก append ลง chain (`{q, a:""}`) และ `whys_asked += 1`; ผู้ใช้ตอบคำถามค้าง (`answers_pending_question`) → เติม `a`; skip → `stop_reason=resistance`; `whys_asked ≥ max` และยังไม่ identified → `max_whys`; parse ไม่ได้ → `warning discovery_unparsed` + `research`. state `discovery = {enabled, route, mode, max_whys, whys_asked, chain, root_goal, root_goal_identified, confidence, next_question, stop_reason, advice_mode, request_type, memory_candidates}`
+- `write_question` (REPORT, ไม่มี tool): quick stream (purpose `final`, prompt `discovery_question.v1`: reflect + คำถามคำต่อคำ + บอกว่าข้ามได้; คำถามหายจากข้อความ → ต่อท้ายให้) → `answer.final{…, discovery}`; state `question` (output ใช้แทน `answer`)
+- `retrieve_analyze`/`verify`: `AgentRunRequest.context_blocks` = `## INVESTOR PROFILE (จาก memory — …)` + `## LESSONS FROM PAST RUNS` (≤ 2: `title — content`) + `## ADVICE MODE: stabilise|educate` → ต่อท้าย **system prompt** (agent เก็บไว้ใช้รอบ verify)
+- `synthesize_report`: `AgentPort.final_answer(role, stop_reason, context_blocks?, closing_question?, discovery?)` — blocks ต่อท้าย system prompt ของคำตอบ; `research_then_ask` → กติกา "ตอบให้ครบก่อน แล้วปิดท้ายด้วยคำถามนี้คำต่อคำ (ไม่ตั้งคำถามอื่น)" และถ้าโมเดลไม่ใส่ harness ต่อท้ายให้ → `answer.final.discovery`
+- `learn` (COMPUTE, `idempotent=False`): `memory.learn(user_messages=[ข้อความ turn นี้], discovery=root goal + memory_candidates ถ้า identified, source_ref {run_id, session_id})` → judge แบบไม่ใช้ LLM (`judge_research`): failure = stop_reason ∈ LIMIT_KINDS หรือ unverified > 3; success = citations ≥ 1 และ unverified = 0 และ (identified หรือ request_type `info`); อื่น ๆ / ask-only = ไม่ตัดสิน → ตัดสินได้: `bank.distill(max_items=1, tags {workflow: research, scenario: skill, market})` + `bank.settle(run_id, success)`; ทุกขั้นห่อ try → `warning memory_learn_failed` (run ไม่ fail)
+- harness `_finish`: assistant message meta + `memory_changes`, `discovery` (= payload ของ `answer.final.discovery`); `session.meta["discovery"]` = `{whys_asked, chain, root_goal, root_goal_identified, confidence, stop_reason, advice_mode}` (รีเซ็ต chain ตาม §11)
+
+**portfolio_advisor v2** (`version="2"`): `compute_analytics` (ok) → `recall_memory` → `diagnose` …; `report` → `learn` → END. `recall_memory` = profile + RB `workflow=portfolio` k=2 (+ `record_use`), state `memory.goal` = goal item แรกของ profile; `_limits_text` ต่อด้วย INVESTOR PROFILE + LESSONS (ทั้ง diagnose และ propose) และ `Goal:` ใช้ goal จาก memory เมื่อ input ไม่มี ("(from the user's memory)"; report มีบรรทัด `_Goal from your memory: …_`). `AdviseInput.user_id`. `approval` state เพิ่ม `human_outcome`, `human_comment` (คำตอบจริงของคน ก่อนถูกเปลี่ยนเป็น rejected เพราะ edit ผิด/ถูก block). `learn`: approved/edited (และยังผ่าน) → distill success (≤ 2, tags `{workflow: portfolio}`); rejected + comment → `memory.learn([comment])` + distill failure (→ `pitfall`); ทุกกรณีที่คนตอบ → `settle(run_id, success)`; ไม่ถึง approval → ไม่ทำอะไร. run output `state` เพิ่ม `memory`, `learned`
+
+**trading**: `POST /trade/runs/{id}/outcome` หลัง reflection → `distill_trade_lesson` (tags `{workflow: trade, market, horizon}`, `outcome_signal` จาก R: > 0.2 success, < −0.2 failure, อื่น ๆ mixed; ไม่มี R (not_filled/cancelled) = ไม่กลั่น; ล้ม = log เท่านั้น) → response เพิ่ม `distilled: [{id, title, kind}]`; `trade_decisions` lessons ไม่เปลี่ยน

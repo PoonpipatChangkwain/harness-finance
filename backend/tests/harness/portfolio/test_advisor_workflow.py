@@ -57,8 +57,8 @@ async def test_happy_path_normalizes_weights_rounds_lots_and_saves_a_plan(settin
     assert run is not None and run.status == "waiting_approval", run
     events = await events_of(run_id)
     assert [n for n in node_order(events) if "." not in n] == [
-        "load_portfolio", "compute_analytics", "diagnose", "propose_rebalance", "compute_trades",
-        "policy_gate", "approval",
+        "load_portfolio", "compute_analytics", "recall_memory", "diagnose", "propose_rebalance",
+        "compute_trades", "policy_gate", "approval",
     ]  # fmt: skip
     # each diagnostician is its own UI sub-node inside ``diagnose``
     assert {n for n in node_order(events) if "." in n} == {"diagnose.risk", "diagnose.allocation"}

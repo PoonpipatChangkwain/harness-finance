@@ -140,6 +140,9 @@ class AgentRunRequest(BaseModel):
     max_iterations: int | None = None  # None = the run's own limit
     require_data: bool = False  # a data question: nudge once if the model answers without tools
     wrap_up: bool = False  # at max_iterations with no reply yet, force one tool-less call to write it
+    # (P17) blocks appended to the system prompt (INVESTOR PROFILE, LESSONS, advice mode) — not the
+    # user turn, so micro-compaction never clears them; the agent keeps them for later passes
+    context_blocks: list[str] = Field(default_factory=list)
 
 
 class AgentRunResult(BaseModel):
@@ -162,4 +165,15 @@ class AgentPort(Protocol):
 
     async def check(self, markdown: str) -> AnswerCheck: ...
 
-    async def final_answer(self, *, role: str, stop_reason: str | None) -> AnswerCheck: ...
+    async def final_answer(
+        self,
+        *,
+        role: str,
+        stop_reason: str | None,
+        context_blocks: list[str] | None = None,
+        closing_question: str | None = None,
+        discovery: dict[str, Any] | None = None,
+    ) -> AnswerCheck:
+        """(P17) ``context_blocks`` go into the system prompt, ``closing_question`` is asked verbatim
+        as the answer's single last question, ``discovery`` is added to ``answer.final``."""
+        ...

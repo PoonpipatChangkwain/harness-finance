@@ -166,3 +166,122 @@ async def test_cancel_mid_run(settings: Settings) -> None:
     assert of_type(events, "run.finished")[0]["payload"]["status"] == "cancelled"
     assert of_type(events, "answer.final")
     save("cancel", events)
+
+
+async def test_discovery_three_turns_ask_ask_identified(settings: Settings, install_services: Any) -> None:
+    """(P17 §17.2) 5 Whys across three chat turns through the API: research + why 1/5 → ask-only
+    why 2/5 → root goal understood (chain reset in the session, goal remembered, a lesson distilled).
+    Recorded as ``frontend/tests/fixtures/research-discovery.jsonl`` (all three runs)."""
+    import httpx
+
+    from app.api.main import app
+    from app.domain.memory.schemas import DiscoveryAssessment, PrivacyVerdict
+    from tests.harness.memory.helpers import facts, lesson, lessons
+
+    q1, q2 = "ถ้าได้ถือ PTT แล้วจะช่วยอะไรคุณ?", "เงินที่โตขึ้นนั้นตั้งใจจะใช้ทำอะไรครับ?"
+    goal_text = "เก็บเงินดาวน์บ้านภายในปี 2028"
+
+    def research(final: str) -> list[Any]:
+        return [
+            FakeTurn(tool_calls=[call("get_prices", "call_D1", symbol="PTT")]),
+            FakeTurn(text="Brief: PTT close"),
+            FakeTurn(text=final),
+        ]
+
+    llm = CitingFakeLLM(
+        [
+            plan(title="อยากซื้อ PTT"),
+            DiscoveryAssessment(request_type="buy_single", confidence=0.2, next_question=q1),
+            *research("PTT ปิดที่ 34.5 บาท {cite} ข้อมูลนี้ไม่ใช่คำแนะนำการลงทุน"),
+            facts(),
+            plan(),
+            DiscoveryAssessment(answers_pending_question=True, confidence=0.5, next_question=q2),
+            f"เข้าใจครับ อยากให้เงินโตขึ้น {q2} ถ้าไม่สะดวกตอบ กดข้ามได้เลยครับ",
+            facts(),
+            plan(),
+            DiscoveryAssessment.model_validate(
+                {
+                    "answers_pending_question": True,
+                    "root_goal_identified": True,
+                    "confidence": 0.85,
+                    "stop_reason": "root_goal",
+                    "root_goal": {"category": "home", "horizon_years": 2, "text": goal_text},
+                    "memory_candidates": [
+                        {
+                            "category": "goal",
+                            "text": f"ผู้ใช้{goal_text}",
+                            "key": "goal:home_2028",
+                            "confidence": 0.9,
+                        }
+                    ],
+                }
+            ),
+            *research("PTT ปิดที่ 34.5 บาท {cite} ข้อมูลนี้ไม่ใช่คำแนะนำการลงทุน"),
+            facts(),
+            lessons(lesson("Tie a single-stock idea to the user's dated goal")),
+            PrivacyVerdict(identifies_person_or_holdings=False),
+        ]
+    )
+    services = install_services(research_services(settings, [], llm=llm, long_term_memory=True))
+    # something to recall on turn 1: a memory item the question's FTS finds (no LLM — no
+    # neighbour → plain ADD) and a research lesson in the bank (top-1 is always injected)
+    seeded = await services.reasoning_bank._insert_or_merge(
+        lesson("Answer with data first, then ask why"),
+        kind="coaching",
+        signal="success",
+        score=0.8,
+        tags={"workflow": "research"},
+        model=None,
+        source_run_id=None,
+        user_id="usr_default",
+    )
+    all_events: list[dict[str, Any]] = []
+    async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://test") as c:
+        added = await c.post("/api/memory", json={"category": "preference", "text": "ผู้ใช้ชอบหุ้นปันผลอย่าง PTT"})
+        assert added.status_code == 200, added.text
+        mem_id = added.json()["changes"][0]["item"]["id"]
+        sid = (await c.post("/api/sessions", json={"kind": "research"})).json()["id"]
+
+        async def turn(text: str) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+            resp = await c.post(f"/api/sessions/{sid}/messages", json={"text": text})
+            assert resp.status_code == 200, resp.text
+            run_id = resp.json()["run_id"]
+            await services.runs.wait(run_id)
+            events = await envelopes(run_id, sid)
+            all_events.extend(events)
+            return events, (await c.get(f"/api/sessions/{sid}")).json()
+
+        events, detail = await turn("ผมอยากซื้อ PTT")
+        recalled = of_type(events, "memory.recalled")[0]["payload"]
+        assert [i["id"] for i in recalled["items"]] == [mem_id]
+        assert [r["id"] for r in recalled["reasoning"]] == [seeded.id]
+        answer = of_type(events, "answer.final")[0]["payload"]
+        assert answer["discovery"] == {"whys_asked": 1, "max": 5, "question": q1}
+        assert detail["discovery"]["whys_asked"] == 1 and detail["discovery"]["chain"] == [{"q": q1, "a": ""}]
+        run1 = of_type(events, "run.started")[0]["payload"]["input"]
+        assert run1["user_id"] == "usr_default" and run1["discovery"] is None
+
+        events, detail = await turn("อยากให้เงินโตขึ้น")
+        assert "write_question" in [e["node"] for e in of_type(events, "node.started")]
+        assert of_type(events, "answer.final")[0]["payload"]["discovery"]["whys_asked"] == 2
+        assert detail["discovery"]["chain"] == [{"q": q1, "a": "อยากให้เงินโตขึ้น"}, {"q": q2, "a": ""}]
+        # the second turn's assessment saw the chain from the session
+        assess_call = [x for x in llm.calls if x.schema == "DiscoveryAssessment"][1]
+        assert q1 in assess_call.messages[-1].content
+
+        events, detail = await turn(goal_text)
+        assessed = of_type(events, "discovery.assessed")[0]["payload"]
+        assert assessed["root_goal_identified"] and assessed["root_goal"]["text"] == goal_text
+        assert of_type(events, "answer.final")[0]["payload"]["discovery"] is None
+        change = of_type(events, "memory.updated")[0]["payload"]["changes"][0]
+        assert change["category"] == "goal" and change["status"] == "active"
+        assert of_type(events, "reasoning.distilled")
+        d = detail["discovery"]
+        assert d["whys_asked"] == 0 and d["chain"] == [] and d["root_goal"]["text"] == goal_text
+        assert d["root_goal_identified"] is True and d["stop_reason"] == "root_goal"
+        assert detail["messages"][-1]["meta"]["memory_changes"][0]["category"] == "goal"
+    goals = await services.user_memory.list_items("usr_default", statuses=["active"], category="goal")
+    assert [g.key for g in goals] == ["goal:home_2028"]
+    if os.environ.get("RECORD_FE_FIXTURES") == "1":
+        lines = [json.dumps(e, ensure_ascii=False) for e in all_events]
+        (FIXTURES / "research-discovery.jsonl").write_text("\n".join(lines) + "\n", encoding="utf-8")

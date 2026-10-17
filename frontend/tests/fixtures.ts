@@ -19,6 +19,23 @@ export function loadFixture(name: string): EventEnvelope[] {
     .map((line) => JSON.parse(line) as EventEnvelope);
 }
 
+/**
+ * (P17) Three chat turns of one session recorded by backend
+ * tests/harness/research/test_frontend_fixtures.py::test_discovery_three_turns_ask_ask_identified:
+ * research + why 1/5 → ask-only why 2/5 → root goal identified (goal remembered, lesson distilled).
+ * Returned as one event list per run, in order.
+ */
+export function loadDiscoveryRuns(): EventEnvelope[][] {
+  const text = readFileSync(path.join(FIXTURE_DIR, "research-discovery.jsonl"), "utf8");
+  const runs = new Map<string, EventEnvelope[]>();
+  for (const line of text.split("\n")) {
+    if (!line.trim()) continue;
+    const e = JSON.parse(line) as EventEnvelope;
+    runs.set(e.run_id, [...(runs.get(e.run_id) ?? []), e]);
+  }
+  return [...runs.values()];
+}
+
 /** Trading runs recorded by backend tests/harness/trading/test_frontend_fixtures.py (P11). */
 export const TRADING_FIXTURES = readdirSync(FIXTURE_DIR)
   .filter((f) => f.startsWith("trading-run-") && f.endsWith(".jsonl"))

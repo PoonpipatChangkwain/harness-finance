@@ -48,6 +48,7 @@ P00 Scaffold
 | 14 | [phase-14-hardening.md](phases/phase-14-hardening.md) | ทั้งหมด | evals, E2E, budget, docs |
 | 15 | [phase-15-backtest.md](phases/phase-15-backtest.md) | F1, T3 | backtest + portfolio simulator |
 | 16 | [phase-16-portfolio-entry-claude-code.md](phases/phase-16-portfolio-entry-claude-code.md) | F1, F4, UI | โหมดกรอกพอร์ตแบบโบรกเกอร์ + preview + วางข้อความ; LLM provider `claude_code` (subscription) |
+| 17 | [phase-17-advisor-memory.md](phases/phase-17-advisor-memory.md) | D2, F3, T5, UI | Long-term user memory (supersede ไม่ลบ), ReasoningBank ข้าม run, 5 Whys ใน chat, หน้า `/memory` — วิจัยประกอบ [research/advisor-styles-memory.md](research/advisor-styles-memory.md) |
 
 ## วิธีส่งงานให้ implementing agent (template)
 

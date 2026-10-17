@@ -118,11 +118,18 @@ async def test_workflow_graph(settings: Settings, install_services: Any) -> None
         graph = (await c.get("/api/workflows/research/graph")).json()
         assert [n["id"] for n in graph["nodes"]] == [
             "plan",
+            "recall_memory",
+            "assess_discovery",
+            "write_question",
             "retrieve_analyze",
             "verify",
             "synthesize_report",
+            "learn",
         ]
-        assert len(graph["edges"]) == 3
+        # 7 plain edges + the 5-Whys router (ask_only / research / research_then_ask / fallback)
+        assert len(graph["edges"]) == 11
+        labels = {e.get("label") for e in graph["edges"] if e["source"] == "assess_discovery"}
+        assert labels == {"ask_only", "research", "research_then_ask", "__fallback__"}
         assert (await c.get("/api/workflows/nope/graph")).status_code == 404
 
 

@@ -12,6 +12,7 @@ from __future__ import annotations
 import asyncio
 import logging
 import re
+from typing import Any
 
 from app.domain.models.provenance import ProvenanceRecord
 from app.domain.ports import AnswerCheck, LLMMessage, LLMPort
@@ -20,7 +21,7 @@ from app.harness.provenance.citations import resolve_citations, strip_citation_m
 from app.harness.provenance.number_check import cite_numbers, find_unverified_numbers
 from app.harness.provenance.store import ProvenanceStore
 from app.harness.runtime.context import RunContext
-from app.harness.runtime.prompts import FINAL_SYSTEM_PROMPT
+from app.harness.runtime.prompts import CLOSING_QUESTION_RULE, FINAL_SYSTEM_PROMPT
 from app.harness.state.scratchpad import format_tool_result
 
 logger = logging.getLogger(__name__)
@@ -121,7 +122,13 @@ async def write_final_answer(
     brief: str,
     stop_reason: str | None,
     context_chars: int,
+    context_blocks: list[str] | None = None,
+    closing_question: str | None = None,
+    discovery: dict[str, Any] | None = None,
 ) -> AnswerCheck:
+    """(P17) ``context_blocks`` (profile, lessons, advice mode) extend the system prompt;
+    ``closing_question`` must end the answer word for word (appended if the model left it out);
+    ``discovery`` goes into ``answer.final``."""
     data = final_context(ctx, context_chars) or "(no tool results)"
     note = stop_note(stop_reason)
     user = (
@@ -130,8 +137,13 @@ async def write_final_answer(
         + (f"## Research brief (guide only)\n{brief}\n\n" if brief else "")
         + f"## DATA (tool results with provenance ids)\n{data}"
     )
+    system = FINAL_SYSTEM_PROMPT.format(title=title)
+    if context_blocks:
+        system = f"{system}\n\n" + "\n\n".join(context_blocks)
+    if closing_question:
+        system = f"{system}\n\n{CLOSING_QUESTION_RULE.format(question=closing_question)}"
     messages = [
-        LLMMessage(role="system", content=FINAL_SYSTEM_PROMPT.format(title=title)),
+        LLMMessage(role="system", content=system),
         *history,
         LLMMessage(role="user", content=user),
     ]
@@ -154,6 +166,8 @@ async def write_final_answer(
             "warning", {"code": "final_answer_failed", "message": f"{type(exc).__name__}: {exc}"}
         )
         text = fallback_answer(ctx, type(exc).__name__, brief)
+    if closing_question and closing_question.strip() not in text:
+        text = f"{text.rstrip()}\n\n{closing_question.strip()}"
 
     records = await provenance.list(ctx.run_id)
     check, unknown = check_answer(text, records)
@@ -165,14 +179,14 @@ async def write_final_answer(
                 "message": f"dropped citations to unknown ids: {', '.join(unknown[:5])}",
             },
         )
-    await ctx.emit.emit(
-        "answer.final",
-        {
-            "markdown": check.markdown,
-            "citations": check.citations,
-            "unverified_numbers": check.unverified_numbers,
-        },
-    )
+    payload: dict[str, Any] = {
+        "markdown": check.markdown,
+        "citations": check.citations,
+        "unverified_numbers": check.unverified_numbers,
+    }
+    if discovery:
+        payload["discovery"] = discovery
+    await ctx.emit.emit("answer.final", payload)
     return check
 
 

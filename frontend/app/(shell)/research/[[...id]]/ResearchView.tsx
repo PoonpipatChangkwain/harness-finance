@@ -19,6 +19,7 @@ import type { TurnData } from "@/components/conversation/Turn";
 import { RESEARCH_TABS } from "@/components/inspector/RunInspectorTabs";
 import { useInspectorTabs } from "@/components/shell/InspectorRegistry";
 import { api, ApiError, type SessionDetail, type SkillInfo } from "@/lib/api";
+import { sendChatMessage } from "@/lib/chat";
 import { useNow } from "@/lib/hooks";
 import { isTerminal } from "@/stores/run-reducer";
 import { usePortfolioStore } from "@/stores/portfolio-store";
@@ -184,7 +185,7 @@ export function ResearchView({ sessionId }: { sessionId: string | null }) {
     try {
       let sid = sessionId;
       if (!sid) sid = (await api.createSession({ kind: "research" })).id;
-      const { run_id } = await api.postMessage(sid, { text: body, skill, llm: llmChoice, portfolio_ids: portfolioIds });
+      const { run_id } = await sendChatMessage(sid, { text: body, skill, llm: llmChoice, portfolio_ids: portfolioIds });
       const llmLabel = llmChoice ? `${llmChoice.provider}:${llmChoice.model}` : null;
       const used = portfolioIds.map((id) => portfolioNames.get(id) ?? id);
       setLocalTurns((prev) => [...prev, { key: run_id, text: body, skill, runId: run_id, llm: llmLabel, portfolios: used }]);

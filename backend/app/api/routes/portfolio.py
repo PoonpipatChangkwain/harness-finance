@@ -18,12 +18,13 @@ from __future__ import annotations
 import logging
 from datetime import UTC, datetime
 from decimal import Decimal
-from typing import Any, Literal
+from typing import Annotated, Any, Literal
 
-from fastapi import APIRouter, HTTPException, Query, Request
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
+from app.api.deps import current_user_id
 from app.api.routes.sessions import LLMChoice, _check_llm_choice
 from app.domain.models.portfolio import Portfolio, portfolio_context, portfolio_hash
 from app.domain.portfolio.analytics import PortfolioAnalytics
@@ -455,7 +456,11 @@ async def positions_preview(portfolio_id: str, body: PositionsPreviewRequest) ->
 
 
 @router.post("/portfolios/{portfolio_id}/advise", response_model=AdviseStarted)
-async def advise(portfolio_id: str, body: AdviseRequest | None = None) -> AdviseStarted:
+async def advise(
+    portfolio_id: str,
+    user_id: Annotated[str, Depends(current_user_id)],
+    body: AdviseRequest | None = None,
+) -> AdviseStarted:
     body = body or AdviseRequest()
     portfolio = await _require(portfolio_id)
     if not portfolio.positions:
@@ -464,6 +469,7 @@ async def advise(portfolio_id: str, body: AdviseRequest | None = None) -> Advise
         **body.model_dump(mode="json", exclude={"llm"}),
         "portfolio_id": portfolio_id,
         "portfolio_hash": portfolio_hash(portfolio),
+        "user_id": user_id,  # (P17) whose memory the advisor reads and writes
     }
     if body.llm is not None:
         run_input["llm"] = _check_llm_choice(body.llm)
@@ -621,8 +627,10 @@ async def get_default_analytics(fresh: bool = False) -> dict[str, Any]:
 
 
 @router.post("/portfolio/advise", response_model=AdviseStarted)
-async def advise_default(body: AdviseRequest | None = None) -> AdviseStarted:
-    return await advise(DEFAULT_ID, body)
+async def advise_default(
+    user_id: Annotated[str, Depends(current_user_id)], body: AdviseRequest | None = None
+) -> AdviseStarted:
+    return await advise(DEFAULT_ID, user_id, body)
 
 
 @router.get("/portfolio/plans")

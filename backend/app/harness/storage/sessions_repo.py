@@ -90,6 +90,15 @@ async def set_title(session_id: str, title: str) -> None:
             await s.commit()
 
 
+async def update_meta(session_id: str, values: dict[str, Any]) -> None:
+    """Merge ``values`` into ``session.meta`` (a new dict: the JSON column is not mutation-tracked)."""
+    async with session_scope() as s:
+        row = await s.get(SessionRow, session_id)
+        if row is not None:
+            row.meta = {**(row.meta or {}), **values}
+            await s.commit()
+
+
 async def add_message(
     session_id: str, role: str, content: str, *, run_id: str | None = None, meta: dict[str, Any] | None = None
 ) -> MessageRecord:

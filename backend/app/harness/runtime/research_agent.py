@@ -9,6 +9,8 @@ scratchpad; ``check`` number-checks a draft against the run's provenance.
 
 from __future__ import annotations
 
+from typing import Any
+
 from pydantic import BaseModel
 from ulid import ULID
 
@@ -73,6 +75,7 @@ class ResearchAgent:
         self.loop = AgentLoop(ctx, llm, executor, context)
         self.brief = ""
         self.prompt_versions: dict[str, str] = {}
+        self.context_blocks: list[str] = []
 
     def _tools_for(self, role_tools: list[str] | None) -> list[ToolSpec]:
         tools = self.tools.for_node(role_tools) if role_tools else self.tools.enabled()
@@ -117,7 +120,11 @@ class ResearchAgent:
     async def run_loop(self, req: AgentRunRequest) -> AgentRunResult:
         role = get_role(req.role)
         tools = self._tools_for(role.tools)
+        if req.context_blocks:  # (P17) kept for later passes (verify) that may not resend them
+            self.context_blocks = list(req.context_blocks)
         system = build_system_prompt(role, tools, self.skills)
+        if self.context_blocks:
+            system = f"{system}\n\n" + "\n\n".join(self.context_blocks)
         self.prompt_versions[role.name] = role.prompt_id
         if not self.loop.started:
             user = self.query
@@ -154,7 +161,15 @@ class ResearchAgent:
         records = await self.provenance.list(self.ctx.run_id)
         return check_answer(markdown, records)[0]
 
-    async def final_answer(self, *, role: str, stop_reason: str | None) -> AnswerCheck:
+    async def final_answer(
+        self,
+        *,
+        role: str,
+        stop_reason: str | None,
+        context_blocks: list[str] | None = None,
+        closing_question: str | None = None,
+        discovery: dict[str, Any] | None = None,
+    ) -> AnswerCheck:
         spec = get_role(role)
         return await write_final_answer(
             self.ctx,
@@ -166,4 +181,7 @@ class ResearchAgent:
             brief=self.brief,
             stop_reason=stop_reason,
             context_chars=context_budget_chars(self.context.window, self.context.config.chars_per_token),
+            context_blocks=self.context_blocks if context_blocks is None else context_blocks,
+            closing_question=closing_question,
+            discovery=discovery,
         )

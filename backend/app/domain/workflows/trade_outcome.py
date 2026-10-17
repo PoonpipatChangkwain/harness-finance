@@ -20,6 +20,7 @@ from pydantic import BaseModel, Field
 
 from app.domain.agents.library import get_role, role_profile
 from app.domain.compute.risk import realized_r
+from app.domain.memory.tags import market_tag
 from app.domain.models.provenance import ProvenanceRecord
 from app.domain.ports import LLMMessage
 
@@ -104,3 +105,43 @@ def reflection_messages(record: dict[str, Any], outcome: dict[str, Any], languag
         LLMMessage(role="system", content=role_profile(get_role("trade_reflector"))),
         LLMMessage(role="user", content=user),
     ]
+
+
+# (P17) ReasoningBank: a settled trade with an R becomes an anonymised lesson for every trader.
+R_SUCCESS = 0.2  # |R| within ±0.2 is a scratch: "mixed"
+
+
+def trade_lesson_inputs(record: dict[str, Any]) -> dict[str, Any] | None:
+    """``bank.distill`` arguments for a settled decision, or None when there is nothing to learn
+    (no R: not filled / cancelled). Pure: the summary says what happened; the bank scrubs it."""
+    outcome = record.get("outcome") or {}
+    r = outcome.get("r_multiple")
+    if not isinstance(r, int | float):
+        return None
+    card = record.get("card") or {}
+    signal = "success" if r > R_SUCCESS else "failure" if r < -R_SUCCESS else "mixed"
+    summary = "\n".join(
+        [
+            f"Trade: {card.get('side')} · horizon {card.get('horizon')} ({card.get('interval')} bars) · "
+            f"order {card.get('order') or card.get('order_type') or 'market'} "
+            f"· R:R {card.get('risk_reward')}",
+            f"Invalidation: {card.get('invalidation') or '(none)'}",
+            f"Thesis: {str(record.get('thesis') or '(none)')[:1500]}",
+            f"Outcome: {outcome.get('label')} · result {r:+.2f}R",
+            f"Trader's note: {outcome.get('note') or '(none)'}",
+            f"Reflection: {record.get('reflection') or '(none)'}",
+        ]
+    )
+    symbol = str(record.get("symbol") or card.get("symbol") or "")
+    tags = {
+        "workflow": "trade",
+        "market": market_tag(symbol) if symbol else None,
+        "horizon": card.get("horizon"),
+    }
+    return {
+        "run_summary": summary,
+        "success": r > 0,
+        "score": max(0.0, min(1.0, 0.5 + r / 4)),
+        "signal": signal,
+        "tags": {k: v for k, v in tags.items() if v},
+    }

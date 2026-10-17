@@ -56,7 +56,11 @@ async def test_tool_call_then_final_answer_event_order(settings: Settings) -> No
     t = types(events)
     assert t[0] == "run.started" and t[-1] == "run.finished"
     nodes = [p["node"] for p in of(events, "node.started")]
-    assert nodes == ["plan", "retrieve_analyze", "verify", "synthesize_report"]
+    # (P17) memory off: recall_memory / assess_discovery / learn run but do nothing (no LLM call)
+    assert nodes == [
+        "plan", "recall_memory", "assess_discovery", "retrieve_analyze", "verify", "synthesize_report",
+        "learn",
+    ]  # fmt: skip
     # node → llm → tool (concurrent batch) → context.usage → answer.final
     i_node = t.index("node.started")
     i_llm = t.index("llm.started")

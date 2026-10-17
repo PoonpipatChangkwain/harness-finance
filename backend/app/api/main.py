@@ -14,6 +14,7 @@ from app.api.routes.config import router as config_router
 from app.api.routes.dev import router as dev_router
 from app.api.routes.health import router as health_router
 from app.api.routes.market import router as market_router
+from app.api.routes.memory import router as memory_router
 from app.api.routes.portfolio import router as portfolio_router
 from app.api.routes.runs import router as runs_router
 from app.api.routes.sessions import router as sessions_router
@@ -75,3 +76,4 @@ app.include_router(trade_router, prefix=api_router_prefix)
 app.include_router(portfolio_router, prefix=api_router_prefix)
 app.include_router(settings_router, prefix=api_router_prefix)
 app.include_router(backtest_router, prefix=api_router_prefix)
+app.include_router(memory_router, prefix=api_router_prefix)

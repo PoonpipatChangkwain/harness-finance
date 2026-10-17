@@ -11,6 +11,7 @@ import { useRun } from "@/stores/run-store";
 import { useUiStore } from "@/stores/ui-store";
 
 import { ContextTab } from "./ContextTab";
+import { MemoryTab } from "./MemoryTab";
 import { ProvenanceTab } from "./ProvenanceTab";
 import { ScratchpadTab } from "./ScratchpadTab";
 import { TrajectoryTab } from "./TrajectoryTab";
@@ -30,4 +31,5 @@ export const RESEARCH_TABS: InspectorTab[] = [
   { id: "scratchpad", label: "Scratchpad", render: () => <WithRun>{(v) => <ScratchpadTab view={v} />}</WithRun> },
   { id: "provenance", label: "Provenance", render: () => <WithRun>{(v) => <ProvenanceTab view={v} />}</WithRun> },
   { id: "context", label: "Context", render: () => <WithRun>{(v) => <ContextTab view={v} />}</WithRun> },
+  { id: "memory", label: "Memory", render: () => <WithRun>{(v) => <MemoryTab view={v} />}</WithRun> },
 ];

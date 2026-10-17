@@ -10,7 +10,7 @@
 import { clsx } from "clsx";
 import { useState } from "react";
 
-import type { OutcomeKind, TradeOutcomeBody, TradeResult } from "@/lib/trade-api";
+import type { DistilledLesson, OutcomeKind, TradeOutcomeBody, TradeResult } from "@/lib/trade-api";
 
 const num = (v: unknown) =>
   typeof v === "number" ? v.toLocaleString("en-US", { maximumSignificantDigits: 6 }) : "–";
@@ -20,7 +20,8 @@ export function TradeOutcomePanel({
   onSettle,
 }: {
   result: TradeResult;
-  onSettle: (body: TradeOutcomeBody) => Promise<string | null>;
+  /** error text, or null / the lessons the backend distilled (P17) on success */
+  onSettle: (body: TradeOutcomeBody) => Promise<string | null | { distilled: DistilledLesson[] }>;
 }) {
   const card = result.card ?? {};
   const targets = Array.isArray(card.targets) ? (card.targets as number[]) : [];
@@ -30,14 +31,16 @@ export function TradeOutcomePanel({
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [distilled, setDistilled] = useState<DistilledLesson[] | null>(null);
 
   const submit = async (body: TradeOutcomeBody) => {
     setBusy(true);
     setError(null);
-    const err = await onSettle({ ...body, note: note.trim() });
+    const res = await onSettle({ ...body, note: note.trim() });
     setBusy(false);
-    if (err) setError(err);
+    if (typeof res === "string") setError(res);
     else {
+      setDistilled(res?.distilled ?? null);
       setEditing(false);
       setExitKind(null);
       setPrice("");
@@ -142,6 +145,11 @@ export function TradeOutcomePanel({
           ) : null}
         </div>
       )}
+      {distilled?.length && !editing ? (
+        <p data-testid="distilled-note" className="text-[12px] text-subtle" title={distilled.map((d) => d.title).join("\n")}>
+          บันทึกบทเรียน {distilled.length} ข้อลง ReasoningBank
+        </p>
+      ) : null}
       {error ? <p className="text-[12px] text-error">{error}</p> : null}
     </section>
   );

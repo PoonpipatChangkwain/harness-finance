@@ -5,7 +5,7 @@ import Ajv2020 from "ajv/dist/2020";
 import { describe, expect, it } from "vitest";
 
 import { EVENT_TYPES, parseTs } from "@/lib/events";
-import { FIXTURE_NAMES, TRADING_FIXTURES, loadFixture, loadTradingRun } from "@/tests/fixtures";
+import { FIXTURE_NAMES, TRADING_FIXTURES, loadDiscoveryRuns, loadFixture, loadTradingRun } from "@/tests/fixtures";
 
 const SCHEMA_PATH = path.join(import.meta.dirname, "../../../backend/schemas/events.schema.json");
 
@@ -25,14 +25,24 @@ const validate = new Ajv2020({ strict: false, validateFormats: false, allErrors:
 
 describe("event envelope schema", () => {
   it("has one TS event type per backend payload model", () => {
-    const backendTypes = ((schema.oneOf as { $ref: string }[]) ?? []).map((r) => r.$ref);
-    expect(backendTypes).toHaveLength(EVENT_TYPES.length);
+    // "#/$defs/Event_run_started" → "run.started" (every type has one dot except "warning")
+    const backendTypes = ((schema.oneOf as { $ref: string }[]) ?? []).map((r) =>
+      r.$ref.replace("#/$defs/Event_", "").replace("_", "."),
+    );
+    expect(new Set(backendTypes).size).toBe(backendTypes.length);
+    expect(new Set(backendTypes)).toEqual(new Set<string>(EVENT_TYPES));
   });
 
   it.each(FIXTURE_NAMES)("every event of fixture %s passes the backend schema", (name) => {
     for (const e of loadFixture(name)) {
       const ok = validate(e);
       expect(ok, `${name} seq ${e.seq} ${e.type}: ${JSON.stringify(validate.errors?.slice(0, 2))}`).toBe(true);
+    }
+  });
+
+  it("every event of the 5 Whys fixture (research-discovery.jsonl) passes the backend schema", () => {
+    for (const e of loadDiscoveryRuns().flat()) {
+      expect(validate(e), `discovery seq ${e.seq} ${e.type}: ${JSON.stringify(validate.errors?.slice(0, 2))}`).toBe(true);
     }
   });
 
