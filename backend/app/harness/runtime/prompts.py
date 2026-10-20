@@ -11,6 +11,7 @@ user's language.
 
 from __future__ import annotations
 
+import re
 from datetime import UTC, datetime
 
 from app.domain.agents.library import RoleSpec, role_profile
@@ -88,8 +89,8 @@ Stop calling tools once you have enough data. Reply with a short plain-text rese
 FINAL_SYSTEM_PROMPT = """You write the final answer of a financial research session for the user. You are the {title}.
 
 Rules:
-1. Answer in the same language as the user's question (Thai question → Thai answer).
-2. Every number must come from the DATA section. Right after each number put a citation marker [^prov_…] with a provenance id listed on the tool result it came from, e.g. "ปิดที่ 34.50 บาท [^prov_01J8…]".
+1. Answer in the same language as the user's question (Thai question → Thai answer, English question → English answer).
+2. Every number must come from the DATA section. Right after each number put a citation marker [^prov_…] with a provenance id listed on the tool result it came from, written exactly like this with no spaces: "closed at 34.50 THB [^prov_01J8…]". One id per marker.
 3. Copy numbers exactly as they appear in DATA (you may shorten 109417000000 to 109.417 billion, but never round differently). Never calculate new numbers (sums, averages, growth, differences, conversions, projections). If a number is needed but not in DATA, say it is not available.
 4. The research brief is a guide only; a number from the brief may be used only if it also appears in DATA.
 5. Say which data was unavailable or failed, if it matters to the answer.
@@ -97,9 +98,36 @@ Rules:
 7. If DATA says "(no tool results)" or lacks the numbers asked for, do not state any market or financial figures; explain that the data could not be retrieved.
 8. Accuracy over comfort: if the data contradicts the user's premise, say so plainly. Use a professional, objective tone without excessive praise.
 9. Don't narrate the research process, don't ask the user for raw data, and don't expose implementation details (tool names, JSON, provenance ids outside the citation markers); if data is incomplete, answer with what you have.
-10. End with one short disclaimer line: the answer is information, not investment advice (Thai: "ข้อมูลนี้ไม่ใช่คำแนะนำการลงทุน")."""
+10. End with one short disclaimer line in the answer's language: the answer is information, not investment advice (Thai: "ข้อมูลนี้ไม่ใช่คำแนะนำการลงทุน")."""
 
 # (P17 §17.2) research_then_ask: answer first, then the discovery question as the only question.
 CLOSING_QUESTION_RULE = """## Closing question
 Answer the question completely first (rules above). Then, as the very last line after the disclaimer, ask exactly this one question, word for word, and ask no other question anywhere in the answer:
 {question}"""
+
+_THAI_RE = re.compile(r"[\u0E00-\u0E7F]")
+_LATIN_RE = re.compile(r"[A-Za-z]")
+
+
+def detect_language(text: str) -> str | None:
+    """ "Thai" / "English" from the script of the question; None when neither (other languages)."""
+    thai, latin = len(_THAI_RE.findall(text)), len(_LATIN_RE.findall(text))
+    if thai and thai * 4 >= latin:  # "PTT น่าซื้อไหม" is Thai; "what about ปตท" is English
+        return "Thai"
+    if latin:
+        return "English"
+    return None
+
+
+DISCLAIMERS = {"Thai": "ข้อมูลนี้ไม่ใช่คำแนะนำการลงทุน", "English": "This is information, not investment advice."}
+
+# Models drift to Thai when the profile, memory or earlier turns are Thai; the code decides instead.
+LANGUAGE_RULE = """## Answer language
+The user's question is in {language}. Write the ENTIRE answer in {language} — headings, table headers, notes and the disclaimer ("{disclaimer}") — even if the investor profile, memory, research brief or earlier turns are in another language. Keep tickers, company names and numbers as they are."""
+
+
+def language_rule(query: str) -> str:
+    language = detect_language(query)
+    if language is None:
+        return ""
+    return LANGUAGE_RULE.format(language=language, disclaimer=DISCLAIMERS[language])

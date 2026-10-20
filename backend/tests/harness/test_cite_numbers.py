@@ -57,3 +57,34 @@ def test_implied_scale_cites_only_within_written_rounding() -> None:
     rev = new_record("data", {"revenue": 10_990_000_000.0}, source="sec_edgar")
     assert cite_numbers("Xiaomi 10,999 หยวน", [rev]) == "Xiaomi 10,999 หยวน"
     assert cite_numbers("| Revenue (USD mn) | 10,990 |", [rev]) == f"| Revenue (USD mn) | 10,990[^{rev.id}] |"
+
+
+def test_loose_markers_are_resolved_not_leaked() -> None:
+    from app.harness.runtime.final_answer import check_answer
+
+    text = (
+        f"- DCF value **≈ $34.5** [ ^{SPECIFIC.id} ]\n"
+        f"- vol 28.49% [{RATIO.id}] and close ({'^' + SPECIFIC.id}), both [^{SPECIFIC.id}, ^{RATIO.id}]"
+    )
+    check, unknown = check_answer(text, [SPECIFIC, RATIO])
+    assert "prov_" not in check.markdown and unknown == []
+    assert "$34.5** [1]" in check.markdown and "[1][1]" not in check.markdown
+    assert "28.49% [2]" in check.markdown and "both [1][2]" in check.markdown
+
+
+def test_stray_and_unknown_ids_are_removed() -> None:
+    resolved = resolve_citations(
+        "price 34.5 [ ^prov_01UNKNOWNID0000 ] see prov_01M5CKG1K2KBN11WFYX0", {SPECIFIC.id}
+    )
+    assert "prov_" not in resolved.markdown and resolved.unknown_ids == ["prov_01UNKNOWNID0000"]
+
+
+def test_answer_language_follows_the_question() -> None:
+    from app.harness.runtime.prompts import detect_language, language_rule
+
+    assert detect_language("Value AAPL with a DCF") == "English"
+    assert detect_language("PTT น่าซื้อไหม") == "Thai"
+    assert detect_language("ประเมินมูลค่า AAPL ด้วย DCF") == "Thai"
+    assert detect_language("what do you think about ปตท right now?") == "English"
+    assert detect_language("123 ???") is None and language_rule("123") == ""
+    assert "ENTIRE answer in English" in language_rule("Value AAPL with a DCF")

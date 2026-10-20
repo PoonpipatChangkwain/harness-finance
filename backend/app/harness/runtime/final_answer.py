@@ -17,11 +17,16 @@ from typing import Any
 from app.domain.models.provenance import ProvenanceRecord
 from app.domain.ports import AnswerCheck, LLMMessage, LLMPort
 from app.harness.context.compact import fit_text
-from app.harness.provenance.citations import resolve_citations, strip_citation_markers
+from app.harness.provenance.citations import normalize_markers, resolve_citations, strip_citation_markers
 from app.harness.provenance.number_check import cite_numbers, find_unverified_numbers
 from app.harness.provenance.store import ProvenanceStore
 from app.harness.runtime.context import RunContext
-from app.harness.runtime.prompts import CLOSING_QUESTION_RULE, FINAL_SYSTEM_PROMPT
+from app.harness.runtime.prompts import (
+    CLOSING_QUESTION_RULE,
+    FINAL_SYSTEM_PROMPT,
+    detect_language,
+    language_rule,
+)
 from app.harness.state.scratchpad import format_tool_result
 
 logger = logging.getLogger(__name__)
@@ -62,7 +67,8 @@ def final_context(ctx: RunContext, max_chars: int) -> str:
 
 
 def check_answer(markdown: str, records: list[ProvenanceRecord]) -> tuple[AnswerCheck, list[str]]:
-    resolved = resolve_citations(cite_numbers(markdown, records), {r.id for r in records})
+    # normalize first so cite_numbers sees "[ ^prov_x ]" as an existing citation
+    resolved = resolve_citations(cite_numbers(normalize_markers(markdown), records), {r.id for r in records})
     unverified = find_unverified_numbers(strip_citation_markers(resolved.markdown), records)
     check = AnswerCheck(
         markdown=resolved.markdown,
@@ -142,6 +148,9 @@ async def write_final_answer(
         system = f"{system}\n\n" + "\n\n".join(context_blocks)
     if closing_question:
         system = f"{system}\n\n{CLOSING_QUESTION_RULE.format(question=closing_question)}"
+    if rule := language_rule(query):  # last, so it wins over Thai profile/memory blocks
+        system = f"{system}\n\n{rule}"
+        user = f"{user}\n\n(Answer language: {detect_language(query)})"
     messages = [
         LLMMessage(role="system", content=system),
         *history,
