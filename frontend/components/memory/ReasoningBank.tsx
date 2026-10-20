@@ -12,6 +12,7 @@ import { Archive, Search } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 
 import { shortId } from "@/lib/format";
+import { tr, useT } from "@/lib/i18n";
 import {
   memoryApi,
   type ReasoningDetailOut,
@@ -29,13 +30,23 @@ export const KIND_STYLE: Record<string, { label: string; className: string }> = 
 };
 
 const WORKFLOWS = [
-  { id: "", label: "ทุก workflow" },
+  {
+    id: "",
+    get label() {
+      return tr("ทุก workflow", "All workflows");
+    },
+  },
   { id: "research", label: "research" },
   { id: "portfolio", label: "portfolio" },
   { id: "trade", label: "trade" },
 ];
 const KINDS = [
-  { id: "", label: "ทุกชนิด" },
+  {
+    id: "",
+    get label() {
+      return tr("ทุกชนิด", "All kinds");
+    },
+  },
   { id: "strategy", label: "strategy" },
   { id: "pitfall", label: "pitfall" },
   { id: "coaching", label: "coaching" },
@@ -60,11 +71,12 @@ export function tagList(tags: ReasoningTags): string[] {
 }
 
 function Stats({ stats }: { stats: ReasoningStats | null }) {
+  const t = useT();
   if (!stats) return null;
   const tiles: [string, string][] = [
-    ["ทั้งหมด", String(stats.total)],
-    ["ใช้งานอยู่", String(stats.active)],
-    ["success rate เฉลี่ย", stats.avg_success_rate === null ? "–" : `${Math.round(stats.avg_success_rate * 100)}%`],
+    [t("ทั้งหมด", "Total"), String(stats.total)],
+    [t("ใช้งานอยู่", "Active"), String(stats.active)],
+    [t("success rate เฉลี่ย", "Avg success rate"), stats.avg_success_rate === null ? "–" : `${Math.round(stats.avg_success_rate * 100)}%`],
     ...Object.entries(stats.by_kind).map(([k, n]): [string, string] => [k, String(n)]),
   ];
   return (
@@ -80,6 +92,7 @@ function Stats({ stats }: { stats: ReasoningStats | null }) {
 }
 
 function DetailDrawer({ id, onClose, onRetired }: { id: string; onClose: () => void; onRetired: () => void }) {
+  const t = useT();
   const [detail, setDetail] = useState<ReasoningDetailOut | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -107,7 +120,7 @@ function DetailDrawer({ id, onClose, onRetired }: { id: string; onClose: () => v
 
   const item = detail?.item;
   return (
-    <Drawer label={item?.title ?? "บทเรียน"} onClose={onClose}>
+    <Drawer label={item?.title ?? t("บทเรียน", "Lesson")} onClose={onClose}>
       {error ? <p className="mb-2 text-error">{error}</p> : null}
       {!item && !error ? <div className="h-32 animate-pulse rounded-md bg-layer-2" /> : null}
       {item ? (
@@ -123,19 +136,20 @@ function DetailDrawer({ id, onClose, onRetired }: { id: string; onClose: () => v
           <p className="text-muted">{item.description}</p>
           <div className="whitespace-pre-wrap rounded-md bg-layer-2/60 p-2 text-[13px] text-fg">{item.content}</div>
           <dl className="num grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-[12px]">
-            <dt className="text-subtle">ใช้ไป</dt>
+            <dt className="text-subtle">{t("ใช้ไป", "Used")}</dt>
             <dd>
-              {item.use_count} ครั้ง · สำเร็จ {item.success_count}
+              {t(`${item.use_count} ครั้ง · สำเร็จ ${item.success_count}`, `${item.use_count} times · ${item.success_count} succeeded`)}
             </dd>
             <dt className="text-subtle">success rate</dt>
             <dd>
               <RatioBar value={item.success_rate} label="success rate" />
             </dd>
-            <dt className="text-subtle">จาก run</dt>
+            <dt className="text-subtle">{t("จาก run", "From runs")}</dt>
             <dd>
-              {item.source_count} แหล่ง{item.source_run_id ? ` · ${shortId(item.source_run_id)}` : ""}
+              {t(`${item.source_count} แหล่ง`, `${item.source_count} source(s)`)}
+              {item.source_run_id ? ` · ${shortId(item.source_run_id)}` : ""}
             </dd>
-            <dt className="text-subtle">ผลที่มา</dt>
+            <dt className="text-subtle">{t("ผลที่มา", "Outcome")}</dt>
             <dd>
               {item.outcome_signal}
               {item.judge_score != null ? ` (${item.judge_score.toFixed(2)})` : ""}
@@ -149,18 +163,18 @@ function DetailDrawer({ id, onClose, onRetired }: { id: string; onClose: () => v
                 </dd>
               </>
             ) : null}
-            <dt className="text-subtle">สร้าง</dt>
+            <dt className="text-subtle">{t("สร้าง", "Created")}</dt>
             <dd>{formatDate(item.created_at)}</dd>
           </dl>
           <section>
-            <h3 className="mb-1 text-[11px] uppercase tracking-wide text-subtle">การใช้ล่าสุด · {detail.uses.length}</h3>
-            {detail.uses.length === 0 ? <p className="text-subtle">ยังไม่มี run ที่ใช้บทเรียนนี้</p> : null}
+            <h3 className="mb-1 text-[11px] uppercase tracking-wide text-subtle">{t("การใช้ล่าสุด", "Recent uses")} · {detail.uses.length}</h3>
+            {detail.uses.length === 0 ? <p className="text-subtle">{t("ยังไม่มี run ที่ใช้บทเรียนนี้", "No run has used this lesson yet")}</p> : null}
             <ul className="space-y-1">
               {detail.uses.map((u) => (
                 <li key={`${u.run_id}-${u.created_at}`} data-testid="rb-use" className="num flex items-center gap-2 text-[12px]">
                   <span className="text-muted">{shortId(u.run_id)}</span>
                   <span className={u.outcome === "success" ? "text-done" : u.outcome === "failure" ? "text-error" : "text-subtle"}>
-                    {u.outcome ?? "รอผล"}
+                    {u.outcome ?? t("รอผล", "pending")}
                   </span>
                   <span className="ml-auto text-subtle">{formatDate(u.created_at)}</span>
                 </li>
@@ -175,7 +189,7 @@ function DetailDrawer({ id, onClose, onRetired }: { id: string; onClose: () => v
               onClick={() => void retire()}
               className="inline-flex items-center gap-1 rounded-md bg-layer-2 px-3 py-1 text-[12.5px] text-fg hover:bg-error/10 hover:text-error disabled:opacity-50"
             >
-              <Archive className="size-3.5" aria-hidden /> ปิดบทเรียนนี้ (retire)
+              <Archive className="size-3.5" aria-hidden /> {t("ปิดบทเรียนนี้ (retire)", "Retire this lesson")}
             </button>
           ) : null}
         </div>
@@ -185,6 +199,7 @@ function DetailDrawer({ id, onClose, onRetired }: { id: string; onClose: () => v
 }
 
 export function ReasoningBank() {
+  const t = useT();
   const [workflow, setWorkflow] = useState("");
   const [kind, setKind] = useState("");
   const [q, setQ] = useState("");
@@ -225,7 +240,10 @@ export function ReasoningBank() {
   return (
     <div data-testid="reasoning-bank" className="space-y-3">
       <p className="text-[12px] text-muted">
-        บทเรียนที่ระบบกลั่นจาก run ที่สำเร็จและล้มเหลว (ไม่มีชื่อหุ้นในพอร์ต จำนวนเงิน หรือข้อมูลส่วนตัว) — run ใหม่ดึง 1–2 ข้อที่ใกล้ที่สุดไปใช้ และ success rate อัปเดตตามผลจริง
+        {t(
+          "บทเรียนที่ระบบกลั่นจาก run ที่สำเร็จและล้มเหลว (ไม่มีชื่อหุ้นในพอร์ต จำนวนเงิน หรือข้อมูลส่วนตัว) — run ใหม่ดึง 1–2 ข้อที่ใกล้ที่สุดไปใช้ และ success rate อัปเดตตามผลจริง",
+          "Lessons distilled from successful and failed runs (no portfolio tickers, amounts or personal data) — each new run pulls the 1–2 closest ones, and the success rate updates with real outcomes",
+        )}
       </p>
       <Stats stats={stats} />
       <div className="flex flex-wrap items-center gap-2 text-[12.5px]">
@@ -246,19 +264,22 @@ export function ReasoningBank() {
         <label className="flex min-w-0 flex-1 items-center gap-1 rounded-md border border-line bg-bg px-2 py-1 sm:max-w-xs">
           <Search className="size-3.5 shrink-0 text-subtle" aria-hidden />
           <input
-            aria-label="ค้นหาบทเรียน"
+            aria-label={t("ค้นหาบทเรียน", "Search lessons")}
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder="ค้นหา…"
+            placeholder={t("ค้นหา…", "Search…")}
             className="min-w-0 flex-1 bg-transparent text-fg outline-none placeholder:text-subtle"
           />
         </label>
       </div>
-      {error ? <p className="text-[12.5px] text-error">โหลด ReasoningBank ไม่ได้: {error}</p> : null}
+      {error ? <p className="text-[12.5px] text-error">{t("โหลด ReasoningBank ไม่ได้", "Could not load the ReasoningBank")}: {error}</p> : null}
       {!items && !error ? <div className="h-32 animate-pulse rounded-md bg-layer-1" /> : null}
       {items && items.length === 0 ? (
         <p data-testid="rb-empty" className="rounded-lg border border-dashed border-line p-6 text-center text-[12.5px] text-subtle">
-          ยังไม่มีบทเรียน — จะเกิดหลังอนุมัติ/ปฏิเสธแผนของ advisor หรือ research ที่ตัดสินผลได้
+          {t(
+            "ยังไม่มีบทเรียน — จะเกิดหลังอนุมัติ/ปฏิเสธแผนของ advisor หรือ research ที่ตัดสินผลได้",
+            "No lessons yet — they appear after you approve/reject an advisor plan or a research run with a clear outcome",
+          )}
         </p>
       ) : null}
       {items && items.length ? (
@@ -266,13 +287,13 @@ export function ReasoningBank() {
           <table className="w-full min-w-[720px] text-left text-[12.5px]">
             <thead className="bg-layer-1 text-[11px] uppercase tracking-wide text-subtle">
               <tr>
-                <th className="px-3 py-2 font-medium">บทเรียน</th>
-                <th className="px-2 py-2 font-medium">ชนิด</th>
+                <th className="px-3 py-2 font-medium">{t("บทเรียน", "Lesson")}</th>
+                <th className="px-2 py-2 font-medium">{t("ชนิด", "Kind")}</th>
                 <th className="px-2 py-2 font-medium">workflow</th>
                 <th className="px-2 py-2 font-medium">tags</th>
-                <th className="px-2 py-2 text-right font-medium">ใช้</th>
+                <th className="px-2 py-2 text-right font-medium">{t("ใช้", "Uses")}</th>
                 <th className="px-2 py-2 font-medium">success</th>
-                <th className="px-3 py-2 font-medium">สร้าง</th>
+                <th className="px-3 py-2 font-medium">{t("สร้าง", "Created")}</th>
               </tr>
             </thead>
             <tbody>

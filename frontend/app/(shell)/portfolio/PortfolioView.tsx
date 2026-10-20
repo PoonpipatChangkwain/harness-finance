@@ -36,6 +36,7 @@ import { useInspectorTabs } from "@/components/shell/InspectorRegistry";
 import { StateDot, dotFor } from "@/components/ui/StateDot";
 import { api, ApiError } from "@/lib/api";
 import { buildPositions, mergePositions, remapErrors, rowsFromBook, type EntryMode } from "@/lib/holdings";
+import { localized, tr, useT } from "@/lib/i18n";
 import {
   entryErrors,
   portfolioApi,
@@ -54,17 +55,17 @@ import { useUiStore } from "@/stores/ui-store";
 
 const REFRESH_MS = 60_000;
 const OPEN_RUN = new Set(["pending", "running", "waiting_approval", "interrupted"]);
-const OUTCOME: Record<string, string> = {
-  approved: "อนุมัติ · บันทึกแผนแล้ว",
-  declined: "ไม่อนุมัติ",
-  rejected: "ผิด policy / แก้แล้วไม่ผ่าน",
-  no_change: "AI เห็นว่าไม่ต้องปรับ",
-  no_proposal: "ไม่มีข้อเสนอที่ใช้ได้",
-  unavailable: "คำนวณไม่ได้",
-  unvalued: "พอร์ตแบบ % อย่างเดียว",
-  not_provided: "ยังไม่มีพอร์ต",
-  empty: "พอร์ตว่าง",
-};
+const OUTCOME: Record<string, string> = localized({
+  approved: ["อนุมัติ · บันทึกแผนแล้ว", "Approved · plan saved"],
+  declined: ["ไม่อนุมัติ", "Declined"],
+  rejected: ["ผิด policy / แก้แล้วไม่ผ่าน", "Policy violation / edit did not pass"],
+  no_change: ["AI เห็นว่าไม่ต้องปรับ", "The AI sees no need to rebalance"],
+  no_proposal: ["ไม่มีข้อเสนอที่ใช้ได้", "No usable proposal"],
+  unavailable: ["คำนวณไม่ได้", "Could not compute"],
+  unvalued: ["พอร์ตแบบ % อย่างเดียว", "Percent-only portfolio"],
+  not_provided: ["ยังไม่มีพอร์ต", "No portfolio yet"],
+  empty: ["พอร์ตว่าง", "Empty portfolio"],
+});
 
 function useSectorLimit(): { limit: number; label: string } {
   const [state, setState] = useState({ limit: 0.4, label: "advisor · balanced" });
@@ -91,24 +92,28 @@ function EmptyState({
   onPercent: () => void;
   onImport: () => void;
 }) {
+  const t = useT();
   return (
     <div data-testid="portfolio-empty" className="mx-auto flex max-w-lg flex-col items-center gap-3 py-12 text-center">
-      <h2 className="text-[18px] font-semibold">ยังไม่มีข้อมูลพอร์ต</h2>
+      <h2 className="text-[18px] font-semibold">{t("ยังไม่มีข้อมูลพอร์ต", "No portfolio data yet")}</h2>
       <p className="text-[13px] text-muted">
-        กรอก position ของคุณ แล้วระบบจะดึงราคา คำนวณน้ำหนัก กำไร/ขาดทุน และความเสี่ยงให้ — ทุกตัวเลขตรวจที่มาได้ (ไม่มีการส่งคำสั่งซื้อขายจริง)
+        {t(
+          "กรอก position ของคุณ แล้วระบบจะดึงราคา คำนวณน้ำหนัก กำไร/ขาดทุน และความเสี่ยงให้ — ทุกตัวเลขตรวจที่มาได้ (ไม่มีการส่งคำสั่งซื้อขายจริง)",
+          "Enter your positions and the system fetches prices and computes weights, P/L and risk — every number is traceable (no real orders are sent)",
+        )}
       </p>
       <div className="flex flex-wrap justify-center gap-2">
         <button type="button" data-testid="empty-add" onClick={onAdd} className="inline-flex items-center gap-1 rounded-md bg-accent px-3 py-1.5 text-[13px] text-bg">
-          <Plus className="size-4" aria-hidden /> เพิ่ม position
+          <Plus className="size-4" aria-hidden /> {t("เพิ่ม position", "Add position")}
         </button>
         <button type="button" data-testid="empty-paste" onClick={onPaste} className="inline-flex items-center gap-1 rounded-md bg-layer-2 px-3 py-1.5 text-[13px]">
-          <ClipboardPaste className="size-4" aria-hidden /> วางข้อความจากแอปโบรกเกอร์
+          <ClipboardPaste className="size-4" aria-hidden /> {t("วางข้อความจากแอปโบรกเกอร์", "Paste from your broker app")}
         </button>
         <button type="button" data-testid="empty-import" onClick={onImport} className="inline-flex items-center gap-1 rounded-md bg-layer-2 px-3 py-1.5 text-[13px]">
           <FileUp className="size-4" aria-hidden /> Import CSV
         </button>
         <button type="button" data-testid="empty-percent" onClick={onPercent} className="inline-flex items-center gap-1 rounded-md bg-layer-2 px-3 py-1.5 text-[13px]">
-          <Percent className="size-4" aria-hidden /> กรอกแบบ %
+          <Percent className="size-4" aria-hidden /> {t("กรอกแบบ %", "Enter as %")}
         </button>
       </div>
     </div>
@@ -116,6 +121,7 @@ function EmptyState({
 }
 
 function BookDetail({ id, brief }: { id: string; brief: PortfolioBrief | null }) {
+  const t = useT();
   const revision = usePortfolioStore((s) => s.revision);
   const bump = usePortfolioStore((s) => s.bump);
   const reloadList = usePortfolioStore((s) => s.reload);
@@ -223,7 +229,7 @@ function BookDetail({ id, brief }: { id: string; brief: PortfolioBrief | null })
 
   const save = async (positions: PositionInput[], cash: string | null): Promise<EntryError[] | null> => {
     try {
-      const out = await portfolioApi.put(id, { positions, cash, ...(book ? {} : { name: brief?.name ?? "พอร์ตหลัก" }) });
+      const out = await portfolioApi.put(id, { positions, cash, ...(book ? {} : { name: brief?.name ?? tr("พอร์ตหลัก", "Main portfolio") }) });
       setBook(out);
       setStartWith(null);
       bump();
@@ -259,7 +265,7 @@ function BookDetail({ id, brief }: { id: string; brief: PortfolioBrief | null })
 
   if (book === undefined) {
     return bookError ? (
-      <p className="text-[12.5px] text-error">โหลดพอร์ตไม่ได้: {bookError}</p>
+      <p className="text-[12.5px] text-error">{t("โหลดพอร์ตไม่ได้", "Could not load the portfolio")}: {bookError}</p>
     ) : (
       <div className="h-48 animate-pulse rounded-md bg-layer-1" />
     );
@@ -290,7 +296,7 @@ function BookDetail({ id, brief }: { id: string; brief: PortfolioBrief | null })
             <SummaryTiles analytics={analytics} />
           </>
         ) : analyticsError ? (
-          <p className="rounded-md bg-error/10 px-3 py-1.5 text-[12.5px] text-error">คำนวณ analytics ไม่ได้: {analyticsError}</p>
+          <p className="rounded-md bg-error/10 px-3 py-1.5 text-[12.5px] text-error">{t("คำนวณ analytics ไม่ได้", "Could not compute analytics")}: {analyticsError}</p>
         ) : (
           <div data-testid="analytics-skeleton" className="grid grid-cols-2 gap-2 md:grid-cols-3 xl:grid-cols-6">
             {Array.from({ length: 6 }, (_, i) => (
@@ -311,7 +317,7 @@ function BookDetail({ id, brief }: { id: string; brief: PortfolioBrief | null })
           portfolioId={id}
         />
       ) : null}
-      {loadingAnalytics && analytics ? <p className="text-[11px] text-subtle">กำลังอัปเดตราคา…</p> : null}
+      {loadingAnalytics && analytics ? <p className="text-[11px] text-subtle">{t("กำลังอัปเดตราคา…", "Updating prices…")}</p> : null}
 
       {hasPositions && analytics && !analytics.weights_declared_only ? (
         <>
@@ -337,16 +343,16 @@ function BookDetail({ id, brief }: { id: string; brief: PortfolioBrief | null })
         ) : view && !runDone ? (
           <div data-testid="advisor-running" className="flex items-center gap-2 rounded-md border border-line bg-layer-1 px-3 py-2 text-[12.5px]">
             <StateDot state="ongoing" label="running" />
-            AI Advisor กำลังวิเคราะห์ — ดูขั้นตอนได้ใน inspector
+            {t("AI Advisor กำลังวิเคราะห์ — ดูขั้นตอนได้ใน inspector", "The AI Advisor is analyzing — follow the steps in the inspector")}
             <button type="button" onClick={() => runId && selectRun(runId)} className="ml-auto text-accent">
-              ดู process
+              {t("ดู process", "View process")}
             </button>
           </div>
         ) : lastRun?.finished_at ? (
           <details data-testid="advisor-result" className="rounded-md border border-line bg-layer-1 px-3 py-2 text-[12.5px]">
             <summary className="flex cursor-pointer items-center gap-2">
               <StateDot state={dotFor(lastRun.status)} label={lastRun.status} />
-              ผล advisor ล่าสุด: <b>{OUTCOME[lastRun.outcome ?? ""] ?? lastRun.outcome ?? lastRun.status}</b>
+              {t("ผล advisor ล่าสุด", "Latest advisor result")}: <b>{OUTCOME[lastRun.outcome ?? ""] ?? lastRun.outcome ?? lastRun.status}</b>
               {lastRun.plan_id ? <span className="num text-subtle">plan {lastRun.plan_id.slice(-8)}</span> : null}
             </summary>
             {lastRun.report_md ? (
@@ -395,6 +401,7 @@ function BookDetail({ id, brief }: { id: string; brief: PortfolioBrief | null })
 }
 
 export function PortfolioView() {
+  const t = useT();
   useInspectorTabs(PORTFOLIO_TABS);
   const router = useRouter();
   const search = useSearchParams();
@@ -452,7 +459,7 @@ export function PortfolioView() {
               onClick={() => go(ALL)}
               className={clsx("rounded-full border px-3 py-0.5 text-[12.5px]", selectedId === ALL ? "border-accent bg-accent-muted text-accent" : "border-line text-muted hover:text-fg")}
             >
-              ทั้งหมด
+              {t("ทั้งหมด", "All")}
             </button>
           ) : null}
           {portfolios.map((p) => (
@@ -477,19 +484,19 @@ export function PortfolioView() {
             onClick={() => setForm("create")}
             className="inline-flex items-center gap-1 rounded-full border border-dashed border-line px-2.5 py-0.5 text-[12.5px] text-muted hover:text-fg"
           >
-            <Plus className="size-3.5" aria-hidden /> พอร์ตใหม่
+            <Plus className="size-3.5" aria-hidden /> {t("พอร์ตใหม่", "New portfolio")}
           </button>
         </nav>
         <span className="flex-1" />
         {brief ? (
           <button type="button" onClick={() => setForm("edit")} className="inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[12px] text-muted hover:bg-layer-2">
-            <Settings2 className="size-3.5" aria-hidden /> ตั้งค่าพอร์ต
+            <Settings2 className="size-3.5" aria-hidden /> {t("ตั้งค่าพอร์ต", "Portfolio settings")}
           </button>
         ) : null}
       </header>
 
       <div className="min-h-0 flex-1 overflow-y-auto px-4 py-3">
-        {error && !portfolios.length ? <p className="text-[12.5px] text-error">โหลดรายการพอร์ตไม่ได้: {error}</p> : null}
+        {error && !portfolios.length ? <p className="text-[12.5px] text-error">{t("โหลดรายการพอร์ตไม่ได้", "Could not load the portfolio list")}: {error}</p> : null}
         {!loaded || !selectedId ? (
           <div className="h-48 animate-pulse rounded-md bg-layer-1" />
         ) : selectedId === ALL ? (

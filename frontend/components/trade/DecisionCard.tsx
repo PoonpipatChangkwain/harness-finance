@@ -12,6 +12,7 @@ import { useEffect, useState } from "react";
 
 import { CitationChip, loadProvenance } from "@/components/conversation/CitationChip";
 import type { ProvenanceRecord } from "@/lib/api";
+import { intlLocale, useT } from "@/lib/i18n";
 import {
   answeredApproval,
   orderLabel,
@@ -97,7 +98,8 @@ export function VerdictBadge({ verdict, confidence }: { verdict: string; confide
 }
 
 export function PolicyList({ results }: { results: PolicyResult[] }) {
-  if (!results.length) return <p className="text-[12.5px] text-subtle">ยังไม่ได้ตรวจ policy</p>;
+  const t = useT();
+  if (!results.length) return <p className="text-[12.5px] text-subtle">{t("ยังไม่ได้ตรวจ policy", "Policy not checked yet")}</p>;
   return (
     <ul data-testid="policy-results" className="space-y-0.5 text-[12.5px]">
       {results.map((r) => {
@@ -137,6 +139,7 @@ export function DecisionCard({
   runId: string;
   load?: Loader;
 }) {
+  const t = useT();
   const decision = detail.decision;
   const approval = answeredApproval(detail);
   // latest numbers: re-priced at approval > re-priced at the live quote > the PM's snapshot sizing
@@ -157,7 +160,7 @@ export function DecisionCard({
   const currency = sizing.currency ?? detail.instrument?.currency ?? "";
   const invalidation = String(detail.trade_proposal?.proposal?.invalidation ?? "").trim();
   const pending = orderLabel(sizing.order);
-  const when = (iso: string) => new Date(iso).toLocaleString("th-TH", { dateStyle: "short", timeStyle: "short" });
+  const when = (iso: string) => new Date(iso).toLocaleString(intlLocale(), { dateStyle: "short", timeStyle: "short" });
 
   return (
     <section data-testid="decision-card" className="space-y-3 rounded-lg border border-line bg-layer-1 p-3">
@@ -180,7 +183,7 @@ export function DecisionCard({
         <span className="ml-auto text-[11.5px] uppercase text-muted">{sizing.side}</span>
         {edited ? (
           <span data-testid="edited-note" className="rounded-sm bg-warning/15 px-1.5 py-0.5 text-[11.5px] text-warning">
-            แก้ไขโดยผู้อนุมัติ · size {pct(edited.final_size_pct)}
+            {t("แก้ไขโดยผู้อนุมัติ", "Edited by approver")} · size {pct(edited.final_size_pct)}
           </span>
         ) : null}
       </header>
@@ -203,22 +206,23 @@ export function DecisionCard({
           {pending ? cite(citations?.order) : cite(citations?.entry)}
           {pending ? (
             <div data-testid="order-detail" className="text-[11px] text-subtle">
-              ราคาตอนนี้ {num(sizing.market_price)}
+              {t("ราคาตอนนี้", "Now")} {num(sizing.market_price)}
               {cite(citations?.entry)}
               {sizing.order_distance_atr !== null && sizing.order_distance_atr !== undefined
-                ? ` · ห่าง ${sizing.order_distance_atr.toFixed(2)} ATR`
+                ? ` · ${t("ห่าง", "distance")} ${sizing.order_distance_atr.toFixed(2)} ATR`
                 : ""}
-              {sizing.order_expires_at ? ` · หมดอายุ ${when(sizing.order_expires_at)}` : ""}
+              {sizing.order_expires_at ? ` · ${t("หมดอายุ", "expires")} ${when(sizing.order_expires_at)}` : ""}
             </div>
           ) : quote ? (
             <div data-testid="entry-live" className="text-[11px] text-subtle">
-              ราคาสด{quote.ts ? ` ${new Date(quote.ts).toLocaleTimeString("th-TH", { hour12: false })}` : ""}
+              {t("ราคาสด", "Live price")}
+              {quote.ts ? ` ${new Date(quote.ts).toLocaleTimeString(intlLocale(), { hour12: false })}` : ""}
               {detail.market_snapshot?.close !== undefined ? ` · snapshot ${num(detail.market_snapshot.close)}` : ""}
             </div>
           ) : null}
         </Field>
         <Field label="Stop">
-          {sizing.stop === null ? <span className="text-error">ไม่มี</span> : num(sizing.stop)}
+          {sizing.stop === null ? <span className="text-error">{t("ไม่มี", "None")}</span> : num(sizing.stop)}
           {cite(citations?.stop)}
         </Field>
         <Field label="Targets">
@@ -258,9 +262,9 @@ export function DecisionCard({
               {sizing.time_stop_bars} × {sizing.interval ?? ""}
               {cite(citations?.timeStop)}
               {sizing.time_stop_from === "fill" ? (
-                <span className="block text-[11px] text-subtle">นับจากตอนได้เข้า</span>
+                <span className="block text-[11px] text-subtle">{t("นับจากตอนได้เข้า", "counted from the fill")}</span>
               ) : sizing.time_stop_at ? (
-                <span className="block text-[11px] text-subtle">ภายใน {when(sizing.time_stop_at)}</span>
+                <span className="block text-[11px] text-subtle">{t("ภายใน", "by")} {when(sizing.time_stop_at)}</span>
               ) : null}
             </span>
           </Field>

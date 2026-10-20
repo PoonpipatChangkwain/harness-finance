@@ -1,6 +1,7 @@
 /** Pure helpers of the Backtest page (P15): form ↔ request, the cell grid, chart series. */
 
 import type { LlmChoice } from "./api";
+import { localized, tr, useLocaleStore } from "./i18n";
 import type { BacktestCell, BacktestConfig, EquityPoint, SimConfigBody } from "./backtest-api";
 import type { AnalystName } from "./trade-api";
 
@@ -70,7 +71,7 @@ export function defaultForm(now = new Date()): BacktestForm {
     analysts: ["market"],
     debateRounds: 1,
     riskRounds: 1,
-    language: "th",
+    language: useLocaleStore.getState().locale, // reports follow the UI language by default
     concurrency: 2,
     budgetUsd: "",
     baseline: true,
@@ -147,20 +148,25 @@ export function toConfig(f: BacktestForm, llm: LlmChoice | null): BacktestConfig
   };
 }
 
-/** Problems the form can catch before the server does (Thai, shown under the form). */
+/** Problems the form can catch before the server does (shown under the form). */
 export function formProblems(f: BacktestForm, today = isoDaysAgo(0)): string[] {
   const out: string[] = [];
-  if (!f.symbols.length) out.push("เลือก symbol อย่างน้อย 1 ตัว");
-  if (f.start >= today) out.push("วันเริ่มต้องเป็นวันในอดีต");
-  if (f.end < f.start) out.push("วันสิ้นสุดต้องไม่ก่อนวันเริ่ม");
-  if (!f.analysts.length) out.push("เลือก analyst อย่างน้อย 1 ตัว");
+  if (!f.symbols.length) out.push(tr("เลือก symbol อย่างน้อย 1 ตัว", "Pick at least 1 symbol"));
+  if (f.start >= today) out.push(tr("วันเริ่มต้องเป็นวันในอดีต", "Start date must be in the past"));
+  if (f.end < f.start) out.push(tr("วันสิ้นสุดต้องไม่ก่อนวันเริ่ม", "End date must not be before the start date"));
+  if (!f.analysts.length) out.push(tr("เลือก analyst อย่างน้อย 1 ตัว", "Pick at least 1 analyst"));
   const limit = HORIZON_MAX_DAYS[f.horizon];
   const start = new Date(f.start).getTime();
   if (limit !== null && (Date.now() - start) / 86_400_000 > limit) {
-    out.push(`horizon ${f.horizon} ย้อนได้ราว ${limit} วัน (Yahoo) — ช่วงก่อนนั้นจะใช้แท่งรายวันแทน`);
+    out.push(
+      tr(
+        `horizon ${f.horizon} ย้อนได้ราว ${limit} วัน (Yahoo) — ช่วงก่อนนั้นจะใช้แท่งรายวันแทน`,
+        `horizon ${f.horizon} only goes back about ${limit} days (Yahoo) — earlier dates use daily bars instead`,
+      ),
+    );
   }
   const capital = Number(f.sim.capital);
-  if (!(capital > 0)) out.push("เงินต้นต้องมากกว่า 0");
+  if (!(capital > 0)) out.push(tr("เงินต้นต้องมากกว่า 0", "Starting capital must be greater than 0"));
   return out;
 }
 
@@ -244,23 +250,23 @@ export function drawdown(points: EquityPoint[]): { day: string; dd: number }[] {
   });
 }
 
-export const SKIP_LABEL: Record<string, string> = {
-  flat: "ไม่มีสัญญาณ (flat / no trade)",
-  invalid_levels: "ระดับราคาไม่ถูกต้อง",
-  short_not_allowed: "ชอร์ตไม่ได้ (บัญชีเงินสด)",
-  already_open: "มี position ฝั่งเดียวกันอยู่แล้ว",
-  max_positions: "ชนจำนวน position สูงสุด",
-  below_one_lot: "เงินไม่พอซื้อ 1 lot",
-  no_buying_power: "เงินสด/มาร์จิ้นไม่พอ",
-  gap_invalidated: "ราคาเปิด gap ข้าม stop/target",
-  order_expired: "ออเดอร์รอไม่ถูก fill",
-  no_bars: "ไม่มีแท่งราคาหลังวันตัดสินใจ",
-};
+export const SKIP_LABEL: Record<string, string> = localized({
+  flat: ["ไม่มีสัญญาณ (flat / no trade)", "No signal (flat / no trade)"],
+  invalid_levels: ["ระดับราคาไม่ถูกต้อง", "Invalid price levels"],
+  short_not_allowed: ["ชอร์ตไม่ได้ (บัญชีเงินสด)", "Shorting not allowed (cash account)"],
+  already_open: ["มี position ฝั่งเดียวกันอยู่แล้ว", "A position on the same side is already open"],
+  max_positions: ["ชนจำนวน position สูงสุด", "Max open positions reached"],
+  below_one_lot: ["เงินไม่พอซื้อ 1 lot", "Not enough cash for 1 lot"],
+  no_buying_power: ["เงินสด/มาร์จิ้นไม่พอ", "Not enough cash/margin"],
+  gap_invalidated: ["ราคาเปิด gap ข้าม stop/target", "Open gapped past stop/target"],
+  order_expired: ["ออเดอร์รอไม่ถูก fill", "Pending order was never filled"],
+  no_bars: ["ไม่มีแท่งราคาหลังวันตัดสินใจ", "No price bars after the decision date"],
+});
 
-export const EXIT_LABEL: Record<string, string> = {
-  tp: "ชน target",
-  sl: "ชน stop",
-  time_stop: "หมดเวลา",
-  reverse: "สัญญาณกลับข้าง",
-  end_of_test: "จบช่วงทดสอบ",
-};
+export const EXIT_LABEL: Record<string, string> = localized({
+  tp: ["ชน target", "Target hit"],
+  sl: ["ชน stop", "Stop hit"],
+  time_stop: ["หมดเวลา", "Time stop"],
+  reverse: ["สัญญาณกลับข้าง", "Signal reversed"],
+  end_of_test: ["จบช่วงทดสอบ", "End of test"],
+});

@@ -3,12 +3,13 @@
 import { clsx } from "clsx";
 import { X } from "lucide-react";
 import { useEffect, type ReactNode } from "react";
+import { intlLocale, useT } from "@/lib/i18n";
 
 export function formatDate(iso: string | null | undefined): string {
   if (!iso) return "";
   const t = Date.parse(/(?:Z|[+-]\d{2}:?\d{2})$/.test(iso) ? iso : `${iso}Z`);
   if (Number.isNaN(t)) return "";
-  return new Date(t).toLocaleDateString("th-TH", { day: "numeric", month: "short", year: "2-digit" });
+  return new Date(t).toLocaleDateString(intlLocale(), { day: "numeric", month: "short", year: "2-digit" });
 }
 
 /** A 0–1 value as a thin bar + percent (confidence, success rate). */
@@ -35,6 +36,7 @@ export function Pill({ children, className, title }: { children: ReactNode; clas
 
 /** Right-hand drawer (full width on phones); Esc closes. */
 export function Drawer({ label, onClose, children }: { label: string; onClose: () => void; children: ReactNode }) {
+  const t = useT();
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
@@ -53,7 +55,7 @@ export function Drawer({ label, onClose, children }: { label: string; onClose: (
       >
         <div className="flex items-center gap-2 border-b border-line px-4 py-2">
           <h2 className="min-w-0 flex-1 truncate text-[14px] font-semibold">{label}</h2>
-          <button type="button" aria-label="ปิด" onClick={onClose} className="rounded-md p-1 text-subtle hover:bg-layer-2 hover:text-fg">
+          <button type="button" aria-label={t("ปิด", "Close")} onClick={onClose} className="rounded-md p-1 text-subtle hover:bg-layer-2 hover:text-fg">
             <X className="size-4" aria-hidden />
           </button>
         </div>

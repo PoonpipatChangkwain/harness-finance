@@ -13,9 +13,11 @@ import { TradeHistory } from "@/components/trade/TradeHistory";
 import { StateDot, dotFor } from "@/components/ui/StateDot";
 import type { SessionListItem } from "@/lib/api";
 import { formatRelative } from "@/lib/format";
+import { useT } from "@/lib/i18n";
 import { useSessionStore } from "@/stores/session-store";
 import { useUiStore } from "@/stores/ui-store";
 
+import { LocaleToggle } from "./LocaleProvider";
 import { ProviderStatus } from "./ProviderStatus";
 import { ThemeToggle } from "./ThemeController";
 
@@ -34,11 +36,15 @@ export function Sidebar({ compact }: { compact: boolean }) {
   const { sessions, loaded, error, reload, remove } = useSessionStore();
   const closeSheet = useUiStore((s) => s.setMobileSidebarOpen);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const t = useT();
 
   const onDelete = async (session: SessionListItem) => {
     const name = session.title ?? "Untitled";
-    if (!window.confirm(`ลบ session "${name}"?
-ข้อความ, run, provenance และ scratchpad ของ session นี้จะถูกลบถาวร`)) return;
+    const message = t(
+      `ลบ session "${name}"?\nข้อความ, run, provenance และ scratchpad ของ session นี้จะถูกลบถาวร`,
+      `Delete session "${name}"?\nIts messages, runs, provenance and scratchpad will be permanently deleted.`,
+    );
+    if (!window.confirm(message)) return;
     const err = await remove(session.id);
     setDeleteError(err);
     if (!err && pathname === `/research/${session.id}`) router.push("/research");
@@ -97,8 +103,8 @@ export function Sidebar({ compact }: { compact: boolean }) {
         </Link>
       </div>
       <ul data-testid="session-list" className="mt-1 min-h-0 flex-1 space-y-px overflow-y-auto px-2">
-        {!loaded ? <li className="px-2 text-[12px] text-subtle">กำลังโหลด…</li> : null}
-        {error && !compact ? <li className="px-2 text-[12px] text-error">โหลด session ไม่ได้</li> : null}
+        {!loaded ? <li className="px-2 text-[12px] text-subtle">{t("กำลังโหลด…", "Loading…")}</li> : null}
+        {error && !compact ? <li className="px-2 text-[12px] text-error">{t("โหลด session ไม่ได้", "Could not load sessions")}</li> : null}
         {deleteError && !compact ? <li className="px-2 text-[12px] text-error">{deleteError}</li> : null}
         {sessions.map((s) => {
           const href = `/research/${s.id}`;
@@ -128,8 +134,8 @@ export function Sidebar({ compact }: { compact: boolean }) {
                 <button
                   type="button"
                   data-testid="delete-session"
-                  aria-label={`ลบ session ${s.title ?? "Untitled"}`}
-                  title="ลบ session"
+                  aria-label={t(`ลบ session ${s.title ?? "Untitled"}`, `Delete session ${s.title ?? "Untitled"}`)}
+                  title={t("ลบ session", "Delete session")}
                   onClick={() => void onDelete(s)}
                   className="absolute right-1 top-1/2 -translate-y-1/2 rounded-md p-1 text-subtle opacity-0 hover:bg-error/15 hover:text-error focus-visible:opacity-100 group-hover:opacity-100"
                 >
@@ -144,8 +150,9 @@ export function Sidebar({ compact }: { compact: boolean }) {
       )}
 
       <div className="space-y-2 border-t border-line py-2">
-        <div className={clsx("px-2", compact && "flex justify-center px-0")}>
+        <div className={clsx("flex items-center gap-1 px-2", compact && "flex-col justify-center px-0")}>
           <ThemeToggle compact={compact} />
+          <LocaleToggle compact={compact} />
         </div>
         <ProviderStatus compact={compact} />
       </div>

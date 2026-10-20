@@ -6,11 +6,13 @@ import Link from "next/link";
 
 import { EXIT_LABEL, SKIP_LABEL } from "@/lib/backtest";
 import type { SimResult } from "@/lib/backtest-api";
+import { useT } from "@/lib/i18n";
 import { formatMoney, upDownClass } from "@/lib/portfolio-format";
 
 const px = (s: string) => Number(s).toLocaleString(undefined, { maximumFractionDigits: 4 });
 
 export function TradesTable({ result }: { result: SimResult }) {
+  const t = useT();
   const skippedBy = Object.entries(
     result.skipped.reduce<Record<string, number>>((acc, s) => ({ ...acc, [s.reason]: (acc[s.reason] ?? 0) + 1 }), {}),
   ).sort((a, b) => b[1] - a[1]);
@@ -20,7 +22,17 @@ export function TradesTable({ result }: { result: SimResult }) {
         <table data-testid="trades-table" className="w-full text-[12.5px]">
           <thead className="text-left text-[11.5px] text-muted">
             <tr className="border-b border-line">
-              {["Symbol", "ฝั่ง", "ตัดสินใจ", "เข้า", "ออก", "จำนวน", "เหตุผลออก", "R", "P&L"].map((h) => (
+              {[
+                "Symbol",
+                t("ฝั่ง", "Side"),
+                t("ตัดสินใจ", "Decided"),
+                t("เข้า", "Entry"),
+                t("ออก", "Exit"),
+                t("จำนวน", "Units"),
+                t("เหตุผลออก", "Exit reason"),
+                "R",
+                "P&L",
+              ].map((h) => (
                 <th key={h} className="px-2 py-1.5 font-normal">
                   {h}
                 </th>
@@ -31,7 +43,7 @@ export function TradesTable({ result }: { result: SimResult }) {
             {result.trades.length === 0 ? (
               <tr>
                 <td colSpan={9} className="px-2 py-3 text-center text-subtle">
-                  ไม่มีเทรดที่เกิดขึ้นจริง — ดูเหตุผลทางขวา
+                  {t("ไม่มีเทรดที่เกิดขึ้นจริง — ดูเหตุผลทางขวา", "No trades actually happened — see the reasons on the right")}
                 </td>
               </tr>
             ) : null}
@@ -67,7 +79,9 @@ export function TradesTable({ result }: { result: SimResult }) {
         </table>
       </div>
       <div data-testid="skipped-summary" className="rounded-md border border-line bg-layer-1 p-3 text-[12.5px]">
-        <div className="mb-1 font-medium">การตัดสินใจที่ไม่ได้เทรด ({result.skipped.length})</div>
+        <div className="mb-1 font-medium">
+          {t("การตัดสินใจที่ไม่ได้เทรด", "Decisions not traded")} ({result.skipped.length})
+        </div>
         {skippedBy.length === 0 ? <p className="text-subtle">–</p> : null}
         <ul className="space-y-0.5">
           {skippedBy.map(([reason, n]) => (

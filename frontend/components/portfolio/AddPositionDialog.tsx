@@ -32,6 +32,7 @@ import {
   type DraftRow,
   type GuidedMode,
 } from "@/lib/holdings";
+import { useT } from "@/lib/i18n";
 import {
   entryErrors,
   portfolioApi,
@@ -121,6 +122,7 @@ function FieldErrors({ errors, warn, testId }: { errors: EntryError[]; warn?: bo
 
 /** What the backend computed for one row (every number with provenance). */
 export function PreviewSummary({ row, compact = false }: { row: PreviewRow; compact?: boolean }) {
+  const t = useT();
   const unit = moneyUnit(row.currency);
   const qty = row.quantity !== null ? Number(row.quantity) : null;
   const avg = row.avg_cost !== null ? Number(row.avg_cost) : null;
@@ -145,24 +147,24 @@ export function PreviewSummary({ row, compact = false }: { row: PreviewRow; comp
   );
   return (
     <div className="grid grid-cols-2 gap-x-4 gap-y-2 sm:grid-cols-3">
-      {cell("จำนวน", <ProvValue value={qty} provenanceId={row.provenance_id} format="number" digits={6} />, "pv-quantity")}
+      {cell(t("จำนวน", "Quantity"), <ProvValue value={qty} provenanceId={row.provenance_id} format="number" digits={6} />, "pv-quantity")}
       {cell(
-        `ต้นทุนเฉลี่ย (${unit})`,
+        t(`ต้นทุนเฉลี่ย (${unit})`, `Avg cost (${unit})`),
         <ProvValue value={avg} provenanceId={row.provenance_id} format="number" digits={4} />,
         "pv-avg-cost",
       )}
       {cell(
-        `ราคาล่าสุด (${unit})`,
+        t(`ราคาล่าสุด (${unit})`, `Last price (${unit})`),
         <>
           <ProvValue pv={row.price} />
           {row.price_as_of ? <span className="num ml-1 text-[11px] text-subtle">{row.price_as_of.slice(0, 10)}</span> : null}
         </>,
         "pv-price",
       )}
-      {cell(`มูลค่า (${unit})`, <ProvValue pv={row.market_value} />, "pv-value")}
-      {cell(`ต้นทุนรวม (${unit})`, <ProvValue pv={row.cost_basis} />, "pv-cost-basis")}
+      {cell(t(`มูลค่า (${unit})`, `Value (${unit})`), <ProvValue pv={row.market_value} />, "pv-value")}
+      {cell(t(`ต้นทุนรวม (${unit})`, `Total cost (${unit})`), <ProvValue pv={row.cost_basis} />, "pv-cost-basis")}
       {cell(
-        "กำไร/ขาดทุน",
+        t("กำไร/ขาดทุน", "P/L"),
         <span className="inline-flex flex-wrap gap-x-1.5">
           <ProvValue pv={row.unrealized_pnl} format="signed" colored />
           <ProvValue pv={row.unrealized_pnl_pct} format="signedPct" colored />
@@ -193,6 +195,7 @@ export function AddPositionDialog({
   search?: SymbolSearchFn;
   previewDelayMs?: number;
 }) {
+  const t = useT();
   const [form, setForm] = useState<AddForm>(() => blankForm(loadLastMode()));
   const [items, setItems] = useState<Item[]>([]);
   const [preview, setPreview] = useState<{ key: string; row: PreviewRow | null } | null>(null);
@@ -368,21 +371,21 @@ export function AddPositionDialog({
     <div
       role="dialog"
       aria-modal="true"
-      aria-label="เพิ่ม position"
+      aria-label={t("เพิ่ม position", "Add position")}
       className="fixed inset-0 z-50 grid place-items-center bg-black/50 p-4"
     >
       <div data-testid="add-position-dialog" className="flex max-h-[90vh] w-full max-w-xl flex-col rounded-lg border border-line-strong bg-layer-1 shadow-xl">
         <div className="flex items-center border-b border-line px-4 py-2">
-          <h2 className="text-[14px] font-semibold">เพิ่ม position</h2>
+          <h2 className="text-[14px] font-semibold">{t("เพิ่ม position", "Add position")}</h2>
           <span className="flex-1" />
-          <button type="button" aria-label="ปิด" onClick={onClose} className="rounded-md p-1 text-muted hover:bg-layer-2">
+          <button type="button" aria-label={t("ปิด", "Close")} onClick={onClose} className="rounded-md p-1 text-muted hover:bg-layer-2">
             <X className="size-4" aria-hidden />
           </button>
         </div>
 
         <div className="min-h-0 flex-1 space-y-4 overflow-y-auto p-4 text-[12.5px]">
           <section className="space-y-1.5">
-            <h3 className="text-[12px] font-medium text-muted">1 · เลือกหุ้น</h3>
+            <h3 className="text-[12px] font-medium text-muted">1 · {t("เลือกหุ้น", "Pick a stock")}</h3>
             <SymbolSearch
               value={form.symbol}
               search={search}
@@ -402,7 +405,7 @@ export function AddPositionDialog({
                 <span className="num rounded-sm bg-layer-2 px-1.5 py-0.5 text-[11px] text-muted">{form.symbol.currency}</span>
                 {quote && quote.symbol === form.symbol.canonical ? (
                   <span data-testid="add-quote" className="ml-auto text-muted">
-                    ราคาล่าสุด <ProvValue pv={quote.price} /> <span className="num text-[11px] text-subtle">{quote.ts.slice(0, 16).replace("T", " ")}</span>
+                    {t("ราคาล่าสุด", "Last price")} <ProvValue pv={quote.price} /> <span className="num text-[11px] text-subtle">{quote.ts.slice(0, 16).replace("T", " ")}</span>
                   </span>
                 ) : null}
               </div>
@@ -413,15 +416,15 @@ export function AddPositionDialog({
           {form.symbol ? (
             <section className="space-y-2">
               <div className="flex items-baseline gap-2">
-                <h3 className="text-[12px] font-medium text-muted">2 · คุณเห็นอะไรในแอปโบรกเกอร์?</h3>
+                <h3 className="text-[12px] font-medium text-muted">2 · {t("คุณเห็นอะไรในแอปโบรกเกอร์?", "What does your broker app show?")}</h3>
                 <span className="flex-1" />
                 {onPercentMode ? (
                   <button type="button" data-testid="add-percent-mode" onClick={onPercentMode} className="text-[11.5px] text-accent hover:underline">
-                    กรอกแค่ % น้ำหนัก
+                    {t("กรอกแค่ % น้ำหนัก", "Enter % weight only")}
                   </button>
                 ) : null}
               </div>
-              <div role="radiogroup" aria-label="โหมดกรอก" className="grid grid-cols-1 gap-1 rounded-md bg-layer-2 p-1 sm:grid-cols-2">
+              <div role="radiogroup" aria-label={t("โหมดกรอก", "Entry mode")} className="grid grid-cols-1 gap-1 rounded-md bg-layer-2 p-1 sm:grid-cols-2">
                 {ENTRY_MODES.map((m) => (
                   <button
                     key={m}
@@ -446,20 +449,20 @@ export function AddPositionDialog({
                     <label className="block">
                       <span className="mb-0.5 block text-[11.5px] text-muted">
                         {label}
-                        {required ? "" : " (ไม่บังคับ)"}
+                        {required ? "" : t(" (ไม่บังคับ)", " (optional)")}
                       </span>
                       <input
                         aria-label={label}
                         data-testid={`add-${slot}`}
                         inputMode="decimal"
                         value={slot === "first" ? form.first : form.second}
-                        placeholder={field === "pnlPct" ? "เช่น 14.52" : field === "quantity" ? "เช่น 100" : `0.00 ${moneyUnit(currency)}`}
+                        placeholder={field === "pnlPct" ? t("เช่น 14.52", "e.g. 14.52") : field === "quantity" ? t("เช่น 100", "e.g. 100") : `0.00 ${moneyUnit(currency)}`}
                         onChange={(e) => (slot === "first" ? update({ first: e.target.value }) : setSecond(e.target.value))}
                         className={clsx(inputCls, invalid(slot) && "border-error")}
                       />
                     </label>
                     {slot === "second" && spec.signed ? (
-                      <div role="group" aria-label="กำไรหรือขาดทุน" className="mt-1 flex gap-1">
+                      <div role="group" aria-label={t("กำไรหรือขาดทุน", "Gain or loss")} className="mt-1 flex gap-1">
                         <button
                           type="button"
                           data-testid="sign-gain"
@@ -467,7 +470,7 @@ export function AddPositionDialog({
                           onClick={() => update({ loss: false })}
                           className={clsx("flex-1 rounded-sm px-2 py-0.5 text-[12px]", !form.loss ? "bg-up/15 font-medium text-up" : "bg-layer-2 text-muted")}
                         >
-                          กำไร
+                          {t("กำไร", "Gain")}
                         </button>
                         <button
                           type="button"
@@ -476,7 +479,7 @@ export function AddPositionDialog({
                           onClick={() => update({ loss: true })}
                           className={clsx("flex-1 rounded-sm px-2 py-0.5 text-[12px]", form.loss ? "bg-down/15 font-medium text-down" : "bg-layer-2 text-muted")}
                         >
-                          ขาดทุน
+                          {t("ขาดทุน", "Loss")}
                         </button>
                       </div>
                     ) : null}
@@ -490,23 +493,23 @@ export function AddPositionDialog({
                 {current && current.status === "ok" ? (
                   <PreviewSummary row={current} />
                 ) : previewing ? (
-                  <p className="text-subtle">กำลังคำนวณจากราคาล่าสุด…</p>
+                  <p className="text-subtle">{t("กำลังคำนวณจากราคาล่าสุด…", "Computing from the latest price…")}</p>
                 ) : previewFailure ? (
-                  <p className="text-error">preview ไม่ได้: {previewFailure}</p>
+                  <p className="text-error">{t("preview ไม่ได้", "Preview failed")}: {previewFailure}</p>
                 ) : current?.status === "error" ? (
-                  <p className="text-error">ข้อมูลแถวนี้ใช้ไม่ได้ — ดูข้อความที่ช่องด้านบน</p>
+                  <p className="text-error">{t("ข้อมูลแถวนี้ใช้ไม่ได้ — ดูข้อความที่ช่องด้านบน", "This row is not valid — see the messages on the fields above")}</p>
                 ) : (
-                  <p className="text-subtle">กรอกตัวเลขแล้วระบบจะคำนวณส่วนที่เหลือให้</p>
+                  <p className="text-subtle">{t("กรอกตัวเลขแล้วระบบจะคำนวณส่วนที่เหลือให้", "Enter the numbers and the rest is computed for you")}</p>
                 )}
                 <FieldErrors errors={general} warn={previewWarn} testId="error-row" />
-                <p className="mt-2 text-[11px] text-subtle">ระบบคำนวณจากราคาล่าสุด ค่าจะขยับตามตลาด</p>
+                <p className="mt-2 text-[11px] text-subtle">{t("ระบบคำนวณจากราคาล่าสุด ค่าจะขยับตามตลาด", "Computed from the latest price; values move with the market")}</p>
               </div>
             </section>
           ) : null}
 
           {items.length ? (
             <section data-testid="add-items" className="space-y-1">
-              <h3 className="text-[12px] font-medium text-muted">รายการที่จะบันทึก ({items.length})</h3>
+              <h3 className="text-[12px] font-medium text-muted">{t("รายการที่จะบันทึก", "To be saved")} ({items.length})</h3>
               <ul className="divide-y divide-line/60 rounded-md border border-line">
                 {items.map((it) => (
                   <li key={it.key} data-testid="add-item" data-symbol={it.position.symbol} className={clsx("px-2 py-1.5", it.errors.length && "bg-error/5")}>
@@ -516,9 +519,9 @@ export function AddPositionDialog({
                       <span className="flex-1" />
                       <button
                         type="button"
-                        aria-label={`แก้ ${it.position.symbol}`}
+                        aria-label={t(`แก้ ${it.position.symbol}`, `Edit ${it.position.symbol}`)}
                         disabled={filled}
-                        title={filled ? "เพิ่มหรือล้างตัวที่กรอกอยู่ก่อน" : "แก้"}
+                        title={filled ? t("เพิ่มหรือล้างตัวที่กรอกอยู่ก่อน", "Add or clear the row being entered first") : t("แก้", "Edit")}
                         onClick={() => editItem(it.key)}
                         className="rounded-sm p-1 text-subtle hover:bg-layer-2 hover:text-fg disabled:opacity-40"
                       >
@@ -526,7 +529,7 @@ export function AddPositionDialog({
                       </button>
                       <button
                         type="button"
-                        aria-label={`ลบ ${it.position.symbol}`}
+                        aria-label={t(`ลบ ${it.position.symbol}`, `Remove ${it.position.symbol}`)}
                         onClick={() => setItems((prev) => prev.filter((i) => i.key !== it.key))}
                         className="rounded-sm p-1 text-subtle hover:bg-error/15 hover:text-error"
                       >
@@ -556,7 +559,7 @@ export function AddPositionDialog({
 
         <div className="flex flex-wrap items-center justify-end gap-2 border-t border-line px-4 py-2">
           <button type="button" onClick={onClose} className="rounded-md px-3 py-1 text-[13px] text-muted hover:bg-layer-2">
-            ยกเลิก
+            {t("ยกเลิก", "Cancel")}
           </button>
           <button
             type="button"
@@ -565,7 +568,7 @@ export function AddPositionDialog({
             onClick={addAnother}
             className="inline-flex items-center gap-1 rounded-md bg-layer-2 px-3 py-1 text-[13px] disabled:opacity-50"
           >
-            <Plus className="size-3.5" aria-hidden /> เพิ่มอีกตัว
+            <Plus className="size-3.5" aria-hidden /> {t("เพิ่มอีกตัว", "Add another")}
           </button>
           <button
             type="button"
@@ -574,7 +577,9 @@ export function AddPositionDialog({
             onClick={() => void saveAll()}
             className="rounded-md bg-accent px-3 py-1 text-[13px] text-bg disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {saving ? "กำลังบันทึก…" : `บันทึกทั้งหมด${items.length + (filled ? 1 : 0) > 1 ? ` (${items.length + (filled ? 1 : 0)})` : ""}`}
+            {saving
+              ? t("กำลังบันทึก…", "Saving…")
+              : `${t("บันทึกทั้งหมด", "Save all")}${items.length + (filled ? 1 : 0) > 1 ? ` (${items.length + (filled ? 1 : 0)})` : ""}`}
           </button>
         </div>
       </div>

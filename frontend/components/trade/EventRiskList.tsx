@@ -9,6 +9,7 @@
 import { clsx } from "clsx";
 
 import type { EventRisk } from "@/lib/trade-api";
+import { intlLocale, tr, useT } from "@/lib/i18n";
 
 const IMPACT_CLASS: Record<string, string> = {
   high: "bg-down/15 text-down",
@@ -18,27 +19,33 @@ const IMPACT_CLASS: Record<string, string> = {
 };
 
 function fmtHours(h: number): string {
-  if (Math.abs(h) < 1) return `${Math.round(h * 60)} นาที`;
-  return `${h > 0 ? "อีก " : ""}${Math.abs(h).toFixed(1)} ชม.${h < 0 ? "ที่แล้ว" : ""}`;
+  if (Math.abs(h) < 1) return tr(`${Math.round(h * 60)} นาที`, `${Math.round(h * 60)} min`);
+  const abs = Math.abs(h).toFixed(1);
+  if (h > 0) return tr(`อีก ${abs} ชม.`, `in ${abs} h`);
+  return h < 0 ? tr(`${abs} ชม.ที่แล้ว`, `${abs} h ago`) : tr(`${abs} ชม.`, `${abs} h`);
 }
 
 export function EventRiskList({ risk }: { risk: EventRisk | null | undefined }) {
+  const t = useT();
   if (!risk) return null;
   const events = (risk.events ?? []).filter((e) => e.impact !== "low");
   return (
     <section data-testid="event-risk" className="rounded-md border border-line bg-layer-1 p-3">
       <h3 className="mb-1.5 flex items-center gap-2 text-[12px] font-medium uppercase tracking-wide text-subtle">
-        ข่าวเศรษฐกิจช่วงถือ
+        {t("ข่าวเศรษฐกิจช่วงถือ", "Economic events while holding")}
         {risk.available ? (
           <span className="normal-case tracking-normal">
-            {risk.source} · {(risk.currencies ?? []).join("/")} · {risk.window_hours} ชม.ข้างหน้า
+            {risk.source} · {(risk.currencies ?? []).join("/")} · {t(`${risk.window_hours} ชม.ข้างหน้า`, `next ${risk.window_hours} h`)}
           </span>
         ) : null}
       </h3>
       {!risk.available ? (
-        <p className="text-[12.5px] text-warning">ปฏิทินข่าวไม่พร้อม: {risk.error ?? "ไม่ได้โหลด"} (ไม่ได้แปลว่าไม่มีข่าว)</p>
+        <p className="text-[12.5px] text-warning">
+          {t("ปฏิทินข่าวไม่พร้อม", "Economic calendar unavailable")}: {risk.error ?? t("ไม่ได้โหลด", "not loaded")}{" "}
+          {t("(ไม่ได้แปลว่าไม่มีข่าว)", "(this does not mean there are no events)")}
+        </p>
       ) : events.length === 0 ? (
-        <p className="text-[12.5px] text-muted">ไม่มีข่าวแรงระดับ high/medium ในช่วงถือ</p>
+        <p className="text-[12.5px] text-muted">{t("ไม่มีข่าวแรงระดับ high/medium ในช่วงถือ", "No high/medium-impact events while holding")}</p>
       ) : (
         <ul className="space-y-1 text-[12.5px]">
           {events.map((e) => (
@@ -47,7 +54,7 @@ export function EventRiskList({ risk }: { risk: EventRisk | null | undefined }) 
               <span className="num w-10 text-muted">{e.currency}</span>
               <span className="min-w-0 flex-1">{e.title}</span>
               <span className="num text-subtle">
-                {new Date(e.at).toLocaleString("th-TH", { weekday: "short", hour: "2-digit", minute: "2-digit" })} ·{" "}
+                {new Date(e.at).toLocaleString(intlLocale(), { weekday: "short", hour: "2-digit", minute: "2-digit" })} ·{" "}
                 {fmtHours(e.hours_from_now)}
               </span>
               {e.forecast || e.previous || e.actual ? (

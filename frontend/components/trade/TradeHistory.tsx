@@ -10,6 +10,7 @@ import { useEffect, useState } from "react";
 
 import { StateDot, dotFor } from "@/components/ui/StateDot";
 import { formatRelative } from "@/lib/format";
+import { useT } from "@/lib/i18n";
 import type { TradeRunBrief } from "@/lib/trade-api";
 import { useTradeHistory } from "@/stores/trade-store";
 
@@ -18,6 +19,7 @@ import { VerdictBadge } from "./DecisionCard";
 const OPEN = ["running", "waiting_approval"];
 
 export function TradeHistory({ compact, onNavigate }: { compact: boolean; onNavigate?: () => void }) {
+  const t = useT();
   const pathname = usePathname() ?? "";
   const router = useRouter();
   const { runs, loaded, error, symbol, setSymbol, reload, remove } = useTradeHistory();
@@ -29,7 +31,11 @@ export function TradeHistory({ compact, onNavigate }: { compact: boolean; onNavi
 
   const onDelete = async (run: TradeRunBrief) => {
     const label = run.symbol ?? run.run_id;
-    if (!window.confirm(`ลบ trade run "${label}"?\nข้อมูล run, provenance และ scratchpad ของ run นี้จะถูกลบถาวร`)) return;
+    const message = t(
+      `ลบ trade run "${label}"?\nข้อมูล run, provenance และ scratchpad ของ run นี้จะถูกลบถาวร`,
+      `Delete trade run "${label}"?\nIts run data, provenance and scratchpad will be permanently deleted.`,
+    );
+    if (!window.confirm(message)) return;
     const err = await remove(run.run_id);
     setDeleteError(err);
     if (!err && pathname === `/trade/${run.run_id}`) router.push("/trade");
@@ -62,7 +68,7 @@ export function TradeHistory({ compact, onNavigate }: { compact: boolean; onNavi
           <input
             value={symbol}
             onChange={(e) => setSymbol(e.target.value)}
-            placeholder="กรอง symbol"
+            placeholder={t("กรอง symbol", "Filter symbol")}
             aria-label="filter trade runs by symbol"
             // browser extensions (e.g. form fillers) inject `fdprocessedid` before hydration
             suppressHydrationWarning
@@ -71,10 +77,10 @@ export function TradeHistory({ compact, onNavigate }: { compact: boolean; onNavi
         </div>
       )}
       <ul data-testid="trade-history" className="mt-1 min-h-0 flex-1 space-y-px overflow-y-auto px-2">
-        {!loaded ? <li className="px-2 text-[12px] text-subtle">กำลังโหลด…</li> : null}
-        {error && !compact ? <li className="px-2 text-[12px] text-error">โหลดประวัติไม่ได้</li> : null}
+        {!loaded ? <li className="px-2 text-[12px] text-subtle">{t("กำลังโหลด…", "Loading…")}</li> : null}
+        {error && !compact ? <li className="px-2 text-[12px] text-error">{t("โหลดประวัติไม่ได้", "Could not load history")}</li> : null}
         {deleteError && !compact ? <li className="px-2 text-[12px] text-error">{deleteError}</li> : null}
-        {loaded && !runs.length && !compact ? <li className="px-2 text-[12px] text-subtle">ยังไม่มี run</li> : null}
+        {loaded && !runs.length && !compact ? <li className="px-2 text-[12px] text-subtle">{t("ยังไม่มี run", "No runs yet")}</li> : null}
         {runs.map((r) => {
           const href = `/trade/${r.run_id}`;
           const status = r.status === "waiting_approval" ? "partial" : r.status;
@@ -99,7 +105,7 @@ export function TradeHistory({ compact, onNavigate }: { compact: boolean; onNavi
                       {r.verdict ? <VerdictBadge verdict={r.verdict} /> : null}
                     </span>
                     <span className="block text-[11px] text-subtle">
-                      {r.date ?? "latest"} · {r.status === "waiting_approval" ? "รออนุมัติ" : (r.outcome ?? r.status)} ·{" "}
+                      {r.date ?? "latest"} · {r.status === "waiting_approval" ? t("รออนุมัติ", "awaiting approval") : (r.outcome ?? r.status)} ·{" "}
                       {formatRelative(r.created_at)}
                     </span>
                   </span>
@@ -109,8 +115,8 @@ export function TradeHistory({ compact, onNavigate }: { compact: boolean; onNavi
                 <button
                   type="button"
                   data-testid="delete-trade-run"
-                  aria-label={`ลบ trade run ${r.symbol ?? r.run_id}`}
-                  title="ลบ run"
+                  aria-label={t(`ลบ trade run ${r.symbol ?? r.run_id}`, `Delete trade run ${r.symbol ?? r.run_id}`)}
+                  title={t("ลบ run", "Delete run")}
                   onClick={() => void onDelete(r)}
                   className="absolute right-1 top-1/2 -translate-y-1/2 rounded-md p-1 text-subtle opacity-0 hover:bg-error/15 hover:text-error focus-visible:opacity-100 group-hover:opacity-100"
                 >

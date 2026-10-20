@@ -12,6 +12,7 @@ import { FastForward, Send, Square, X } from "lucide-react";
 import { forwardRef, useEffect, useImperativeHandle, useRef, type KeyboardEvent, type ReactNode } from "react";
 
 import type { SkillInfo } from "@/lib/api";
+import { useT } from "@/lib/i18n";
 import { useUiStore } from "@/stores/ui-store";
 
 const CATEGORY_LABEL: Record<string, string> = {
@@ -39,6 +40,7 @@ export function ScenarioPicker({
   onChange: (skill: string | null) => void;
   disabled?: boolean;
 }) {
+  const t = useT();
   const groups = new Map<string, SkillInfo[]>();
   for (const s of skills) groups.set(s.category, [...(groups.get(s.category) ?? []), s]);
   const current = skills.find((s) => s.name === value);
@@ -48,7 +50,7 @@ export function ScenarioPicker({
       data-testid="scenario-picker"
       value={value ?? ""}
       disabled={disabled}
-      title={current?.description ?? "Auto: ให้ agent เลือก scenario เอง"}
+      title={current?.description ?? t("Auto: ให้ agent เลือก scenario เอง", "Auto: let the agent pick the scenario")}
       onChange={(e) => onChange(e.target.value || null)}
       className="max-w-44 truncate rounded-md border border-line bg-layer-2 px-2 py-1 text-[12.5px] text-fg"
     >
@@ -58,7 +60,7 @@ export function ScenarioPicker({
           {items.map((s) => (
             <option key={s.name} value={s.name} disabled={!s.available} title={s.description}>
               {skillTitle(s.name)}
-              {s.available ? "" : ` (ต้องมี ${s.missing.join(", ")})`}
+              {s.available ? "" : t(` (ต้องมี ${s.missing.join(", ")})`, ` (requires ${s.missing.join(", ")})`)}
             </option>
           ))}
         </optgroup>
@@ -91,6 +93,7 @@ export const Composer = forwardRef<
     onStop: () => void;
   }
 >(function Composer(props, ref) {
+  const t = useT();
   const { text, onText, skill, onSkill, skills, running, disabled, disabledReason, busy, modelPicker, notice, onSend, onStop } =
     props;
   const area = useRef<HTMLTextAreaElement>(null);
@@ -122,7 +125,14 @@ export const Composer = forwardRef<
         value={text}
         onChange={(e) => onText(e.target.value)}
         onKeyDown={onKeyDown}
-        placeholder={skill ? `${skillTitle(skill)}: พิมพ์ symbol หรือคำถาม เช่น "AAPL"` : "ถามเรื่องหุ้น ตลาด หรือเศรษฐกิจ… (Enter ส่ง, Shift+Enter ขึ้นบรรทัด)"}
+        placeholder={
+          skill
+            ? t(`${skillTitle(skill)}: พิมพ์ symbol หรือคำถาม เช่น "AAPL"`, `${skillTitle(skill)}: type a symbol or a question, e.g. "AAPL"`)
+            : t(
+                "ถามเรื่องหุ้น ตลาด หรือเศรษฐกิจ… (Enter ส่ง, Shift+Enter ขึ้นบรรทัด)",
+                "Ask about stocks, markets or the economy… (Enter to send, Shift+Enter for a new line)",
+              )
+        }
         className="block max-h-60 w-full resize-none bg-transparent px-1 py-1 text-[14px] text-fg outline-none placeholder:text-subtle"
       />
       <div className="mt-1 flex flex-wrap items-center gap-2">
@@ -131,13 +141,16 @@ export const Composer = forwardRef<
         {skipDiscovery ? (
           <span
             data-testid="skip-discovery-pill"
-            title="ข้อความถัดไปส่งพร้อม skip_discovery: AI จะวิเคราะห์ทันทีโดยไม่ถามเป้าหมายต่อ"
+            title={t(
+              "ข้อความถัดไปส่งพร้อม skip_discovery: AI จะวิเคราะห์ทันทีโดยไม่ถามเป้าหมายต่อ",
+              "The next message is sent with skip_discovery: the AI analyzes right away without asking about your goals",
+            )}
             className="inline-flex items-center gap-1 rounded-full border border-accent/40 bg-accent-muted px-2 py-0.5 text-[11.5px] text-accent"
           >
-            <FastForward className="size-3" aria-hidden /> ข้ามคำถาม
+            <FastForward className="size-3" aria-hidden /> {t("ข้ามคำถาม", "Skip questions")}
             <button
               type="button"
-              aria-label="ยกเลิกการข้ามคำถาม"
+              aria-label={t("ยกเลิกการข้ามคำถาม", "Cancel skipping questions")}
               data-testid="skip-discovery-clear"
               onClick={() => setSkipDiscovery(false)}
               className="rounded-full p-px hover:bg-layer-2"

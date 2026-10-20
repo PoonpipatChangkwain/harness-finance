@@ -5,6 +5,7 @@
 import { create } from "zustand";
 
 import { api, ApiError, type SessionListItem } from "@/lib/api";
+import { tr } from "@/lib/i18n";
 
 interface SessionState {
   sessions: SessionListItem[];
@@ -33,7 +34,7 @@ export const useSessionStore = create<SessionState>((set) => ({
       set((s) => ({ sessions: s.sessions.filter((x) => x.id !== id) }));
       return null;
     } catch (err) {
-      if (err instanceof ApiError && err.status === 409) return "session นี้มี run กำลังทำงานอยู่ กด Stop ก่อนแล้วค่อยลบ";
+      if (err instanceof ApiError && err.status === 409) return tr("session นี้มี run กำลังทำงานอยู่ กด Stop ก่อนแล้วค่อยลบ", "This session has a run in progress — press Stop before deleting");
       return err instanceof Error ? err.message : String(err);
     }
   },

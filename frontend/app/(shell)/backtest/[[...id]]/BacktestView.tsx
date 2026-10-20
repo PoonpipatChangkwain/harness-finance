@@ -21,16 +21,17 @@ import { applyCellEvent } from "@/lib/backtest";
 import { backtestApi, type BacktestCell, type BacktestDetail, type Sim } from "@/lib/backtest-api";
 import type { EventPayloads } from "@/lib/events";
 import { formatCost } from "@/lib/format";
+import { localized, useT } from "@/lib/i18n";
 import { subscribeRun } from "@/lib/sse";
 
 type Progress = EventPayloads["backtest.progress"];
 
-const PHASE_LABEL: Record<Progress["phase"], string> = {
-  preload: "กำลังโหลดราคา",
-  decisions: "ระบบเทรดกำลังตัดสินใจทีละวัน",
-  simulate: "กำลังจำลองพอร์ต",
-  done: "เสร็จแล้ว",
-};
+const PHASE_LABEL: Record<Progress["phase"], string> = localized({
+  preload: ["กำลังโหลดราคา", "Loading prices"],
+  decisions: ["ระบบเทรดกำลังตัดสินใจทีละวัน", "The trading system is deciding day by day"],
+  simulate: ["กำลังจำลองพอร์ต", "Simulating the portfolio"],
+  done: ["เสร็จแล้ว", "Done"],
+});
 
 export function BacktestView({ id }: { id: string | null }) {
   const router = useRouter();
@@ -39,6 +40,7 @@ export function BacktestView({ id }: { id: string | null }) {
 }
 
 function BacktestRun({ id }: { id: string }) {
+  const t = useT();
   const [detail, setDetail] = useState<BacktestDetail | null>(null);
   const [cells, setCells] = useState<BacktestCell[]>([]);
   const [progress, setProgress] = useState<Progress | null>(null);
@@ -84,7 +86,7 @@ function BacktestRun({ id }: { id: string }) {
   }, [id, load]);
 
   if (error && !detail) return <p role="alert" className="text-error">{error}</p>;
-  if (!detail) return <p className="text-subtle">กำลังโหลด…</p>;
+  if (!detail) return <p className="text-subtle">{t("กำลังโหลด…", "Loading…")}</p>;
 
   const running = detail.running || detail.status === "running";
   const resumable = !running && ["interrupted", "cancelled", "failed", "limited"].includes(detail.status);
@@ -110,7 +112,7 @@ function BacktestRun({ id }: { id: string }) {
           {detail.start_date} → {detail.end_date} · {detail.horizon} · {detail.symbols.join(", ")}
         </span>
         <span className="ml-auto text-[12.5px] text-muted">
-          ค่า LLM <b className="num text-fg">{formatCost(cost)}</b>
+          {t("ค่า LLM", "LLM cost")} <b className="num text-fg">{formatCost(cost)}</b>
         </span>
         {running ? (
           <button
@@ -119,7 +121,7 @@ function BacktestRun({ id }: { id: string }) {
             onClick={() => void api.cancelRun(id).then(load)}
             className="inline-flex items-center gap-1 rounded-md border border-line px-2.5 py-1 text-[12.5px] hover:bg-layer-2"
           >
-            <Square className="size-3.5" aria-hidden /> หยุด
+            <Square className="size-3.5" aria-hidden /> {t("หยุด", "Stop")}
           </button>
         ) : null}
         {resumable ? (
@@ -129,16 +131,17 @@ function BacktestRun({ id }: { id: string }) {
             onClick={() => void api.resumeRun(id).then(load)}
             className="inline-flex items-center gap-1 rounded-md bg-accent px-2.5 py-1 text-[12.5px] font-medium text-bg"
           >
-            <Play className="size-3.5" aria-hidden /> ทำต่อ
+            <Play className="size-3.5" aria-hidden /> {t("ทำต่อ", "Resume")}
           </button>
         ) : null}
       </header>
 
       <section className="space-y-2 rounded-md border border-line bg-layer-1 p-3">
         <div className="flex flex-wrap items-center gap-3 text-[12.5px]">
-          <span className="font-medium">{progress ? PHASE_LABEL[progress.phase] : running ? "กำลังเริ่ม…" : detail.status}</span>
+          <span className="font-medium">{progress ? PHASE_LABEL[progress.phase] : running ? t("กำลังเริ่ม…", "Starting…") : detail.status}</span>
           <span className="num text-muted">
-            {done + failed}/{cells.length} วัน·symbol · ใช้ผลเดิม {cells.filter((c) => c.cached_from).length} · ล้มเหลว {failed}
+            {done + failed}/{cells.length} {t("วัน·symbol", "day·symbol")} · {t("ใช้ผลเดิม", "reused")} {cells.filter((c) => c.cached_from).length} ·{" "}
+            {t("ล้มเหลว", "failed")} {failed}
           </span>
           {detail.run.error ? <span className="text-error">{detail.run.error}</span> : null}
         </div>
@@ -161,8 +164,9 @@ function BacktestRun({ id }: { id: string }) {
           <EquityChart result={sim.result} currency={sim.metrics.currency} />
           {sim.result.baseline ? (
             <p className="text-[12px] text-muted">
-              {sim.result.baseline.name} (ไม่ใช้ LLM, เงื่อนไขพอร์ตเดียวกัน): return{" "}
-              <b className="num">{(sim.result.baseline.metrics.total_return * 100).toFixed(2)}%</b> · {sim.result.baseline.metrics.trades} เทรด
+              {sim.result.baseline.name} {t("(ไม่ใช้ LLM, เงื่อนไขพอร์ตเดียวกัน)", "(no LLM, same portfolio settings)")}: return{" "}
+              <b className="num">{(sim.result.baseline.metrics.total_return * 100).toFixed(2)}%</b> · {sim.result.baseline.metrics.trades}{" "}
+              {t("เทรด", "trades")}
             </p>
           ) : null}
           <WhatIfPanel backtestId={id} sims={detail.sims} current={sim} disabled={running} onSim={(s) => { setSim(s); void load(); }} onPick={(sid) => void pickSim(sid)} />
@@ -173,9 +177,19 @@ function BacktestRun({ id }: { id: string }) {
       <aside data-testid="bt-caveats" className="flex gap-2 rounded-md border border-warning/40 bg-warning/10 p-3 text-[12px] text-muted">
         <AlertTriangle className="mt-0.5 size-4 shrink-0 text-warning" aria-hidden />
         <ul className="list-disc space-y-0.5 pl-4">
-          <li>ผลในอดีตไม่รับประกันอนาคต และระบบนี้ไม่ส่งคำสั่งซื้อขายจริง</li>
-          <li>ข้อมูลราคาถูกตัดที่วันตัดสินใจ แต่ตัวโมเดลเองอาจ &quot;รู้&quot; เหตุการณ์ในช่วงนั้นจากข้อมูลที่ใช้ฝึก — ช่วงหลัง training cutoff ของโมเดลจะเชื่อถือได้กว่า</li>
-          <li>ข่าว/โซเชียลย้อนหลังมีไม่ครบ · ค่าคอมฯ และ slippage เป็นค่าที่คุณกำหนด · ปฏิทินเศรษฐกิจย้อนหลังไม่มี</li>
+          <li>{t("ผลในอดีตไม่รับประกันอนาคต และระบบนี้ไม่ส่งคำสั่งซื้อขายจริง", "Past results do not guarantee future results, and this system never sends real orders")}</li>
+          <li>
+            {t(
+              "ข้อมูลราคาถูกตัดที่วันตัดสินใจ แต่ตัวโมเดลเองอาจ \"รู้\" เหตุการณ์ในช่วงนั้นจากข้อมูลที่ใช้ฝึก — ช่วงหลัง training cutoff ของโมเดลจะเชื่อถือได้กว่า",
+              "Price data is cut at each decision date, but the model itself may \"know\" events of that period from its training data — periods after the model's training cutoff are more trustworthy",
+            )}
+          </li>
+          <li>
+            {t(
+              "ข่าว/โซเชียลย้อนหลังมีไม่ครบ · ค่าคอมฯ และ slippage เป็นค่าที่คุณกำหนด · ปฏิทินเศรษฐกิจย้อนหลังไม่มี",
+              "Historical news/social data is incomplete · commission and slippage are your assumptions · no historical economic calendar",
+            )}
+          </li>
         </ul>
       </aside>
     </div>

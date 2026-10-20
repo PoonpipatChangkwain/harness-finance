@@ -8,6 +8,7 @@ import { formatPct } from "@/lib/portfolio-format";
 import type { PortfolioAnalytics } from "@/lib/portfolio-api";
 
 import { ProvValue } from "./ProvValue";
+import { useT } from "@/lib/i18n";
 
 export function ExposureBars({
   analytics,
@@ -19,6 +20,7 @@ export function ExposureBars({
   limit: number;
   limitLabel: string;
 }) {
+  const t = useT();
   const sectors = Object.entries(analytics.exposure.sector ?? {})
     .filter(([k, v]) => k !== "CASH" && v > 0)
     .sort((a, b) => b[1] - a[1]);
@@ -29,11 +31,11 @@ export function ExposureBars({
       <div className="mb-2 flex items-center gap-2">
         <h2 className="text-[13px] font-semibold">Sector exposure</h2>
         <span className="text-[11.5px] text-subtle">
-          เส้นแดง = limit {formatPct(limit, 0)} ({limitLabel})
+          {t("เส้นแดง", "Red line")} = limit {formatPct(limit, 0)} ({limitLabel})
         </span>
       </div>
       {sectors.length === 0 ? (
-        <p className="text-[12.5px] text-subtle">ยังไม่มีข้อมูล sector</p>
+        <p className="text-[12.5px] text-subtle">{t("ยังไม่มีข้อมูล sector", "No sector data yet")}</p>
       ) : (
         <ul className="space-y-1.5">
           {sectors.map(([name, w]) => {

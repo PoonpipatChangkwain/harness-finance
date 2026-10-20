@@ -11,10 +11,12 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
 import { isTerminal, type RunView } from "@/stores/run-reducer";
+import { useT } from "@/lib/i18n";
 
 const SHOW_MS = 6000;
 
 export function ReasoningToast({ view }: { view: RunView | undefined }) {
+  const t = useT();
   const live = useRef(new Set<string>());
   const shown = useRef(new Set<string>());
   const [toast, setToast] = useState<{ runId: string; titles: string[] } | null>(null);
@@ -49,7 +51,7 @@ export function ReasoningToast({ view }: { view: RunView | undefined }) {
     >
       <Lightbulb className="mt-0.5 size-4 shrink-0 text-warning" aria-hidden />
       <div className="min-w-0 flex-1">
-        <div className="font-medium text-fg">บันทึกบทเรียนลง ReasoningBank</div>
+        <div className="font-medium text-fg">{t("บันทึกบทเรียนลง ReasoningBank", "Lesson saved to the ReasoningBank")}</div>
         <ul className="mt-0.5 space-y-0.5 text-muted">
           {toast.titles.map((t) => (
             <li key={t} className="truncate" title={t}>
@@ -58,10 +60,10 @@ export function ReasoningToast({ view }: { view: RunView | undefined }) {
           ))}
         </ul>
         <Link href="/memory?tab=reasoning" className="text-[12px] text-accent hover:underline">
-          ดูใน ReasoningBank
+          {t("ดูใน ReasoningBank", "View in the ReasoningBank")}
         </Link>
       </div>
-      <button type="button" aria-label="ปิด" onClick={() => setToast(null)} className="rounded p-0.5 text-subtle hover:text-fg">
+      <button type="button" aria-label={t("ปิด", "Close")} onClick={() => setToast(null)} className="rounded p-0.5 text-subtle hover:text-fg">
         <X className="size-3.5" aria-hidden />
       </button>
     </div>

@@ -12,6 +12,7 @@ import { Bot, KeyRound } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 
 import { api, type LlmChoice, type LlmProviderInfo, type LlmProviders } from "@/lib/api";
+import { tr, useT } from "@/lib/i18n";
 
 const CUSTOM = "__custom__";
 
@@ -39,9 +40,13 @@ export function useLlmProviders(): { data: LlmProviders | null; error: boolean; 
 export function choiceProblem(choice: LlmChoice | null, providers: LlmProviderInfo[] | undefined): string | null {
   if (!choice || !providers) return null;
   const info = providers.find((p) => p.id === choice.provider);
-  if (!info) return `ไม่รู้จัก provider ${choice.provider}`;
-  if (!info.configured) return `ยังไม่ได้ใส่ API key ของ ${info.label} — ตั้ง ${info.env_hint} ใน backend/.env ก่อน`;
-  if (!choice.model.trim()) return "ใส่ชื่อ model ก่อน";
+  if (!info) return tr(`ไม่รู้จัก provider ${choice.provider}`, `Unknown provider ${choice.provider}`);
+  if (!info.configured)
+    return tr(
+      `ยังไม่ได้ใส่ API key ของ ${info.label} — ตั้ง ${info.env_hint} ใน backend/.env ก่อน`,
+      `No API key for ${info.label} yet — set ${info.env_hint} in backend/.env first`,
+    );
+  if (!choice.model.trim()) return tr("ใส่ชื่อ model ก่อน", "Enter a model name first");
   return null;
 }
 
@@ -56,6 +61,7 @@ export function ModelPicker({
   onChange: (choice: LlmChoice | null) => void;
   disabled?: boolean;
 }) {
+  const t = useT();
   const list = providers?.providers ?? [];
   const info = choice ? list.find((p) => p.id === choice.provider) : undefined;
   const models = info?.models ?? [];
@@ -74,8 +80,11 @@ export function ModelPicker({
         disabled={disabled}
         title={
           choice
-            ? `${info?.label ?? choice.provider}: หา tool + เขียนคำตอบ (ไม่มี failover) · วางแผนใช้โมเดล quick ตาม .env`
-            : "ใช้ LLM ตามที่ตั้งใน backend/.env (มี failover)"
+            ? t(
+                `${info?.label ?? choice.provider}: หา tool + เขียนคำตอบ (ไม่มี failover) · วางแผนใช้โมเดล quick ตาม .env`,
+                `${info?.label ?? choice.provider}: tool calls + answer (no failover) · planning uses the quick model from .env`,
+              )
+            : t("ใช้ LLM ตามที่ตั้งใน backend/.env (มี failover)", "Use the LLMs configured in backend/.env (with failover)")
         }
         onChange={(e) => {
           const id = e.target.value;
@@ -90,7 +99,7 @@ export function ModelPicker({
           <option key={p.id} value={p.id}>
             {p.configured ? "✓ " : "✗ "}
             {p.label}
-            {p.configured ? "" : " (ไม่มี key)"}
+            {p.configured ? "" : t(" (ไม่มี key)", " (no key)")}
           </option>
         ))}
       </select>
@@ -112,7 +121,7 @@ export function ModelPicker({
                 {m}
               </option>
             ))}
-            <option value={CUSTOM}>อื่นๆ (พิมพ์เอง)…</option>
+            <option value={CUSTOM}>{t("อื่นๆ (พิมพ์เอง)…", "Other (type it)…")}</option>
           </select>
           {custom ? (
             <input

@@ -12,6 +12,7 @@ import remarkGfm from "remark-gfm";
 import { VerdictBadge } from "@/components/trade/DecisionCard";
 import type { DebateKind } from "@/lib/trade";
 import type { DebateTurn, TradeRunDetail } from "@/lib/trade-api";
+import { useT } from "@/lib/i18n";
 
 const SIDES: Record<DebateKind, { id: string; label: string; tone: string }[]> = {
   invest: [
@@ -39,6 +40,7 @@ export function debateRounds(history: DebateTurn[], speakers: string[]): Record<
 }
 
 export function DebateView({ detail, kind }: { detail: TradeRunDetail | undefined; kind: DebateKind }) {
+  const t = useT();
   const sides = SIDES[kind];
   const history = (kind === "invest" ? detail?.invest_debate?.history : detail?.risk_debate?.history) ?? [];
   const rounds = debateRounds(history, sides.map((s) => s.id));
@@ -61,10 +63,10 @@ export function DebateView({ detail, kind }: { detail: TradeRunDetail | undefine
 
   return (
     <div data-testid="debate-view" className="space-y-3 p-3 text-[12.5px]">
-      {!rounds.length ? <p className="text-subtle">ยังไม่มีการ debate</p> : null}
+      {!rounds.length ? <p className="text-subtle">{t("ยังไม่มีการ debate", "No debate yet")}</p> : null}
       {rounds.map((round, i) => (
         <section key={i} data-testid="debate-round-row">
-          <h4 className="mb-1 text-[11px] uppercase tracking-wide text-subtle">รอบ {i + 1}</h4>
+          <h4 className="mb-1 text-[11px] uppercase tracking-wide text-subtle">{t(`รอบ ${i + 1}`, `Round ${i + 1}`)}</h4>
           <div className={clsx("grid gap-2", sides.length === 3 ? "grid-cols-3" : "grid-cols-2")}>
             {sides.map((s) => (
               <div key={s.id} className="min-w-0 rounded-md border border-line bg-layer-1 p-2">

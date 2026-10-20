@@ -11,6 +11,7 @@ import { useEffect } from "react";
 import { create } from "zustand";
 
 import { ApiError } from "@/lib/api";
+import { tr } from "@/lib/i18n";
 import { tradeApi, type GraphView, type TradeRunBrief, type TradeRunDetail } from "@/lib/trade-api";
 import type { RunView } from "@/stores/run-reducer";
 import { useRun } from "@/stores/run-store";
@@ -81,7 +82,7 @@ export const useTradeHistory = create<TradeHistoryState>((set, get) => ({
       set((s) => ({ runs: s.runs.filter((r) => r.run_id !== id) }));
       return null;
     } catch (err) {
-      if (err instanceof ApiError && err.status === 409) return "run นี้กำลังทำงานอยู่ กด Stop ก่อนแล้วค่อยลบ";
+      if (err instanceof ApiError && err.status === 409) return tr("run นี้กำลังทำงานอยู่ กด Stop ก่อนแล้วค่อยลบ", "This run is still running — press Stop before deleting");
       return err instanceof Error ? err.message : String(err);
     }
   },

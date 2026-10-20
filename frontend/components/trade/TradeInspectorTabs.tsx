@@ -10,6 +10,7 @@ import { StateTab } from "@/components/inspector/StateTab";
 import { TrajectoryTab } from "@/components/inspector/TrajectoryTab";
 import type { InspectorTab } from "@/components/shell/InspectorRegistry";
 import { useNow } from "@/lib/hooks";
+import { useT } from "@/lib/i18n";
 import { debateKindOf } from "@/lib/trade";
 import type { TradeRunDetail } from "@/lib/trade-api";
 import { isTerminal, type RunView } from "@/stores/run-reducer";
@@ -25,11 +26,12 @@ function WithTradeRun({
 }: {
   children: (view: RunView, detail: TradeRunDetail | undefined, now: number) => ReactNode;
 }) {
+  const t = useT();
   const runId = useUiStore((s) => s.selectedRunId);
   const view = useRun(runId);
   const detail = useTradeDetail(runId);
   const now = useNow(view ? !isTerminal(view.status) : false, 1000);
-  if (!runId || !view) return <div className="p-4 text-[12.5px] text-subtle">ยังไม่มี run · เลือก symbol แล้วกด Run</div>;
+  if (!runId || !view) return <div className="p-4 text-[12.5px] text-subtle">{t("ยังไม่มี run · เลือก symbol แล้วกด Run", "No run yet · pick a symbol and press Run")}</div>;
   return <>{children(view, detail, now)}</>;
 }
 

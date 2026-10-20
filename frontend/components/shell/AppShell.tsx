@@ -11,6 +11,7 @@ import { Menu, PanelRight } from "lucide-react";
 import { useEffect, type ReactNode } from "react";
 
 import { useBreakpoint } from "@/lib/hooks";
+import { useT } from "@/lib/i18n";
 import { COLUMNS, useUiStore } from "@/stores/ui-store";
 
 import { CommandPalette } from "./CommandPalette";
@@ -22,6 +23,7 @@ import { Sidebar } from "./Sidebar";
 import { ThemeController } from "./ThemeController";
 
 export function AppShell({ children }: { children: ReactNode }) {
+  const t = useT();
   const bp = useBreakpoint();
   const ui = useUiStore();
 
@@ -88,7 +90,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             {!inspectorVisible ? (
               <button
                 type="button"
-                title="เปิด inspector (Ctrl+.)"
+                title={t("เปิด inspector (Ctrl+.)", "Open inspector (Ctrl+.)")}
                 aria-label="Open inspector"
                 onClick={() => ui.setInspectorOpen(true)}
                 className="absolute right-2 top-2 z-20 hidden rounded-md border border-line bg-layer-1 p-1.5 text-muted hover:text-fg md:block"

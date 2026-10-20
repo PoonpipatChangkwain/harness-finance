@@ -10,6 +10,7 @@ import { Briefcase, ChevronDown } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 import type { PortfolioBrief } from "@/lib/portfolio-api";
+import { useT } from "@/lib/i18n";
 
 export function PortfolioToggle({
   portfolios,
@@ -23,6 +24,7 @@ export function PortfolioToggle({
   onChange: (ids: string[]) => void;
   disabled?: boolean;
 }) {
+  const t = useT();
   const [open, setOpen] = useState(false);
   const box = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -42,7 +44,7 @@ export function PortfolioToggle({
         .filter((p) => selected.includes(p.id))
         .map((p) => p.name)
         .join(", ")
-    : "ใช้ข้อมูลพอร์ต";
+    : t("ใช้ข้อมูลพอร์ต", "Use portfolio data");
 
   return (
     <div ref={box} className="relative inline-flex items-center">
@@ -53,7 +55,10 @@ export function PortfolioToggle({
         data-testid="portfolio-toggle"
         disabled={disabled}
         onClick={toggleOn}
-        title="ใส่ข้อมูลพอร์ต (holdings, น้ำหนัก, กำไร/ขาดทุน, ความเสี่ยง) ให้ AI ใช้ในคำถามนี้"
+        title={t(
+          "ใส่ข้อมูลพอร์ต (holdings, น้ำหนัก, กำไร/ขาดทุน, ความเสี่ยง) ให้ AI ใช้ในคำถามนี้",
+          "Give the AI your portfolio data (holdings, weights, P/L, risk) for this question",
+        )}
         className={clsx(
           "inline-flex max-w-52 items-center gap-1 rounded-l-md border px-2 py-1 text-[12.5px]",
           on ? "border-done/50 bg-done/10 text-done" : "border-line bg-layer-2 text-muted",
@@ -64,7 +69,7 @@ export function PortfolioToggle({
       </button>
       <button
         type="button"
-        aria-label="เลือกพอร์ต"
+        aria-label={t("เลือกพอร์ต", "Choose portfolios")}
         aria-expanded={open}
         disabled={disabled}
         onClick={() => setOpen((v) => !v)}

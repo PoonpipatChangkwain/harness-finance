@@ -15,6 +15,7 @@ import type { LlmChoice } from "@/lib/api";
 import { DEFAULT_CADENCE, defaultForm, formProblems, isoDaysAgo, toConfig, type BacktestForm } from "@/lib/backtest";
 import { backtestApi, type BacktestEstimate } from "@/lib/backtest-api";
 import { formatCost } from "@/lib/format";
+import { useT } from "@/lib/i18n";
 import { ALL_ANALYSTS, ANALYST_LABEL } from "@/lib/trade";
 
 import { SimFields } from "./SimFields";
@@ -22,6 +23,7 @@ import { SimFields } from "./SimFields";
 const sel = "rounded-md border border-line bg-bg px-1.5 py-1 text-[13px] text-fg";
 
 export function BacktestSetup({ onStarted }: { onStarted: (id: string) => void }) {
+  const t = useT();
   const [form, setForm] = useState<BacktestForm>(() => defaultForm());
   const [llm, setLlm] = useState<LlmChoice | null>(null);
   const [est, setEst] = useState<BacktestEstimate | null>(null);
@@ -65,19 +67,22 @@ export function BacktestSetup({ onStarted }: { onStarted: (id: string) => void }
   return (
     <section data-testid="backtest-setup" className="space-y-4 rounded-md border border-line bg-layer-1 p-4">
       <header>
-        <h1 className="text-[16px] font-semibold">Backtest ใหม่</h1>
+        <h1 className="text-[16px] font-semibold">{t("Backtest ใหม่", "New backtest")}</h1>
         <p className="text-[12.5px] text-muted">
-          ให้ระบบเทรดตัดสินใจย้อนหลังทีละวัน (เห็นข้อมูลถึงวันนั้นเท่านั้น) แล้วจำลองพอร์ตด้วยเงินต้นที่กำหนด
+          {t(
+            "ให้ระบบเทรดตัดสินใจย้อนหลังทีละวัน (เห็นข้อมูลถึงวันนั้นเท่านั้น) แล้วจำลองพอร์ตด้วยเงินต้นที่กำหนด",
+            "Let the trading system decide day by day in the past (seeing data only up to that day), then simulate a portfolio with your starting capital",
+          )}
         </p>
       </header>
 
       <div className="space-y-1.5">
-        <div className="text-[12px] text-muted">Symbols (สูงสุด 10)</div>
+        <div className="text-[12px] text-muted">{t("Symbols (สูงสุด 10)", "Symbols (up to 10)")}</div>
         <div className="flex flex-wrap items-center gap-1.5">
           {form.symbols.map((s) => (
             <span key={s} data-testid="symbol-chip" className="inline-flex items-center gap-1 rounded-md bg-layer-2 px-2 py-0.5 text-[12.5px]">
               {s}
-              <button type="button" aria-label={`เอา ${s} ออก`} onClick={() => update({ symbols: form.symbols.filter((x) => x !== s) })}>
+              <button type="button" aria-label={t(`เอา ${s} ออก`, `Remove ${s}`)} onClick={() => update({ symbols: form.symbols.filter((x) => x !== s) })}>
                 <X className="size-3" aria-hidden />
               </button>
             </span>
@@ -96,23 +101,23 @@ export function BacktestSetup({ onStarted }: { onStarted: (id: string) => void }
 
       <div className="flex flex-wrap items-end gap-3 text-[12px] text-muted">
         <label className="flex flex-col gap-0.5">
-          เริ่ม
+          {t("เริ่ม", "Start")}
           <input type="date" data-testid="bt-start" max={isoDaysAgo(1)} value={form.start} onChange={(e) => update({ start: e.target.value })} className={`num ${sel}`} />
         </label>
         <label className="flex flex-col gap-0.5">
-          สิ้นสุด
+          {t("สิ้นสุด", "End")}
           <input type="date" data-testid="bt-end" max={isoDaysAgo(1)} value={form.end} onChange={(e) => update({ end: e.target.value })} className={`num ${sel}`} />
         </label>
         <label className="flex flex-col gap-0.5">
           Horizon
           <select value={form.horizon} onChange={(e) => update({ horizon: e.target.value as BacktestForm["horizon"] })} className={sel}>
-            <option value="intraday">intraday · แท่ง 15m</option>
-            <option value="swing">swing · แท่ง 1H</option>
-            <option value="position">position · แท่ง 1D</option>
+            <option value="intraday">{t("intraday · แท่ง 15m", "intraday · 15m bars")}</option>
+            <option value="swing">{t("swing · แท่ง 1H", "swing · 1H bars")}</option>
+            <option value="position">{t("position · แท่ง 1D", "position · 1D bars")}</option>
           </select>
         </label>
-        <label className="flex flex-col gap-0.5" title="ตัดสินใจทุกกี่วันทำการ">
-          ตัดสินใจทุก (วันทำการ)
+        <label className="flex flex-col gap-0.5" title={t("ตัดสินใจทุกกี่วันทำการ", "Decide every how many trading days")}>
+          {t("ตัดสินใจทุก (วันทำการ)", "Decide every (trading days)")}
           <input
             inputMode="numeric"
             placeholder={`auto (${DEFAULT_CADENCE[form.horizon]})`}
@@ -136,14 +141,14 @@ export function BacktestSetup({ onStarted }: { onStarted: (id: string) => void }
           </span>
         </label>
         <label className="flex flex-col gap-0.5">
-          ภาษา
+          {t("ภาษารายงาน", "Report language")}
           <select value={form.language} onChange={(e) => update({ language: e.target.value as "th" | "en" })} className={sel}>
             <option value="th">ไทย</option>
             <option value="en">English</option>
           </select>
         </label>
-        <label className="flex flex-col gap-0.5" title="รัน trading run พร้อมกันกี่ตัว">
-          พร้อมกัน
+        <label className="flex flex-col gap-0.5" title={t("รัน trading run พร้อมกันกี่ตัว", "How many trading runs to run at once")}>
+          {t("พร้อมกัน", "Concurrency")}
           <select value={form.concurrency} onChange={(e) => update({ concurrency: Number(e.target.value) })} className={sel}>
             {[1, 2, 3, 4].map((n) => (
               <option key={n} value={n}>
@@ -152,14 +157,16 @@ export function BacktestSetup({ onStarted }: { onStarted: (id: string) => void }
             ))}
           </select>
         </label>
-        <label className="flex flex-col gap-0.5" title="หยุดเริ่ม run ใหม่เมื่อค่า LLM ถึงเพดาน">
-          งบ LLM (USD)
-          <input inputMode="decimal" placeholder="ไม่จำกัด" value={form.budgetUsd} onChange={(e) => update({ budgetUsd: e.target.value })} className={`num w-24 ${sel}`} />
+        <label className="flex flex-col gap-0.5" title={t("หยุดเริ่ม run ใหม่เมื่อค่า LLM ถึงเพดาน", "Stop starting new runs once the LLM cost hits this cap")}>
+          {t("งบ LLM (USD)", "LLM budget (USD)")}
+          <input inputMode="decimal" placeholder={t("ไม่จำกัด", "unlimited")} value={form.budgetUsd} onChange={(e) => update({ budgetUsd: e.target.value })} className={`num w-24 ${sel}`} />
         </label>
       </div>
 
       <fieldset className="flex flex-wrap items-center gap-3 text-[12.5px]">
-        <legend className="mb-1 text-[12px] text-muted">Analysts (ข่าว/โซเชียลย้อนหลังมักไม่มีข้อมูล — แนะนำ Market)</legend>
+        <legend className="mb-1 text-[12px] text-muted">
+          {t("Analysts (ข่าว/โซเชียลย้อนหลังมักไม่มีข้อมูล — แนะนำ Market)", "Analysts (historical news/social data is often missing — Market is recommended)")}
+        </legend>
         {ALL_ANALYSTS.map((a) => (
           <label key={a} className="flex items-center gap-1">
             <input
@@ -172,14 +179,16 @@ export function BacktestSetup({ onStarted }: { onStarted: (id: string) => void }
         ))}
         <label className="ml-auto flex items-center gap-1">
           <input type="checkbox" checked={form.baseline} onChange={(e) => update({ baseline: e.target.checked })} />
-          เทียบกับกลยุทธ์ SMA20/50 (ไม่ใช้ LLM)
+          {t("เทียบกับกลยุทธ์ SMA20/50 (ไม่ใช้ LLM)", "Compare with an SMA20/50 strategy (no LLM)")}
         </label>
       </fieldset>
 
       <div className="space-y-1.5 rounded-md border border-line bg-bg p-3">
-        <div className="text-[12.5px] font-medium">พอร์ตจำลอง</div>
+        <div className="text-[12.5px] font-medium">{t("พอร์ตจำลอง", "Simulated portfolio")}</div>
         <SimFields value={form.sim} onChange={(sim) => update({ sim })} />
-        <p className="text-[11.5px] text-subtle">เปลี่ยนเงินต้น/ความเสี่ยงหลังรันเสร็จได้ทันทีโดยไม่ต้องเรียก LLM ซ้ำ</p>
+        <p className="text-[11.5px] text-subtle">
+          {t("เปลี่ยนเงินต้น/ความเสี่ยงหลังรันเสร็จได้ทันทีโดยไม่ต้องเรียก LLM ซ้ำ", "You can change capital/risk after the run finishes without calling the LLM again")}
+        </p>
       </div>
 
       <div className="flex flex-wrap items-center gap-3">
@@ -191,7 +200,7 @@ export function BacktestSetup({ onStarted }: { onStarted: (id: string) => void }
           onClick={() => void estimate()}
           className="ml-auto inline-flex items-center gap-1 rounded-md border border-line px-3 py-1 text-[13px] hover:bg-layer-2 disabled:opacity-50"
         >
-          <Calculator className="size-3.5" aria-hidden /> ประเมิน
+          <Calculator className="size-3.5" aria-hidden /> {t("ประเมิน", "Estimate")}
         </button>
         <button
           type="button"
@@ -200,7 +209,7 @@ export function BacktestSetup({ onStarted }: { onStarted: (id: string) => void }
           onClick={() => void start()}
           className="inline-flex items-center gap-1 rounded-md bg-accent px-3 py-1 text-[13px] font-medium text-bg disabled:opacity-50"
         >
-          <Play className="size-3.5" aria-hidden /> เริ่ม backtest
+          <Play className="size-3.5" aria-hidden /> {t("เริ่ม backtest", "Start backtest")}
         </button>
       </div>
       {llmProblem ? <KeyWarning message={llmProblem} /> : null}
@@ -208,19 +217,28 @@ export function BacktestSetup({ onStarted }: { onStarted: (id: string) => void }
       {est ? (
         <div data-testid="bt-estimate-result" className="rounded-md border border-line bg-bg px-3 py-2 text-[12.5px]">
           <div>
-            ประมาณ <b className="num">{est.cells}</b> trading run ({form.symbols.length} symbol) · ใช้ผลเดิมได้{" "}
-            <b className="num">{est.cached}</b> · ต้องรันใหม่ <b className="num">{est.to_run}</b>
+            {t("ประมาณ", "About")} <b className="num">{est.cells}</b> trading run ({form.symbols.length} symbol) ·{" "}
+            {t("ใช้ผลเดิมได้", "reusable")} <b className="num">{est.cached}</b> · {t("ต้องรันใหม่", "to run")}{" "}
+            <b className="num">{est.to_run}</b>
           </div>
           {est.est_cost_usd !== null ? (
             <div className="text-muted">
-              ค่า LLM ≈ <b className="num text-fg">{formatCost(est.est_cost_usd)}</b>
+              {t("ค่า LLM", "LLM cost")} ≈ <b className="num text-fg">{formatCost(est.est_cost_usd)}</b>
               {est.est_llm_calls !== null ? ` · ≈${Math.round(est.est_llm_calls).toLocaleString()} LLM calls` : ""}
-              {est.est_minutes !== null ? ` · ≈${Math.ceil(est.est_minutes)} นาที` : ""} (เฉลี่ยจาก {est.based_on_runs} trade run ล่าสุด)
+              {est.est_minutes !== null ? ` · ≈${Math.ceil(est.est_minutes)} ${t("นาที", "min")}` : ""}{" "}
+              {t(`(เฉลี่ยจาก ${est.based_on_runs} trade run ล่าสุด)`, `(averaged over the last ${est.based_on_runs} trade runs)`)}
             </div>
           ) : (
-            <div className="text-warning">ยังประเมินค่าใช้จ่ายไม่ได้ — ยังไม่เคยรัน trade run ด้วยโมเดลนี้ (ลองรันที่หน้า Trade สัก 1 ครั้งก่อน)</div>
+            <div className="text-warning">
+              {t(
+                "ยังประเมินค่าใช้จ่ายไม่ได้ — ยังไม่เคยรัน trade run ด้วยโมเดลนี้ (ลองรันที่หน้า Trade สัก 1 ครั้งก่อน)",
+                "Cannot estimate the cost yet — no trade run with this model so far (run one on the Trade page first)",
+              )}
+            </div>
           )}
-          {over ? <div className="text-error">เกินเพดาน {est.limit} run — ย่นช่วงวันหรือเพิ่มระยะตัดสินใจ</div> : null}
+          {over ? <div className="text-error">
+              {t(`เกินเพดาน ${est.limit} run — ย่นช่วงวันหรือเพิ่มระยะตัดสินใจ`, `Over the ${est.limit}-run cap — shorten the date range or decide less often`)}
+            </div> : null}
         </div>
       ) : null}
       {problems.length ? (

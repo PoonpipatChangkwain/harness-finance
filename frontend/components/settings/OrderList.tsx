@@ -5,6 +5,7 @@
 import { clsx } from "clsx";
 import { ArrowDown, ArrowUp, GripVertical, X } from "lucide-react";
 import { useState, type ReactNode } from "react";
+import { useT } from "@/lib/i18n";
 
 export function move<T>(items: T[], from: number, to: number): T[] {
   if (from === to || from < 0 || to < 0 || from >= items.length || to >= items.length) return items;
@@ -29,6 +30,7 @@ export function OrderList<T>({
   onRemove?: (index: number) => void;
   label: string;
 }) {
+  const t = useT();
   const [dragging, setDragging] = useState<number | null>(null);
   const [over, setOver] = useState<number | null>(null);
   return (
@@ -67,12 +69,12 @@ export function OrderList<T>({
           <GripVertical className="size-3.5 shrink-0 cursor-grab text-subtle" aria-hidden />
           <span className="num w-4 text-subtle">{i + 1}</span>
           <span className="min-w-0 flex-1">{render(item, i)}</span>
-          <button type="button" aria-label={`เลื่อน ${keyOf(item)} ขึ้น`} disabled={i === 0} onClick={() => onChange(move(items, i, i - 1))} className="rounded-sm p-0.5 text-subtle hover:text-fg disabled:opacity-30">
+          <button type="button" aria-label={t(`เลื่อน ${keyOf(item)} ขึ้น`, `Move ${keyOf(item)} up`)} disabled={i === 0} onClick={() => onChange(move(items, i, i - 1))} className="rounded-sm p-0.5 text-subtle hover:text-fg disabled:opacity-30">
             <ArrowUp className="size-3.5" aria-hidden />
           </button>
           <button
             type="button"
-            aria-label={`เลื่อน ${keyOf(item)} ลง`}
+            aria-label={t(`เลื่อน ${keyOf(item)} ลง`, `Move ${keyOf(item)} down`)}
             disabled={i === items.length - 1}
             onClick={() => onChange(move(items, i, i + 1))}
             className="rounded-sm p-0.5 text-subtle hover:text-fg disabled:opacity-30"
@@ -80,7 +82,7 @@ export function OrderList<T>({
             <ArrowDown className="size-3.5" aria-hidden />
           </button>
           {onRemove ? (
-            <button type="button" aria-label={`ลบ ${keyOf(item)}`} onClick={() => onRemove(i)} className="rounded-sm p-0.5 text-subtle hover:text-error">
+            <button type="button" aria-label={t(`ลบ ${keyOf(item)}`, `Remove ${keyOf(item)}`)} onClick={() => onRemove(i)} className="rounded-sm p-0.5 text-subtle hover:text-error">
               <X className="size-3.5" aria-hidden />
             </button>
           ) : null}

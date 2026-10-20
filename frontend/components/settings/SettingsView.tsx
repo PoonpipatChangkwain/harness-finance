@@ -13,6 +13,7 @@ import { Plus, RotateCcw, Save } from "lucide-react";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 
 import { ApiError } from "@/lib/api";
+import { tr, type Locale, useLocale, useLocaleStore, useT } from "@/lib/i18n";
 import { formatPct, fractionToPercentText, percentTextToFraction } from "@/lib/portfolio-format";
 import {
   settingsApi,
@@ -50,11 +51,12 @@ function Section({
   busy?: boolean;
   overridden?: boolean;
 }) {
+  const t = useT();
   return (
     <section id={id} data-testid={`section-${id}`} className="rounded-lg border border-line bg-layer-1">
       <div className="flex flex-wrap items-center gap-2 border-b border-line px-4 py-2">
         <h2 className="text-[14px] font-semibold">{title}</h2>
-        {overridden ? <span className="rounded-sm bg-accent-muted px-1.5 text-[11px] text-accent">แก้จากค่าเริ่มต้น</span> : null}
+        {overridden ? <span className="rounded-sm bg-accent-muted px-1.5 text-[11px] text-accent">{t("แก้จากค่าเริ่มต้น", "Changed from default")}</span> : null}
         <span className="flex-1" />
         {onReset ? (
           <button
@@ -64,7 +66,7 @@ function Section({
             onClick={onReset}
             className="inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[12px] text-muted hover:bg-layer-2 disabled:opacity-50"
           >
-            <RotateCcw className="size-3.5" aria-hidden /> Reset to defaults
+            <RotateCcw className="size-3.5" aria-hidden /> {t("คืนค่าเริ่มต้น", "Reset to defaults")}
           </button>
         ) : null}
         {onSave ? (
@@ -75,7 +77,7 @@ function Section({
             onClick={onSave}
             className="inline-flex items-center gap-1 rounded-md bg-accent px-2.5 py-0.5 text-[12px] text-bg disabled:opacity-40"
           >
-            <Save className="size-3.5" aria-hidden /> บันทึก
+            <Save className="size-3.5" aria-hidden /> {t("บันทึก", "Save")}
           </button>
         ) : null}
       </div>
@@ -88,10 +90,17 @@ function Section({
 }
 
 function KeyDot({ configured, hint, reason }: { configured: boolean; hint?: string; reason?: string | null }) {
+  const t = useT();
   return (
     <span
       title={
-        configured ? "มี key แล้ว" : reason ? reason : hint ? `ยังไม่มี key: ตั้ง ${hint} ใน backend/.env` : "ยังไม่ได้ตั้งค่า"
+        configured
+          ? t("มี key แล้ว", "Key configured")
+          : reason
+            ? reason
+            : hint
+              ? t(`ยังไม่มี key: ตั้ง ${hint} ใน backend/.env`, `No key yet: set ${hint} in backend/.env`)
+              : t("ยังไม่ได้ตั้งค่า", "Not configured")
       }
       className={clsx("inline-block size-2 shrink-0 rounded-full", configured ? "bg-done" : "bg-idle")}
     />
@@ -101,6 +110,7 @@ function KeyDot({ configured, hint, reason }: { configured: boolean; hint?: stri
 // -- LLM ------------------------------------------------------------------------------------
 
 function TierPicker({ view, value, onChange, label }: { view: View; value: TierChoice; onChange: (v: TierChoice) => void; label: string }) {
+  const t = useT();
   const entry = view.catalog.llm.find((p) => p.id === value.provider);
   const listId = `models-${label}`;
   return (
@@ -118,7 +128,7 @@ function TierPicker({ view, value, onChange, label }: { view: View; value: TierC
         {view.catalog.llm.map((p) => (
           <option key={p.id} value={p.id}>
             {p.label}
-            {p.configured ? "" : " (ไม่มี key)"}
+            {p.configured ? "" : t(" (ไม่มี key)", " (no key)")}
           </option>
         ))}
       </select>
@@ -135,12 +145,13 @@ function TierPicker({ view, value, onChange, label }: { view: View; value: TierC
         ))}
       </datalist>
       <KeyDot configured={entry?.configured ?? false} hint={entry?.env_hint} reason={entry?.configured_reason} />
-      {entry && !entry.configured ? <span className="text-[11.5px] text-warning">ตั้ง {entry.env_hint} ใน backend/.env</span> : null}
+      {entry && !entry.configured ? <span className="text-[11.5px] text-warning">{t(`ตั้ง ${entry.env_hint} ใน backend/.env`, `Set ${entry.env_hint} in backend/.env`)}</span> : null}
     </div>
   );
 }
 
 function LlmSection({ view, save, busy }: { view: View; save: (body: SettingsUpdate) => Promise<void>; busy: boolean }) {
+  const t = useT();
   const v = view.values.llm;
   const fallback: TierChoice = { provider: view.catalog.llm[0]?.id ?? "", model: "" };
   const init = () => ({
@@ -159,7 +170,10 @@ function LlmSection({ view, save, busy }: { view: View; save: (body: SettingsUpd
     <Section
       id="llm"
       title="LLM"
-      description="deep = วิเคราะห์/ตัดสินใจ, quick = งานเบา (สรุป, compaction) · ถ้า provider หลักล้มจะใช้ลำดับ failover"
+      description={t(
+        "deep = วิเคราะห์/ตัดสินใจ, quick = งานเบา (สรุป, compaction) · ถ้า provider หลักล้มจะใช้ลำดับ failover",
+        "deep = analysis/decisions, quick = light work (summaries, compaction) · if the main provider fails the failover order is used",
+      )}
       dirty={dirty}
       busy={busy}
       overridden={Object.keys(view.overrides.llm).length > 0}
@@ -170,7 +184,7 @@ function LlmSection({ view, save, busy }: { view: View; save: (body: SettingsUpd
       <TierPicker view={view} label="deep" value={draft.deep} onChange={(deep) => setDraft({ ...draft, deep })} />
       <TierPicker view={view} label="quick" value={draft.quick} onChange={(quick) => setDraft({ ...draft, quick })} />
       <div>
-        <div className="mb-1 text-muted">ลำดับ failover (ลากเพื่อเรียง)</div>
+        <div className="mb-1 text-muted">{t("ลำดับ failover (ลากเพื่อเรียง)", "Failover order (drag to reorder)")}</div>
         {draft.failover.length ? (
           <OrderList
             label="llm failover"
@@ -188,7 +202,7 @@ function LlmSection({ view, save, busy }: { view: View; save: (body: SettingsUpd
             )}
           />
         ) : (
-          <p className="text-subtle">ไม่มี failover</p>
+          <p className="text-subtle">{t("ไม่มี failover", "No failover")}</p>
         )}
         <div className="mt-2 flex flex-wrap items-center gap-2">
           <select
@@ -216,12 +230,12 @@ function LlmSection({ view, save, busy }: { view: View; save: (body: SettingsUpd
             onClick={() => setDraft({ ...draft, failover: [...draft.failover, { provider: adding.provider, model: adding.model.trim() }] })}
             className="inline-flex items-center gap-1 rounded-md bg-layer-2 px-2 py-1 disabled:opacity-40"
           >
-            <Plus className="size-3.5" aria-hidden /> เพิ่ม
+            <Plus className="size-3.5" aria-hidden /> {t("เพิ่ม", "Add")}
           </button>
         </div>
       </div>
       <div>
-        <div className="mb-1 text-muted">สถานะ key</div>
+        <div className="mb-1 text-muted">{t("สถานะ key", "Key status")}</div>
         <ul className="grid gap-1 sm:grid-cols-2">
           {view.catalog.llm.map((p) => (
             <li key={p.id} data-testid="llm-catalog-entry" className="flex items-start gap-2">
@@ -232,7 +246,7 @@ function LlmSection({ view, save, busy }: { view: View; save: (body: SettingsUpd
                 <span className="flex items-center gap-2">
                   {p.label}
                   {p.free ? <span className="text-[10.5px] text-done">free</span> : null}
-                  <span className="num ml-auto text-[11px] text-subtle">{p.configured ? "มี key" : p.env_hint}</span>
+                  <span className="num ml-auto text-[11px] text-subtle">{p.configured ? t("มี key", "has key") : p.env_hint}</span>
                 </span>
                 {p.note ? (
                   <span data-testid="llm-catalog-note" className="block text-[11px] text-subtle">
@@ -256,6 +270,7 @@ export function changedOrders(draft: Record<string, string[]>, defaults: Record<
 }
 
 function DataSection({ view, save, busy }: { view: View; save: (body: SettingsUpdate) => Promise<void>; busy: boolean }) {
+  const t = useT();
   const [draft, setDraft] = useState(view.values.data.order);
   useEffect(() => setDraft(view.values.data.order), [view]);
   const dirty = JSON.stringify(draft) !== JSON.stringify(view.values.data.order);
@@ -264,7 +279,10 @@ function DataSection({ view, save, busy }: { view: View; save: (body: SettingsUp
     <Section
       id="data"
       title="Data providers"
-      description="ลำดับ provider ต่อ capability: failover = ลองตามลำดับจนได้ข้อมูล, fanout = เรียกทุกตัวแล้วรวมผล · run ถัดไปใช้ลำดับใหม่ (ดูได้จาก provenance.source)"
+      description={t(
+        "ลำดับ provider ต่อ capability: failover = ลองตามลำดับจนได้ข้อมูล, fanout = เรียกทุกตัวแล้วรวมผล · run ถัดไปใช้ลำดับใหม่ (ดูได้จาก provenance.source)",
+        "Provider order per capability: failover = try in order until data comes back, fanout = call all and merge · the next run uses the new order (see provenance.source)",
+      )}
       dirty={dirty}
       busy={busy}
       overridden={Object.keys(view.overrides.data).length > 0}
@@ -283,7 +301,7 @@ function DataSection({ view, save, busy }: { view: View; save: (body: SettingsUp
               <div className="mb-1 flex items-center gap-2">
                 <span className="num font-medium">{cap}</span>
                 <span className="rounded-sm bg-layer-2 px-1 text-[10.5px] text-subtle">{entry.mode}</span>
-                {changed ? <span className="text-[10.5px] text-accent">แก้แล้ว</span> : null}
+                {changed ? <span className="text-[10.5px] text-accent">{t("แก้แล้ว", "changed")}</span> : null}
               </div>
               <OrderList
                 label={`${cap} order`}
@@ -298,7 +316,7 @@ function DataSection({ view, save, busy }: { view: View; save: (body: SettingsUp
                       <KeyDot configured={p?.configured ?? false} />
                       <span className="num">{id}</span>
                       {p ? <span className="text-[10.5px] text-subtle">tier {p.tier}</span> : null}
-                      {p && !p.registered ? <span className="text-[10.5px] text-subtle">(ยังไม่มี)</span> : null}
+                      {p && !p.registered ? <span className="text-[10.5px] text-subtle">{t("(ยังไม่มี)", "(not available)")}</span> : null}
                     </span>
                   );
                 }}
@@ -338,18 +356,19 @@ export const DEXTER_DEFAULTS: Partial<Record<LimitKey, number>> = {
   mc_token_trigger: 80_000,
   autocompact_buffer_tokens: 13_000,
 };
-const LIMIT_FIELDS: { key: LimitKey; label: string; step?: string }[] = [
-  { key: "max_iterations", label: "Max iterations ต่อ query" },
-  { key: "max_tool_calls_total", label: "Tool call limit ต่อ run" },
-  { key: "max_calls_per_tool", label: "เรียก tool เดิมได้สูงสุด (ครั้ง)" },
-  { key: "similarity_threshold", label: "Loop detection: similarity ≥", step: "0.05" },
-  { key: "tool_timeout_s", label: "Tool timeout (วินาที)" },
-  { key: "run_wall_clock_s", label: "Wall clock ต่อ run (วินาที)" },
-  { key: "max_cost_usd", label: "Budget ต่อ run ($)", step: "0.1" },
-  { key: "mc_count_trigger", label: "Microcompact เมื่อ tool result เกิน (ชิ้น)" },
-  { key: "mc_keep_recent", label: "Microcompact เก็บล่าสุด (ชิ้น)" },
-  { key: "mc_token_trigger", label: "Microcompact เมื่อรวมเกิน (tokens)" },
-  { key: "autocompact_buffer_tokens", label: "Full compact buffer (tokens)" },
+/** `label` = [Thai, English] */
+const LIMIT_FIELDS: { key: LimitKey; label: readonly [string, string]; step?: string }[] = [
+  { key: "max_iterations", label: ["Max iterations ต่อ query", "Max iterations per query"] },
+  { key: "max_tool_calls_total", label: ["Tool call limit ต่อ run", "Tool call limit per run"] },
+  { key: "max_calls_per_tool", label: ["เรียก tool เดิมได้สูงสุด (ครั้ง)", "Max calls of the same tool"] },
+  { key: "similarity_threshold", label: ["Loop detection: similarity ≥", "Loop detection: similarity ≥"], step: "0.05" },
+  { key: "tool_timeout_s", label: ["Tool timeout (วินาที)", "Tool timeout (seconds)"] },
+  { key: "run_wall_clock_s", label: ["Wall clock ต่อ run (วินาที)", "Wall clock per run (seconds)"] },
+  { key: "max_cost_usd", label: ["Budget ต่อ run ($)", "Budget per run ($)"], step: "0.1" },
+  { key: "mc_count_trigger", label: ["Microcompact เมื่อ tool result เกิน (ชิ้น)", "Microcompact when tool results exceed (items)"] },
+  { key: "mc_keep_recent", label: ["Microcompact เก็บล่าสุด (ชิ้น)", "Microcompact keeps the latest (items)"] },
+  { key: "mc_token_trigger", label: ["Microcompact เมื่อรวมเกิน (tokens)", "Microcompact when the total exceeds (tokens)"] },
+  { key: "autocompact_buffer_tokens", label: ["Full compact buffer (tokens)", "Full compact buffer (tokens)"] },
 ];
 
 /** Typed fields → the section body: only fields that differ from the default. */
@@ -367,6 +386,7 @@ export function changedNumbers<K extends string>(
 }
 
 function LimitsSection({ view, save, busy }: { view: View; save: (body: SettingsUpdate) => Promise<void>; busy: boolean }) {
+  const t = useT();
   const toText = (vals: LimitsValues) =>
     Object.fromEntries(LIMIT_FIELDS.map((f) => [f.key, vals[f.key] === null ? "" : String(vals[f.key])])) as Record<LimitKey, string>;
   const [draft, setDraft] = useState(() => toText(view.values.limits));
@@ -376,7 +396,7 @@ function LimitsSection({ view, save, busy }: { view: View; save: (body: Settings
     <Section
       id="limits"
       title="Harness limits"
-      description="ใช้กับ run ถัดไป · ช่องว่าง = ค่าเริ่มต้น"
+      description={t("ใช้กับ run ถัดไป · ช่องว่าง = ค่าเริ่มต้น", "Applies to the next run · empty = default")}
       dirty={dirty}
       busy={busy}
       overridden={Object.keys(view.overrides.limits).length > 0}
@@ -386,7 +406,7 @@ function LimitsSection({ view, save, busy }: { view: View; save: (body: Settings
       <div className="grid gap-x-6 gap-y-2 md:grid-cols-2">
         {LIMIT_FIELDS.map((f) => (
           <label key={f.key} className="flex items-center gap-2">
-            <span className="min-w-0 flex-1 text-muted">{f.label}</span>
+            <span className="min-w-0 flex-1 text-muted">{t(...f.label)}</span>
             <input
               aria-label={f.key}
               type="number"
@@ -396,7 +416,7 @@ function LimitsSection({ view, save, busy }: { view: View; save: (body: Settings
               onChange={(e) => setDraft({ ...draft, [f.key]: e.target.value })}
               className="num w-28 rounded-md border border-line bg-bg px-2 py-0.5 text-right"
             />
-            <span className="num w-24 text-[11px] text-subtle" title="ค่าอ้างอิงของ Dexter">
+            <span className="num w-24 text-[11px] text-subtle" title={t("ค่าอ้างอิงของ Dexter", "Dexter's reference value")}>
               {DEXTER_DEFAULTS[f.key] !== undefined ? `Dexter ${DEXTER_DEFAULTS[f.key]!.toLocaleString("en-US")}` : ""}
             </span>
           </label>
@@ -407,12 +427,13 @@ function LimitsSection({ view, save, busy }: { view: View; save: (body: Settings
 }
 
 type PctKey = Exclude<keyof PolicyValues, "require_stop_loss" | "block_on_low_confidence" | "min_risk_reward">;
-const POLICY_FIELDS: { key: PctKey; label: string }[] = [
-  { key: "max_position_weight", label: "น้ำหนักสูงสุดต่อตัว" },
-  { key: "max_sector_weight", label: "น้ำหนักสูงสุดต่อ sector" },
-  { key: "max_risk_per_trade", label: "ความเสี่ยงสูงสุดต่อเทรด" },
-  { key: "min_confidence", label: "Confidence ขั้นต่ำ" },
-  { key: "max_turnover", label: "Turnover สูงสุดต่อการ rebalance" },
+/** `label` = [Thai, English] */
+const POLICY_FIELDS: { key: PctKey; label: readonly [string, string] }[] = [
+  { key: "max_position_weight", label: ["น้ำหนักสูงสุดต่อตัว", "Max weight per position"] },
+  { key: "max_sector_weight", label: ["น้ำหนักสูงสุดต่อ sector", "Max weight per sector"] },
+  { key: "max_risk_per_trade", label: ["ความเสี่ยงสูงสุดต่อเทรด", "Max risk per trade"] },
+  { key: "min_confidence", label: ["Confidence ขั้นต่ำ", "Min confidence"] },
+  { key: "max_turnover", label: ["Turnover สูงสุดต่อการ rebalance", "Max turnover per rebalance"] },
 ];
 
 export type PolicyDraft = Record<PctKey | "min_risk_reward", string>;
@@ -436,6 +457,7 @@ export function policyBody(draft: PolicyDraft, flags: PolicyFlags): SettingsUpda
 }
 
 function PolicySection({ view, save, busy }: { view: View; save: (body: SettingsUpdate) => Promise<void>; busy: boolean }) {
+  const t = useT();
   const o = view.overrides.policy as Partial<PolicyValues>;
   const toText = (): PolicyDraft => ({
     ...(Object.fromEntries(POLICY_FIELDS.map((f) => [f.key, o[f.key] !== undefined && o[f.key] !== null ? fractionToPercentText(o[f.key] as number) : ""])) as Record<PctKey, string>),
@@ -458,7 +480,10 @@ function PolicySection({ view, save, busy }: { view: View; save: (body: Settings
     <Section
       id="policy"
       title="Policy"
-      description="กฎ deterministic ของ gate (trading + portfolio advisor) · ช่องว่าง = ค่าในตัว (advisor ใช้ตาม risk profile) · ข้อจำกัดที่ใส่ตอนสั่ง run ชนะค่าตรงนี้"
+      description={t(
+        "กฎ deterministic ของ gate (trading + portfolio advisor) · ช่องว่าง = ค่าในตัว (advisor ใช้ตาม risk profile) · ข้อจำกัดที่ใส่ตอนสั่ง run ชนะค่าตรงนี้",
+        "Deterministic gate rules (trading + portfolio advisor) · empty = built-in value (the advisor follows the risk profile) · limits given when starting a run override these",
+      )}
       dirty={dirty}
       busy={busy}
       overridden={Object.keys(view.overrides.policy).length > 0}
@@ -470,7 +495,7 @@ function PolicySection({ view, save, busy }: { view: View; save: (body: Settings
           const builtin = view.policy_builtin[f.key];
           return (
             <label key={f.key} className="flex items-center gap-2">
-              <span className="min-w-0 flex-1 text-muted">{f.label}</span>
+              <span className="min-w-0 flex-1 text-muted">{t(...f.label)}</span>
               <input
                 aria-label={f.key}
                 value={draft[f.key]}
@@ -479,12 +504,14 @@ function PolicySection({ view, save, busy }: { view: View; save: (body: Settings
                 onChange={(e) => setDraft({ ...draft, [f.key]: e.target.value })}
                 className="num w-20 rounded-md border border-line bg-bg px-2 py-0.5 text-right"
               />
-              <span className="w-28 text-[11px] text-subtle">% · ค่าในตัว {typeof builtin === "number" ? formatPct(builtin, 0) : "ตาม risk profile"}</span>
+              <span className="w-28 text-[11px] text-subtle">
+                % · {t("ค่าในตัว", "built-in")} {typeof builtin === "number" ? formatPct(builtin, 0) : t("ตาม risk profile", "per risk profile")}
+              </span>
             </label>
           );
         })}
         <label className="flex items-center gap-2">
-          <span className="min-w-0 flex-1 text-muted">R:R ขั้นต่ำที่ TP1 (ต้องมากกว่า · 0 = ปิด)</span>
+          <span className="min-w-0 flex-1 text-muted">{t("R:R ขั้นต่ำที่ TP1 (ต้องมากกว่า · 0 = ปิด)", "Min R:R at TP1 (must exceed · 0 = off)")}</span>
           <input
             aria-label="min_risk_reward"
             value={draft.min_risk_reward}
@@ -493,7 +520,9 @@ function PolicySection({ view, save, busy }: { view: View; save: (body: Settings
             onChange={(e) => setDraft({ ...draft, min_risk_reward: e.target.value })}
             className="num w-20 rounded-md border border-line bg-bg px-2 py-0.5 text-right"
           />
-          <span className="w-28 text-[11px] text-subtle">เท่า · ค่าในตัว {typeof rrBuiltin === "number" ? rrBuiltin : "-"}</span>
+          <span className="w-28 text-[11px] text-subtle">
+            {t("เท่า · ค่าในตัว", "× · built-in")} {typeof rrBuiltin === "number" ? rrBuiltin : "-"}
+          </span>
         </label>
         <label className="flex items-center gap-2">
           <input
@@ -502,7 +531,7 @@ function PolicySection({ view, save, busy }: { view: View; save: (body: Settings
             checked={flags.block_on_low_confidence}
             onChange={(e) => setFlags({ ...flags, block_on_low_confidence: e.target.checked })}
           />
-          <span className="text-muted">Confidence ต่ำกว่าขั้นต่ำ = ไม่เทรด (ปิด = แค่เตือน)</span>
+          <span className="text-muted">{t("Confidence ต่ำกว่าขั้นต่ำ = ไม่เทรด (ปิด = แค่เตือน)", "Confidence below the minimum = no trade (off = warn only)")}</span>
         </label>
         <label className="flex items-center gap-2">
           <input
@@ -511,7 +540,7 @@ function PolicySection({ view, save, busy }: { view: View; save: (body: Settings
             checked={flags.require_stop_loss}
             onChange={(e) => setFlags({ ...flags, require_stop_loss: e.target.checked })}
           />
-          <span className="text-muted">เทรดต้องมี stop-loss</span>
+          <span className="text-muted">{t("เทรดต้องมี stop-loss", "Trades must have a stop-loss")}</span>
         </label>
       </div>
     </Section>
@@ -523,15 +552,18 @@ function PolicySection({ view, save, busy }: { view: View; save: (body: Settings
 const SCALES = [0.9, 1, 1.1, 1.2];
 
 function AppearanceSection() {
+  const t = useT();
   const theme = useUiStore((s) => s.theme);
   const setTheme = useUiStore((s) => s.setTheme);
   const scale = useUiStore((s) => s.fontScale);
   const setScale = useUiStore((s) => s.setFontScale);
+  const locale = useLocale();
+  const setLocale = useLocaleStore((s) => s.setLocale);
   return (
     <Section
       id="appearance"
       title="Appearance"
-      description="เก็บในเบราว์เซอร์นี้"
+      description={t("เก็บในเบราว์เซอร์นี้", "Stored in this browser")}
       onReset={() => {
         setTheme("system");
         setScale(1);
@@ -539,21 +571,40 @@ function AppearanceSection() {
     >
       <div className="flex flex-wrap items-center gap-4">
         <div role="radiogroup" aria-label="theme" className="flex rounded-md bg-layer-2 p-0.5">
-          {(["system", "light", "dark"] as ThemeMode[]).map((t) => (
+          {(["system", "light", "dark"] as ThemeMode[]).map((mode) => (
             <button
-              key={t}
+              key={mode}
               type="button"
               role="radio"
-              aria-checked={theme === t}
-              onClick={() => setTheme(t)}
-              className={clsx("rounded-sm px-3 py-0.5 capitalize", theme === t ? "bg-layer-1 text-fg" : "text-muted")}
+              aria-checked={theme === mode}
+              onClick={() => setTheme(mode)}
+              className={clsx("rounded-sm px-3 py-0.5 capitalize", theme === mode ? "bg-layer-1 text-fg" : "text-muted")}
             >
-              {t}
+              {mode}
+            </button>
+          ))}
+        </div>
+        <div role="radiogroup" aria-label="language" data-testid="language-picker" className="flex rounded-md bg-layer-2 p-0.5">
+          {(
+            [
+              ["th", "ไทย"],
+              ["en", "English"],
+            ] as [Locale, string][]
+          ).map(([id, name]) => (
+            <button
+              key={id}
+              type="button"
+              role="radio"
+              aria-checked={locale === id}
+              onClick={() => setLocale(id)}
+              className={clsx("rounded-sm px-3 py-0.5", locale === id ? "bg-layer-1 text-fg" : "text-muted")}
+            >
+              {name}
             </button>
           ))}
         </div>
         <label className="flex items-center gap-2 text-muted">
-          ขนาดตัวอักษร
+          {t("ขนาดตัวอักษร", "Font size")}
           <select aria-label="font scale" value={scale} onChange={(e) => setScale(Number(e.target.value))} className="rounded-md border border-line bg-bg px-2 py-0.5 text-fg">
             {SCALES.map((s) => (
               <option key={s} value={s}>
@@ -578,6 +629,7 @@ const NAV: { id: SettingsSection | "appearance"; label: string }[] = [
 ];
 
 export function SettingsView({ api = settingsApi }: { api?: Api }) {
+  const t = useT();
   const [view, setView] = useState<View | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
@@ -596,7 +648,7 @@ export function SettingsView({ api = settingsApi }: { api?: Api }) {
       setError(null);
       try {
         setView(await api.put(body));
-        setNotice("บันทึกแล้ว · มีผลกับ run ถัดไป");
+        setNotice(tr("บันทึกแล้ว · มีผลกับ run ถัดไป", "Saved · applies to the next run"));
         window.setTimeout(() => setNotice(null), 2500);
       } catch (e) {
         setError(e instanceof ApiError || e instanceof Error ? e.message : String(e));
@@ -622,7 +674,9 @@ export function SettingsView({ api = settingsApi }: { api?: Api }) {
       </header>
       <div className="min-h-0 flex-1 space-y-3 overflow-y-auto px-4 py-3">
         {error ? <p data-testid="settings-error" className="rounded-md bg-error/10 px-3 py-1.5 text-[12.5px] text-error">{error}</p> : null}
-        <p className="text-[12px] text-subtle">API key ตั้งได้ที่ backend/.env เท่านั้น — หน้านี้แสดงแค่ว่ามี key หรือไม่</p>
+        <p className="text-[12px] text-subtle">
+          {t("API key ตั้งได้ที่ backend/.env เท่านั้น — หน้านี้แสดงแค่ว่ามี key หรือไม่", "API keys can only be set in backend/.env — this page only shows whether a key exists")}
+        </p>
         {view ? (
           <>
             <LlmSection view={view} save={save} busy={busy} />

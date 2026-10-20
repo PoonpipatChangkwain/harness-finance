@@ -30,6 +30,7 @@ import { StateDot, dotFor } from "@/components/ui/StateDot";
 import { api, type SymbolInfo } from "@/lib/api";
 import { formatCost, formatDuration } from "@/lib/format";
 import { useNow } from "@/lib/hooks";
+import { useT } from "@/lib/i18n";
 import { EXAMPLE_SYMBOLS, defaultAnalysts } from "@/lib/trade";
 import {
   answeredApproval,
@@ -94,6 +95,7 @@ function useRunRecord(runId: string | null, view: RunView | undefined) {
 }
 
 function SymbolPicker({ onPick }: { onPick: (o: SymbolOption) => void }) {
+  const t = useT();
   const pickExample = async (q: string) => {
     try {
       const r = await api.searchSymbols(q);
@@ -105,9 +107,12 @@ function SymbolPicker({ onPick }: { onPick: (o: SymbolOption) => void }) {
   };
   return (
     <div data-testid="trade-empty" className="mx-auto flex max-w-xl flex-col items-center gap-3 py-16 text-center">
-      <h2 className="text-[18px] font-semibold">วิเคราะห์เทรด 1 symbol ด้วยทีม AI</h2>
+      <h2 className="text-[18px] font-semibold">{t("วิเคราะห์เทรด 1 symbol ด้วยทีม AI", "Analyze a trade on 1 symbol with an AI team")}</h2>
       <p className="text-[13px] text-muted">
-        analysts → bull/bear debate → trader → risk debate → portfolio manager → policy → คุณอนุมัติ (ไม่มีการส่ง order จริง)
+        {t(
+          "analysts → bull/bear debate → trader → risk debate → portfolio manager → policy → คุณอนุมัติ (ไม่มีการส่ง order จริง)",
+          "analysts → bull/bear debate → trader → risk debate → portfolio manager → policy → your approval (no real orders are sent)",
+        )}
       </p>
       <SymbolSearch onPick={onPick} autoFocus />
       <div className="flex flex-wrap justify-center gap-2">
@@ -128,6 +133,7 @@ function SymbolPicker({ onPick }: { onPick: (o: SymbolOption) => void }) {
 }
 
 export function TradeView({ runId }: { runId: string | null }) {
+  const t = useT();
   const router = useRouter();
   const search = useSearchParams();
   useInspectorTabs(TRADE_TABS);
@@ -237,7 +243,7 @@ export function TradeView({ runId }: { runId: string | null }) {
             <h1 className="text-[15px] font-semibold">{symbol?.display ?? String(view?.input.symbol ?? "…")}</h1>
             {symbol ? <AssetBadge symbol={symbol} /> : null}
             <span className="text-[12px] text-muted">
-              {pending ? "รออนุมัติ" : runStatus}
+              {pending ? t("รออนุมัติ", "awaiting approval") : runStatus}
               {detail?.instrument?.analysis_date ? ` · backtest ${detail.instrument.analysis_date}` : ""}
             </span>
             <span className="num ml-auto text-[12px] text-subtle">
@@ -255,7 +261,7 @@ export function TradeView({ runId }: { runId: string | null }) {
             ) : null}
             {symbol && !live ? (
               <Link href={`/trade?symbol=${encodeURIComponent(symbol.canonical)}`} className="rounded-md bg-layer-2 px-2 py-0.5 text-[12px]">
-                Run ใหม่
+                {t("Run ใหม่", "New run")}
               </Link>
             ) : null}
           </>
@@ -263,7 +269,7 @@ export function TradeView({ runId }: { runId: string | null }) {
           <>
             <SymbolSearch value={symbol} onPick={(o) => setPicked(o.symbol)} />
             <button type="button" onClick={() => setPicked(null)} className="text-[12px] text-subtle hover:text-fg">
-              ล้าง
+              {t("ล้าง", "Clear")}
             </button>
           </>
         )}
@@ -332,7 +338,7 @@ export function TradeView({ runId }: { runId: string | null }) {
         {runId && detail?.event_risk ? <EventRiskList risk={detail.event_risk} /> : null}
         {runId && detail?.outcome && !detail.decision ? (
           <p className="text-[13px] text-muted">
-            ผล: <b>{detail.outcome.status}</b> {detail.outcome.reason ? `· ${detail.outcome.reason}` : ""}
+            {t("ผล", "Result")}: <b>{detail.outcome.status}</b> {detail.outcome.reason ? `· ${detail.outcome.reason}` : ""}
           </p>
         ) : null}
         {detail?.report_md ? (

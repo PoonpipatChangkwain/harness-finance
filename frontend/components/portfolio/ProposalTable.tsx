@@ -19,6 +19,7 @@ import type { PlanMetrics, ProposalCard, ProposalRow } from "@/lib/portfolio-api
 import type { ApprovalView } from "@/stores/run-reducer";
 
 import { ProvValue } from "./ProvValue";
+import { tr, useT } from "@/lib/i18n";
 
 export type PlanApproval =
   | { outcome: "approved" | "rejected" }
@@ -57,6 +58,7 @@ function MetricRow({ label, before, after, pid, format = "pct" }: { label: strin
 }
 
 function Metrics({ card }: { card: ProposalCard }) {
+  const t = useT();
   const b: PlanMetrics = card.metrics_before;
   const a: PlanMetrics = card.metrics_after;
   const p = card.provenance;
@@ -65,17 +67,17 @@ function Metrics({ card }: { card: ProposalCard }) {
       <thead className="text-left text-[11px] text-subtle">
         <tr>
           <th className="font-normal">Metric</th>
-          <th className="text-right font-normal">ก่อน</th>
+          <th className="text-right font-normal">{t("ก่อน", "Before")}</th>
           <th />
-          <th className="text-right font-normal">หลัง</th>
+          <th className="text-right font-normal">{t("หลัง", "After")}</th>
         </tr>
       </thead>
       <tbody>
         <MetricRow label="HHI" before={b.hhi} after={a.hhi} pid={p.concentration} format="ratio" />
         <MetricRow label="Top 1" before={b.top1} after={a.top1} pid={p.concentration} />
         <MetricRow label="Effective N" before={b.effective_n} after={a.effective_n} pid={p.concentration} format="number" />
-        <MetricRow label="เงินสด" before={b.cash_weight} after={a.cash_weight} pid={p.post_trade} />
-        <MetricRow label="Sector ใหญ่สุด" before={b.max_sector} after={a.max_sector} pid={p.sector} />
+        <MetricRow label={t("เงินสด", "Cash")} before={b.cash_weight} after={a.cash_weight} pid={p.post_trade} />
+        <MetricRow label={t("Sector ใหญ่สุด", "Largest sector")} before={b.max_sector} after={a.max_sector} pid={p.sector} />
       </tbody>
     </table>
   );
@@ -98,6 +100,7 @@ export function ProposalTable({
   highlight?: boolean;
   footer?: ReactNode;
 }) {
+  const t = useT();
   const card = (approval?.proposal as unknown as ProposalCard | undefined) ?? cardProp ?? null;
   const pending = !!approval && approval.outcome === "pending" && !!onResolve;
   const [editing, setEditing] = useState(false);
@@ -132,7 +135,7 @@ export function ProposalTable({
       return v.trim() === "" || !Number.isFinite(n) || n < 0 || n > 100;
     });
     const cash = Number(cashPct.trim().replace(/%$/, ""));
-    if (bad) return setError(`target ของ ${bad[0]} ต้องอยู่ระหว่าง 0–100%`);
+    if (bad) return setError(tr(`target ของ ${bad[0]} ต้องอยู่ระหว่าง 0–100%`, `The target of ${bad[0]} must be between 0–100%`));
     if (cashPct.trim() && (!Number.isFinite(cash) || cash < 0 || cash >= 100)) return setError("cash target 0–99%");
     onResolve?.({ outcome: "edited", edits: buildTargetEdits(card.rows, targets, cashPct) });
     setEditing(false);
@@ -152,14 +155,14 @@ export function ProposalTable({
       )}
     >
       <div className="mb-2 flex flex-wrap items-baseline gap-2">
-        <h2 className="text-[13px] font-semibold">{pending ? "ต้องอนุมัติ: " : ""}Rebalance proposal · {card.name}</h2>
+        <h2 className="text-[13px] font-semibold">{pending ? `${t("ต้องอนุมัติ", "Approval required")}: ` : ""}Rebalance proposal · {card.name}</h2>
         {card.verdict ? (
           <span className="rounded-sm bg-layer-2 px-1.5 text-[11px]">
             {card.verdict} · conf {card.confidence.toFixed(2)}
           </span>
         ) : null}
         <span className="text-[11.5px] text-subtle">
-          turnover <ProvValue value={card.turnover} provenanceId={pid.post_trade} format="pct" digits={1} /> · เงินสด{" "}
+          turnover <ProvValue value={card.turnover} provenanceId={pid.post_trade} format="pct" digits={1} /> · {t("เงินสด", "cash")}{" "}
           <ProvValue value={card.cash_before} provenanceId={pid.trades} /> → <ProvValue value={card.cash_after} provenanceId={pid.post_trade} />{" "}
           {card.base_currency}
         </span>
@@ -177,7 +180,7 @@ export function ProposalTable({
               <th className="px-1 text-right font-normal">Δ</th>
               <th className="px-1 font-normal">Action</th>
               <th className="px-1 text-right font-normal">Qty est.</th>
-              <th className="px-1 text-right font-normal">มูลค่า</th>
+              <th className="px-1 text-right font-normal">{t("มูลค่า", "Value")}</th>
             </tr>
           </thead>
           <tbody>
@@ -237,7 +240,8 @@ export function ProposalTable({
       </div>
       {editing ? (
         <p className={clsx("num mt-1 text-[11.5px]", Math.abs(typedTotal - 100) > 0.05 ? "text-warning" : "text-subtle")}>
-          รวม {typedTotal.toFixed(2)}% {Math.abs(typedTotal - 100) > 0.05 ? "· backend จะ normalize ให้รวมเป็น 100%" : ""}
+          {t("รวม", "Total")} {typedTotal.toFixed(2)}%{" "}
+          {Math.abs(typedTotal - 100) > 0.05 ? t("· backend จะ normalize ให้รวมเป็น 100%", "· the backend will normalize it to 100%") : ""}
         </p>
       ) : null}
 
@@ -268,10 +272,10 @@ export function ProposalTable({
                 onClick={submit}
                 className="inline-flex items-center gap-1 rounded-md bg-warning/20 px-3 py-1 text-[13px] text-warning"
               >
-                <Check className="size-3.5" aria-hidden /> ส่งการแก้ไข (คำนวณเทรด + ตรวจ policy ใหม่)
+                <Check className="size-3.5" aria-hidden /> {t("ส่งการแก้ไข (คำนวณเทรด + ตรวจ policy ใหม่)", "Submit edits (recompute trades + re-check policy)")}
               </button>
               <button type="button" onClick={() => setEditing(false)} className="rounded-md px-3 py-1 text-[13px] text-muted hover:bg-layer-2">
-                ยกเลิก
+                {t("ยกเลิก", "Cancel")}
               </button>
             </>
           ) : (
@@ -305,7 +309,9 @@ export function ProposalTable({
               </button>
             </>
           )}
-          <span className="text-[11.5px] text-subtle">อนุมัติแล้วระบบบันทึกเป็นแผน — ยังไม่แก้ positions จนกว่าจะกด Apply</span>
+          <span className="text-[11.5px] text-subtle">
+            {t("อนุมัติแล้วระบบบันทึกเป็นแผน — ยังไม่แก้ positions จนกว่าจะกด Apply", "Approving saves a plan — positions do not change until you press Apply")}
+          </span>
         </div>
       ) : null}
       {footer}

@@ -9,8 +9,10 @@ import { Kbd } from "@/components/ui/Kbd";
 import { useUiStore } from "@/stores/ui-store";
 
 import { useInspectorTabsList } from "./InspectorRegistry";
+import { useT } from "@/lib/i18n";
 
 export function Inspector() {
+  const t = useT();
   const tabs = useInspectorTabsList();
   const active = useUiStore((s) => s.inspectorTab);
   const setTab = useUiStore((s) => s.setInspectorTab);
@@ -40,7 +42,7 @@ export function Inspector() {
         <button
           type="button"
           onClick={() => setOpen(false)}
-          title="ปิด inspector (Ctrl+.)"
+          title={t("ปิด inspector (Ctrl+.)", "Close inspector (Ctrl+.)")}
           className="rounded-md p-1 text-muted hover:bg-layer-2 hover:text-fg"
         >
           <PanelRightClose className="size-4" aria-hidden />
@@ -51,7 +53,8 @@ export function Inspector() {
           current.render()
         ) : (
           <div className="p-4 text-[12.5px] text-subtle">
-            หน้านี้ยังไม่มี inspector · กด <Kbd>Ctrl</Kbd>+<Kbd>.</Kbd> เพื่อปิด
+            {t("หน้านี้ยังไม่มี inspector · กด", "This page has no inspector · press")} <Kbd>Ctrl</Kbd>+<Kbd>.</Kbd>{" "}
+            {t("เพื่อปิด", "to close")}
           </div>
         )}
       </div>

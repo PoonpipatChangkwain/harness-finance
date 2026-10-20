@@ -16,6 +16,7 @@ import { portfolioApi, type MarketFilter, type PortfolioSummary, type SummaryAss
 
 import { CASH_COLOR, Donut, PALETTE } from "./AllocationChart";
 import { ProvValue } from "./ProvValue";
+import { useT } from "@/lib/i18n";
 
 type Mode = "assets" | "portfolios";
 type SortKey = "value" | "pnl";
@@ -56,6 +57,7 @@ export function PortfolioOverview({
   onSelect: (id: string) => void;
   load?: typeof portfolioApi.summary;
 }) {
+  const t = useT();
   const [currency, setCurrency] = useState<"THB" | "USD">("USD");
   const [market, setMarket] = useState<MarketFilter>("ALL");
   const [mode, setMode] = useState<Mode>("assets");
@@ -85,7 +87,7 @@ export function PortfolioOverview({
     return m;
   }, [data]);
 
-  if (error) return <p className="text-[12.5px] text-error">โหลดภาพรวมไม่ได้: {error}</p>;
+  if (error) return <p className="text-[12.5px] text-error">{t("โหลดภาพรวมไม่ได้", "Could not load the overview")}: {error}</p>;
   if (!data) return <div className="h-40 animate-pulse rounded-md bg-layer-1" />;
 
   const pid = data.provenance_id;
@@ -95,7 +97,7 @@ export function PortfolioOverview({
     ...data.portfolios.filter((p) => (p.weight ?? 0) > 0).map((p) => ({ name: p.name, value: p.weight ?? 0, color: colors.get(p.id)! })),
   ];
   if (market === "ALL" && data.cash > 0 && data.total_value > 0 && slices.length === 0) {
-    slices.push({ name: "เงินสด", value: 1, color: CASH_COLOR });
+    slices.push({ name: t("เงินสด", "Cash"), value: 1, color: CASH_COLOR });
   }
 
   return (
@@ -111,14 +113,14 @@ export function PortfolioOverview({
               onClick={() => setMode(m)}
               className={clsx("rounded-sm px-3 py-0.5", mode === m ? "bg-layer-1 text-fg" : "text-muted")}
             >
-              {m === "assets" ? "แยกสินทรัพย์" : "แยกพอร์ต"}
+              {m === "assets" ? t("แยกสินทรัพย์", "By asset") : t("แยกพอร์ต", "By portfolio")}
             </button>
           ))}
         </div>
         <span className="flex-1" />
         {(["ALL", "TH", "US"] as MarketFilter[]).map((m) => (
           <Chip key={m} testId={`market-${m}`} active={market === m} onClick={() => setMarket(m)}>
-            {m === "ALL" ? "ทั้งหมด" : MARKET_LABEL[m]}
+            {m === "ALL" ? t("ทั้งหมด", "All") : MARKET_LABEL[m]}
           </Chip>
         ))}
         <select
@@ -134,7 +136,10 @@ export function PortfolioOverview({
 
       <section data-testid="overview-card" className="flex flex-wrap items-center gap-6 rounded-lg border border-line bg-layer-1 p-4">
         <div className="min-w-56 flex-1 space-y-1">
-          <div className="text-[12px] text-muted">มูลค่ารวม{market !== "ALL" ? ` · ${MARKET_LABEL[market]}` : ""}</div>
+          <div className="text-[12px] text-muted">
+            {t("มูลค่ารวม", "Total value")}
+            {market !== "ALL" ? ` · ${MARKET_LABEL[market]}` : ""}
+          </div>
           <div className="text-[24px] font-semibold">
             <ProvValue value={data.total_value} provenanceId={pid} /> <span className="text-[13px] font-normal text-subtle">{currency}</span>
           </div>
@@ -150,20 +155,20 @@ export function PortfolioOverview({
           ) : null}
           <dl className="grid grid-cols-2 gap-x-4 gap-y-1 pt-2 text-[12.5px] sm:grid-cols-3">
             <div>
-              <dt className="text-muted">ต้นทุนรวม</dt>
+              <dt className="text-muted">{t("ต้นทุนรวม", "Total cost")}</dt>
               <dd>
                 <ProvValue value={data.cost_basis} provenanceId={pid} />
               </dd>
             </div>
             <div>
-              <dt className="text-muted">เปลี่ยนจากวันก่อน</dt>
+              <dt className="text-muted">{t("เปลี่ยนจากวันก่อน", "Change since yesterday")}</dt>
               <dd>
                 <ProvValue value={data.day_pnl_pct} provenanceId={pid} format="signedPct" colored />{" "}
                 <span className={clsx("num text-[11.5px]", upDownClass(data.day_pnl))}>({formatSigned(data.day_pnl)})</span>
               </dd>
             </div>
             <div>
-              <dt className="text-muted">กำไรที่ถืออยู่</dt>
+              <dt className="text-muted">{t("กำไรที่ถืออยู่", "Unrealized P/L")}</dt>
               <dd>
                 <ProvValue value={data.unrealized_pnl} provenanceId={pid} format="signed" colored />{" "}
                 <span className={clsx("num text-[11.5px]", upDownClass(data.unrealized_pnl_pct))}>({formatPct(data.unrealized_pnl_pct, 2, true)})</span>
@@ -201,7 +206,7 @@ export function PortfolioOverview({
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-[13.5px] font-medium">{p.name}</span>
                   <span className="block text-[11.5px] text-subtle">
-                    {p.holdings ?? 0} สินทรัพย์ · {p.base_currency}
+                    {p.holdings ?? 0} {t("สินทรัพย์", "assets")} · {p.base_currency}
                   </span>
                 </span>
                 <span className="text-right">
@@ -219,14 +224,14 @@ export function PortfolioOverview({
       ) : (
         <section className="rounded-md border border-line bg-layer-1">
           <div className="flex items-center gap-2 border-b border-line px-3 py-1.5 text-[12px] text-muted">
-            {assets.length} สินทรัพย์
+            {assets.length} {t("สินทรัพย์", "assets")}
             <span className="flex-1" />
-            เรียงตาม
+            {t("เรียงตาม", "Sort by")}
             <Chip active={sort === "value"} onClick={() => setSort("value")} testId="sort-value">
-              มูลค่า
+              {t("มูลค่า", "Value")}
             </Chip>
             <Chip active={sort === "pnl"} onClick={() => setSort("pnl")} testId="sort-pnl">
-              กำไร
+              {t("กำไร", "P/L")}
             </Chip>
           </div>
           <ul data-testid="overview-assets" className="divide-y divide-line">
@@ -236,7 +241,7 @@ export function PortfolioOverview({
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-[13.5px] font-medium">{a.display}</span>
                   <span className="block text-[11.5px] text-subtle">
-                    {formatPct(a.weight, 2)} · {MARKET_LABEL[a.market] ?? a.market} · {a.portfolios.length} พอร์ต
+                    {formatPct(a.weight, 2)} · {MARKET_LABEL[a.market] ?? a.market} · {a.portfolios.length} {t("พอร์ต", "portfolio(s)")}
                   </span>
                 </span>
                 <span className="text-right">
@@ -255,7 +260,7 @@ export function PortfolioOverview({
                 </span>
               </li>
             ))}
-            {assets.length === 0 ? <li className="px-3 py-4 text-center text-[12.5px] text-subtle">ไม่มีสินทรัพย์ในตลาดนี้</li> : null}
+            {assets.length === 0 ? <li className="px-3 py-4 text-center text-[12.5px] text-subtle">{t("ไม่มีสินทรัพย์ในตลาดนี้", "No assets in this market")}</li> : null}
           </ul>
         </section>
       )}

@@ -15,12 +15,15 @@ import { z } from "zod";
 
 import { KeyWarning, ModelPicker, choiceProblem, useLlmProviders } from "@/components/conversation/ModelPicker";
 import type { LlmChoice, SymbolInfo } from "@/lib/api";
+import { tr, useLocaleStore, useT } from "@/lib/i18n";
 import { ALL_ANALYSTS, ANALYST_LABEL, allowedAnalysts, defaultAnalysts, todayIso } from "@/lib/trade";
 import type { AnalystName, TradeRunRequest } from "@/lib/trade-api";
 
 export const setupSchema = z.object({
-  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "วันที่ไม่ถูกต้อง"),
-  analysts: z.array(z.enum(["market", "news", "fundamentals", "sentiment", "macro"])).min(1, "เลือกอย่างน้อย 1 analyst"),
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, { error: () => tr("วันที่ไม่ถูกต้อง", "Invalid date") }),
+  analysts: z
+    .array(z.enum(["market", "news", "fundamentals", "sentiment", "macro"]))
+    .min(1, { error: () => tr("เลือกอย่างน้อย 1 analyst", "Pick at least 1 analyst") }),
   debateRounds: z.number().int().min(1).max(3),
   riskRounds: z.number().int().min(1).max(3),
   usePortfolio: z.boolean(),
@@ -42,7 +45,8 @@ export function defaultSetup(assetType: string | null | undefined, today = today
     useMl: true,
     mlOnly: false,
     horizon: "swing",
-    language: "th",
+    // the report language follows the UI language unless changed in the bar
+    language: useLocaleStore.getState().locale,
   };
 }
 
@@ -82,6 +86,7 @@ export function RunSetupBar({
   onLlmChange: (choice: LlmChoice | null) => void;
   onRun: (body: TradeRunRequest) => void;
 }) {
+  const t = useT();
   const form = useForm<SetupForm>({ resolver: zodResolver(setupSchema), defaultValues: defaultSetup(symbol.asset_type) });
   const { register, watch, setValue, handleSubmit, formState } = form;
   const providers = useLlmProviders();
@@ -106,12 +111,12 @@ export function RunSetupBar({
       className="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-md border border-line bg-layer-1 px-3 py-2 text-[12.5px]"
     >
       <label className="flex items-center gap-1.5 text-muted">
-        วันที่
+        {t("วันที่", "Date")}
         <input type="date" max={todayIso()} {...register("date")} className="num rounded-md border border-line bg-bg px-1.5 py-0.5 text-fg" />
       </label>
       {isBacktest(date) ? (
         <span data-testid="backtest-badge" className="rounded-sm bg-warning/15 px-1.5 py-0.5 text-[11.5px] text-warning">
-          backtest mode: ข้อมูลถูกตัดตาม as_of
+          {t("backtest mode: ข้อมูลถูกตัดตาม as_of", "backtest mode: data is cut at as_of")}
         </span>
       ) : null}
       <fieldset className="flex flex-wrap items-center gap-2">
@@ -146,29 +151,36 @@ export function RunSetupBar({
       <label className="flex items-center gap-1 text-muted">
         Horizon
         <select {...register("horizon")} className="rounded-md border border-line bg-bg px-1 text-fg">
-          <option value="intraday">intraday · แท่ง 15m · ถือไม่กี่ชม.</option>
-          <option value="swing">swing · แท่ง 1H · 1–5 วัน</option>
-          <option value="position">position · แท่ง 1D · สัปดาห์+</option>
+          <option value="intraday">{t("intraday · แท่ง 15m · ถือไม่กี่ชม.", "intraday · 15m bars · hold a few hours")}</option>
+          <option value="swing">{t("swing · แท่ง 1H · 1–5 วัน", "swing · 1H bars · 1–5 days")}</option>
+          <option value="position">{t("position · แท่ง 1D · สัปดาห์+", "position · 1D bars · weeks+")}</option>
         </select>
       </label>
       <label className="flex items-center gap-1 text-muted">
-        ภาษา
+        {t("ภาษารายงาน", "Report language")}
         <select {...register("language")} className="rounded-md border border-line bg-bg px-1 text-fg">
           <option value="th">ไทย</option>
           <option value="en">English</option>
         </select>
       </label>
       <label className="flex items-center gap-1">
-        <input type="checkbox" {...register("usePortfolio")} /> ใช้พอร์ตของฉัน
+        <input type="checkbox" {...register("usePortfolio")} /> {t("ใช้พอร์ตของฉัน", "Use my portfolio")}
       </label>
-      <label className="flex items-center gap-1" title="ใช้ได้เฉพาะ symbol/horizon ที่มีโมเดลที่ validate แล้ว (ตอนนี้ XAUUSD intraday/swing)">
+      <label className="flex items-center gap-1" title={t(
+          "ใช้ได้เฉพาะ symbol/horizon ที่มีโมเดลที่ validate แล้ว (ตอนนี้ XAUUSD intraday/swing)",
+          "Only for symbols/horizons with a validated model (currently XAUUSD intraday/swing)",
+        )}
+      >
         <input type="checkbox" data-testid="use-ml" {...register("useMl")} /> ML signal
       </label>
       <label
         className={clsx("flex items-center gap-1", !useMl && "opacity-50")}
-        title="ถ้า ML ออก long/short: ไม่เรียก LLM เลย (ข้าม analysts) entry/stop/TP มาจาก label ของโมเดล ถ้า flat จบเป็น no_trade"
+        title={t(
+          "ถ้า ML ออก long/short: ไม่เรียก LLM เลย (ข้าม analysts) entry/stop/TP มาจาก label ของโมเดล ถ้า flat จบเป็น no_trade",
+          "If ML says long/short: no LLM calls at all (analysts skipped), entry/stop/TP come from the model's labels; flat ends as no_trade",
+        )}
       >
-        <input type="checkbox" data-testid="ml-only" disabled={!useMl} {...register("mlOnly")} /> ML ล้วน (ไม่ใช้ LLM)
+        <input type="checkbox" data-testid="ml-only" disabled={!useMl} {...register("mlOnly")} /> {t("ML ล้วน (ไม่ใช้ LLM)", "ML only (no LLM)")}
       </label>
       <ModelPicker providers={providers.data} choice={llm} onChange={onLlmChange} disabled={busy || disabled} />
       <button

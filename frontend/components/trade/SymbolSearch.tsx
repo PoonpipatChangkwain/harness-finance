@@ -11,6 +11,7 @@ import { Search } from "lucide-react";
 import { useEffect, useId, useRef, useState } from "react";
 
 import { api, type SymbolInfo } from "@/lib/api";
+import { useT } from "@/lib/i18n";
 import { assetBadge } from "@/lib/trade";
 
 const RECENT_KEY = "fh-trade-recent-symbols";
@@ -54,6 +55,7 @@ export function SymbolSearch({
   search?: Search;
   autoFocus?: boolean;
 }) {
+  const t = useT();
   const [q, setQ] = useState("");
   const [open, setOpen] = useState(false);
   const [options, setOptions] = useState<SymbolOption[]>([]);
@@ -124,11 +126,11 @@ export function SymbolSearch({
           role="combobox"
           aria-expanded={open}
           aria-controls={listId}
-          aria-label="ค้นหา symbol"
+          aria-label={t("ค้นหา symbol", "Search symbol")}
           data-testid="symbol-search"
           autoFocus={autoFocus}
           value={q}
-          placeholder={value ? `${value.display} · ${value.canonical}` : "ค้นหา symbol เช่น PTT, AAPL, EURUSD"}
+          placeholder={value ? `${value.display} · ${value.canonical}` : t("ค้นหา symbol เช่น PTT, AAPL, EURUSD", "Search a symbol, e.g. PTT, AAPL, EURUSD")}
           onChange={(e) => {
             setQ(e.target.value);
             setOpen(true);
@@ -158,8 +160,8 @@ export function SymbolSearch({
           role="listbox"
           className="absolute z-40 mt-1 max-h-72 w-full overflow-y-auto rounded-md border border-line-strong bg-layer-1 py-1 shadow-lg"
         >
-          {!q.trim() ? <li className="px-2 py-0.5 text-[11px] uppercase text-subtle">ล่าสุด</li> : null}
-          {loading && !shown.length ? <li className="px-2 py-1 text-[12.5px] text-subtle">กำลังค้นหา…</li> : null}
+          {!q.trim() ? <li className="px-2 py-0.5 text-[11px] uppercase text-subtle">{t("ล่าสุด", "Recent")}</li> : null}
+          {loading && !shown.length ? <li className="px-2 py-1 text-[12.5px] text-subtle">{t("กำลังค้นหา…", "Searching…")}</li> : null}
           {shown.map((o, i) => (
             <li
               key={o.symbol.canonical}

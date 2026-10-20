@@ -3,6 +3,8 @@
  * fraction ↔ percent conversion of what the user types or reads).
  */
 
+import { localized } from "./i18n";
+
 export function formatMoney(value: number | null | undefined, digits = 2): string {
   if (value === null || value === undefined || !Number.isFinite(value)) return "–";
   return value.toLocaleString("en-US", { minimumFractionDigits: digits, maximumFractionDigits: digits });
@@ -57,4 +59,4 @@ export function numberText(text: string): string | undefined {
   return Number.isFinite(Number(t)) ? t : undefined;
 }
 
-export const MARKET_LABEL: Record<string, string> = { TH: "ไทย", US: "สหรัฐฯ" };
+export const MARKET_LABEL: Record<string, string> = localized({ TH: ["ไทย", "Thai"], US: ["สหรัฐฯ", "US"] });

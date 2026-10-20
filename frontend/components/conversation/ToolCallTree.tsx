@@ -24,6 +24,7 @@ import { useState } from "react";
 import { JsonView } from "@/components/ui/JsonView";
 import { StateDot, dotFor } from "@/components/ui/StateDot";
 import { firstLine, formatDuration, shortId } from "@/lib/format";
+import { useT } from "@/lib/i18n";
 import type { CallView } from "@/stores/run-reducer";
 import { useUiStore } from "@/stores/ui-store";
 
@@ -43,6 +44,7 @@ export function categoryIcon(category: string): LucideIcon {
 const PREVIEW_LIMIT = 2000;
 
 export function ToolDetails({ call, runId }: { call: CallView; runId: string }) {
+  const t = useT();
   const focusProvenance = useUiStore((s) => s.focusProvenance);
   const setTab = useUiStore((s) => s.setInspectorTab);
   const setOpen = useUiStore((s) => s.setInspectorOpen);
@@ -66,7 +68,7 @@ export function ToolDetails({ call, runId }: { call: CallView; runId: string }) 
         <section>
           <h4 className="mb-1 flex items-center gap-2 text-[11px] font-medium uppercase tracking-wide text-subtle">
             Output
-            {call.truncated || preview.length > PREVIEW_LIMIT ? <span className="normal-case text-warning">ตัดให้สั้น</span> : null}
+            {call.truncated || preview.length > PREVIEW_LIMIT ? <span className="normal-case text-warning">{t("ตัดให้สั้น", "truncated")}</span> : null}
           </h4>
           <pre className="num max-h-64 overflow-auto whitespace-pre-wrap break-words rounded-sm bg-layer-2 p-2 text-muted">
             {preview.slice(0, PREVIEW_LIMIT)}
@@ -80,7 +82,7 @@ export function ToolDetails({ call, runId }: { call: CallView; runId: string }) 
               setOpen(true);
             }}
           >
-            เปิดเต็มใน Scratchpad
+            {t("เปิดเต็มใน Scratchpad", "Open in full in Scratchpad")}
           </button>
         </section>
       ) : null}

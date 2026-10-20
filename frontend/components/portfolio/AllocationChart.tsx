@@ -13,6 +13,7 @@ import { formatPct } from "@/lib/portfolio-format";
 import type { PortfolioAnalytics } from "@/lib/portfolio-api";
 
 import { ProvValue } from "./ProvValue";
+import { useT } from "@/lib/i18n";
 
 /** Categorical palette readable on both themes. */
 export const PALETTE = ["#4ea1ff", "#3fb97f", "#e6a23c", "#c678dd", "#f06a6a", "#56b6c2", "#d19a66", "#98c379", "#e06c9f", "#8a95a3"];
@@ -61,6 +62,7 @@ export function Donut({ slices, size = 180 }: { slices: Slice[]; size?: number }
 }
 
 export function AllocationChart({ analytics }: { analytics: PortfolioAnalytics }) {
+  const t = useT();
   const [by, setBy] = useState<AllocationBy>("symbol");
   const { slices, provenanceId } = allocationSlices(analytics, by);
   return (
@@ -84,7 +86,7 @@ export function AllocationChart({ analytics }: { analytics: PortfolioAnalytics }
         </div>
       </div>
       {slices.length === 0 ? (
-        <p className="text-[12.5px] text-subtle">ยังไม่มีน้ำหนัก (ดึงราคาไม่ได้หรือยังไม่มี position)</p>
+        <p className="text-[12.5px] text-subtle">{t("ยังไม่มีน้ำหนัก (ดึงราคาไม่ได้หรือยังไม่มี position)", "No weights yet (prices unavailable or no positions)")}</p>
       ) : (
         <div className="flex flex-wrap items-start gap-4">
           <Donut slices={slices} />

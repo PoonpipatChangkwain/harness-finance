@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { api, type SymbolMatch } from "@/lib/api";
+import { useT } from "@/lib/i18n";
 import { useSessionStore } from "@/stores/session-store";
 import { useUiStore } from "@/stores/ui-store";
 
@@ -28,6 +29,7 @@ const PAGES: Item[] = [
 ];
 
 export function CommandPalette() {
+  const t = useT();
   const open = useUiStore((s) => s.paletteOpen);
   const setOpen = useUiStore((s) => s.setPaletteOpen);
   const sessions = useSessionStore((s) => s.sessions);
@@ -109,12 +111,12 @@ export function CommandPalette() {
               if (e.key === "ArrowUp") setIndex((i) => Math.max(0, i - 1));
               if (e.key === "Enter") go(items[index]);
             }}
-            placeholder="ไปหน้า, เปิด session, หรือค้น symbol (เช่น PTT, AAPL)…"
+            placeholder={t("ไปหน้า, เปิด session, หรือค้น symbol (เช่น PTT, AAPL)…", "Go to a page, open a session, or search a symbol (e.g. PTT, AAPL)…")}
             className="h-11 flex-1 bg-transparent text-[14px] outline-none placeholder:text-subtle"
           />
         </div>
         <ul className="max-h-80 overflow-y-auto py-1">
-          {items.length === 0 ? <li className="px-3 py-2 text-[12.5px] text-subtle">ไม่พบ</li> : null}
+          {items.length === 0 ? <li className="px-3 py-2 text-[12.5px] text-subtle">{t("ไม่พบ", "No results")}</li> : null}
           {items.map((item, i) => {
             const Icon = item.kind === "session" ? MessageSquare : item.kind === "symbol" ? Search : FlaskConical;
             return (

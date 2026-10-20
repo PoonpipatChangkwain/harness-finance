@@ -8,21 +8,23 @@ import { Area, AreaChart, CartesianGrid, Legend, Line, LineChart, ResponsiveCont
 
 import { drawdown, mergeCurves } from "@/lib/backtest";
 import type { SimResult } from "@/lib/backtest-api";
+import { useT } from "@/lib/i18n";
 import { formatMoney } from "@/lib/portfolio-format";
 
 const COLORS = { strategy: "var(--fh-accent)", benchmark: "var(--fh-text-subtle)", baseline: "var(--fh-state-warning)" };
 
 export function EquityChart({ result, currency }: { result: SimResult; currency: string }) {
+  const t = useT();
   const [mode, setMode] = useState<"money" | "percent">("money");
   const rows = mergeCurves(result.equity_curve, result.benchmark, result.baseline?.equity_curve ?? [], mode);
   const dd = drawdown(result.equity_curve);
   const fmt = (v: number) => (mode === "percent" ? `${v.toFixed(1)}%` : formatMoney(v, 0));
-  if (!rows.length) return <p className="text-[12.5px] text-subtle">ไม่มีข้อมูล equity</p>;
+  if (!rows.length) return <p className="text-[12.5px] text-subtle">{t("ไม่มีข้อมูล equity", "No equity data")}</p>;
   return (
     <div data-testid="equity-chart" className="rounded-md border border-line bg-layer-1 p-3">
       <div className="mb-2 flex items-center gap-2 text-[12.5px]">
-        <span className="font-medium">มูลค่าพอร์ต</span>
-        <span className="text-subtle">({mode === "money" ? currency : "% จากจุดเริ่ม"})</span>
+        <span className="font-medium">{t("มูลค่าพอร์ต", "Portfolio value")}</span>
+        <span className="text-subtle">({mode === "money" ? currency : t("% จากจุดเริ่ม", "% from start")})</span>
         <div className="ml-auto flex rounded-md border border-line">
           {(["money", "percent"] as const).map((m) => (
             <button
@@ -46,7 +48,7 @@ export function EquityChart({ result, currency }: { result: SimResult; currency:
             contentStyle={{ background: "var(--fh-bg-layer-1)", border: "1px solid var(--fh-border)", fontSize: 12 }}
           />
           <Legend wrapperStyle={{ fontSize: 12 }} />
-          <Line type="monotone" dataKey="strategy" name="ระบบเทรด (LLM)" stroke={COLORS.strategy} strokeWidth={2} dot={false} connectNulls isAnimationActive={false} />
+          <Line type="monotone" dataKey="strategy" name={t("ระบบเทรด (LLM)", "Trading system (LLM)")} stroke={COLORS.strategy} strokeWidth={2} dot={false} connectNulls isAnimationActive={false} />
           <Line type="monotone" dataKey="benchmark" name="Buy & hold" stroke={COLORS.benchmark} strokeDasharray="4 3" dot={false} connectNulls isAnimationActive={false} />
           {result.baseline ? (
             <Line type="monotone" dataKey="baseline" name={result.baseline.name} stroke={COLORS.baseline} dot={false} connectNulls isAnimationActive={false} />

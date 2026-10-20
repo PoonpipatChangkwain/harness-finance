@@ -18,12 +18,14 @@ import { AddMemoryForm } from "./AddMemoryForm";
 import { MemoryList } from "./MemoryList";
 import { MemoryProfileCard } from "./MemoryProfileCard";
 import { ReasoningBank } from "./ReasoningBank";
+import { useT } from "@/lib/i18n";
 
 type Tab = "mine" | "reasoning";
 
 const errText = (err: unknown) => (err instanceof Error ? err.message : String(err));
 
 function MyMemory() {
+  const t = useT();
   const [items, setItems] = useState<MemoryItemOut[] | null>(null);
   const [counts, setCounts] = useState<MemoryCounts | null>(null);
   const [listError, setListError] = useState<string | null>(null);
@@ -57,7 +59,8 @@ function MyMemory() {
         <div className="flex flex-wrap items-center gap-2 text-[12px] text-muted">
           {counts ? (
             <span data-testid="memory-counts" className="num">
-              ใช้อยู่ {counts.active} · รอยืนยัน {counts.candidate} · ถูกแทนที่ {counts.superseded} · เลิกใช้ {counts.retired}
+              {t("ใช้อยู่", "Active")} {counts.active} · {t("รอยืนยัน", "Pending")} {counts.candidate} · {t("ถูกแทนที่", "Superseded")}{" "}
+              {counts.superseded} · {t("เลิกใช้", "Retired")} {counts.retired}
             </span>
           ) : null}
           <span className="flex-1" />
@@ -69,10 +72,11 @@ function MyMemory() {
               onChange={(e) => setShowInactive(e.target.checked)}
               className="accent-[var(--fh-accent)]"
             />
-            แสดงที่เลิกใช้แล้ว{inactive ? ` (${inactive})` : ""}
+            {t("แสดงที่เลิกใช้แล้ว", "Show inactive")}
+            {inactive ? ` (${inactive})` : ""}
           </label>
         </div>
-        {listError ? <p className="text-[12.5px] text-error">โหลดความจำไม่ได้: {listError}</p> : null}
+        {listError ? <p className="text-[12.5px] text-error">{t("โหลดความจำไม่ได้", "Could not load memories")}: {listError}</p> : null}
         {items === null && !listError ? <div className="h-48 animate-pulse rounded-md bg-layer-1" /> : null}
         {items ? <MemoryList items={items} showInactive={showInactive} onChanged={reload} /> : null}
       </div>
@@ -85,10 +89,11 @@ function MyMemory() {
 }
 
 export function MemoryView() {
+  const t = useT();
   const router = useRouter();
   const search = useSearchParams();
   const tab: Tab = search?.get("tab") === "reasoning" ? "reasoning" : "mine";
-  const go = (t: Tab) => router.replace(t === "reasoning" ? "/memory?tab=reasoning" : "/memory");
+  const go = (next: Tab) => router.replace(next === "reasoning" ? "/memory?tab=reasoning" : "/memory");
 
   return (
     <div className="flex h-full min-h-0 flex-col">
@@ -98,7 +103,7 @@ export function MemoryView() {
         <div role="tablist" aria-label="Memory" className="flex gap-1">
           {(
             [
-              ["mine", "ความจำของฉัน"],
+              ["mine", t("ความจำของฉัน", "My memory")],
               ["reasoning", "ReasoningBank"],
             ] as const
           ).map(([id, label]) => (
@@ -122,7 +127,10 @@ export function MemoryView() {
       <div className="min-h-0 flex-1 overflow-y-auto px-4 py-3">
         <div className="mx-auto w-full max-w-6xl">
           <p className="mb-3 text-[12px] text-muted">
-            สิ่งที่ AI จำเกี่ยวกับคุณ: ยืนยัน แก้ เลิกใช้ หรือลืมได้ทุกข้อ — ความจำที่เปลี่ยนจะไม่ถูกเขียนทับ (ดูประวัติได้) จนกว่าคุณจะสั่ง “ลืม”
+            {t(
+              "สิ่งที่ AI จำเกี่ยวกับคุณ: ยืนยัน แก้ เลิกใช้ หรือลืมได้ทุกข้อ — ความจำที่เปลี่ยนจะไม่ถูกเขียนทับ (ดูประวัติได้) จนกว่าคุณจะสั่ง “ลืม”",
+              "What the AI remembers about you: confirm, edit, retire or forget any item — changed memories are never overwritten (see the history) until you choose “Forget”",
+            )}
           </p>
           {tab === "mine" ? <MyMemory /> : <ReasoningBank />}
         </div>

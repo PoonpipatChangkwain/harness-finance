@@ -21,6 +21,7 @@ import { useInspectorTabs } from "@/components/shell/InspectorRegistry";
 import { api, ApiError, type SessionDetail, type SkillInfo } from "@/lib/api";
 import { sendChatMessage } from "@/lib/chat";
 import { useNow } from "@/lib/hooks";
+import { tr, useT } from "@/lib/i18n";
 import { isTerminal } from "@/stores/run-reducer";
 import { usePortfolioStore } from "@/stores/portfolio-store";
 import { useRun, useRunConn } from "@/stores/run-store";
@@ -30,6 +31,7 @@ import { useUiStore } from "@/stores/ui-store";
 import { ScenarioCards } from "./ScenarioCards";
 
 export function ResearchView({ sessionId }: { sessionId: string | null }) {
+  const t = useT();
   const router = useRouter();
   const search = useSearchParams();
   const reloadSessions = useSessionStore((s) => s.reload);
@@ -71,7 +73,9 @@ export function ResearchView({ sessionId }: { sessionId: string | null }) {
       setDetail(await api.getSession(sessionId));
       setLoadError(null);
     } catch (err) {
-      setLoadError(err instanceof ApiError && err.status === 404 ? "ไม่พบ session นี้" : String(err instanceof Error ? err.message : err));
+      setLoadError(
+        err instanceof ApiError && err.status === 404 ? tr("ไม่พบ session นี้", "Session not found") : String(err instanceof Error ? err.message : err),
+      );
     }
   }, [sessionId]);
 
@@ -212,7 +216,7 @@ export function ResearchView({ sessionId }: { sessionId: string | null }) {
       skillLabel={skillTitle}
       empty={
         sessionId ? (
-          loadError ? <p className="text-error">{loadError}</p> : <p className="text-subtle">กำลังโหลด…</p>
+          loadError ? <p className="text-error">{loadError}</p> : <p className="text-subtle">{t("กำลังโหลด…", "Loading…")}</p>
         ) : (
           <ScenarioCards
             skills={skills}
@@ -226,7 +230,7 @@ export function ResearchView({ sessionId }: { sessionId: string | null }) {
       }
       composer={
         <>
-          {sendError ? <p className="mb-1 text-[12.5px] text-error">ส่งไม่สำเร็จ: {sendError}</p> : null}
+          {sendError ? <p className="mb-1 text-[12.5px] text-error">{t("ส่งไม่สำเร็จ", "Send failed")}: {sendError}</p> : null}
           {pendingApproval ? (
             <ApprovalPanel approval={pendingApproval} onResolve={resolveApproval} />
           ) : (
@@ -240,7 +244,7 @@ export function ResearchView({ sessionId }: { sessionId: string | null }) {
               running={running}
               busy={busy}
               disabled={streamDown || keyProblem !== null}
-              disabledReason={streamDown ? "กำลังเชื่อมต่อ stream…" : undefined}
+              disabledReason={streamDown ? t("กำลังเชื่อมต่อ stream…", "Connecting the stream…") : undefined}
               modelPicker={
                 <>
                   <ModelPicker providers={llm.data} choice={llmChoice} onChange={setLlmChoice} disabled={running} />

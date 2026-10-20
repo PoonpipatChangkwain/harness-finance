@@ -12,6 +12,7 @@ import { useState } from "react";
 
 import { StateDot, dotFor } from "@/components/ui/StateDot";
 import { formatDuration } from "@/lib/format";
+import { useT } from "@/lib/i18n";
 import { isTerminal, stepCount, type RunView } from "@/stores/run-reducer";
 
 import { CompactionItem, NodeHeader, NoticeRow, ReasoningRow } from "./ProcessRows";
@@ -20,6 +21,7 @@ import { ToolCallTree } from "./ToolCallTree";
 const manualOpen = new Map<string, boolean>();
 
 export function TurnProcess({ view, now }: { view: RunView; now: number }) {
+  const t = useT();
   const [manual, setManual] = useState<boolean | undefined>(() => manualOpen.get(view.runId));
   const live = !isTerminal(view.status);
   const open = manual ?? live;
@@ -52,7 +54,7 @@ export function TurnProcess({ view, now }: { view: RunView; now: number }) {
       </button>
       {open ? (
         <div className="space-y-0.5 border-t border-line px-1.5 py-1.5">
-          {view.items.length === 0 ? <div className="fh-shimmer px-1 text-[12.5px]">กำลังเริ่ม…</div> : null}
+          {view.items.length === 0 ? <div className="fh-shimmer px-1 text-[12.5px]">{t("กำลังเริ่ม…", "Starting…")}</div> : null}
           {view.items.map((item, i) => {
             switch (item.kind) {
               case "node":

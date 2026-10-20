@@ -13,6 +13,7 @@ import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
 import type { Citation } from "@/lib/events";
+import { useT } from "@/lib/i18n";
 
 import { CitationChip } from "./CitationChip";
 
@@ -47,6 +48,7 @@ export function Answer({
   runId: string;
   streaming?: boolean;
 }) {
+  const t = useT();
   const byMarker = new Map(citations.map((c) => [c.marker, c.provenance_id]));
   const source = streaming ? stripRawMarkers(markdown) : markAnswer(markdown, citations, unverified);
   const components: ComponentProps<typeof Markdown>["components"] = {
@@ -61,7 +63,7 @@ export function Answer({
           <span
             className="fh-unverified"
             data-testid="unverified-number"
-            title="ตัวเลขนี้ไม่พบใน provenance ของ run นี้ (อาจไม่ได้มาจาก tool)"
+            title={t("ตัวเลขนี้ไม่พบใน provenance ของ run นี้ (อาจไม่ได้มาจาก tool)", "This number is not in this run's provenance (it may not come from a tool)")}
           >
             {children}
           </span>
@@ -83,7 +85,10 @@ export function Answer({
       {!streaming && unverified.length ? (
         <div className="mt-2 flex items-center gap-1.5 text-[12.5px] text-warning">
           <TriangleAlert className="size-3.5" aria-hidden />
-          {unverified.length} ตัวเลขไม่พบใน provenance (hover ที่ตัวเลขที่ขีดเส้นใต้)
+          {t(
+            `${unverified.length} ตัวเลขไม่พบใน provenance (hover ที่ตัวเลขที่ขีดเส้นใต้)`,
+            `${unverified.length} number(s) not found in provenance (hover the underlined numbers)`,
+          )}
         </div>
       ) : null}
     </div>

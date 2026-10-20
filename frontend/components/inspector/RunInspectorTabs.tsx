@@ -6,6 +6,7 @@ import type { ReactNode } from "react";
 
 import type { InspectorTab } from "@/components/shell/InspectorRegistry";
 import { useNow } from "@/lib/hooks";
+import { useT } from "@/lib/i18n";
 import { isTerminal, type RunView } from "@/stores/run-reducer";
 import { useRun } from "@/stores/run-store";
 import { useUiStore } from "@/stores/ui-store";
@@ -17,11 +18,12 @@ import { ScratchpadTab } from "./ScratchpadTab";
 import { TrajectoryTab } from "./TrajectoryTab";
 
 function WithRun({ children }: { children: (view: RunView, now: number) => ReactNode }) {
+  const t = useT();
   const runId = useUiStore((s) => s.selectedRunId);
   const view = useRun(runId);
   const now = useNow(view ? !isTerminal(view.status) : false, 1000);
   if (!runId || !view) {
-    return <div className="p-4 text-[12.5px] text-subtle">ยังไม่มี run · ส่งคำถามหรือคลิกที่ turn เพื่อดูรายละเอียด</div>;
+    return <div className="p-4 text-[12.5px] text-subtle">{t("ยังไม่มี run · ส่งคำถามหรือคลิกที่ turn เพื่อดูรายละเอียด", "No run yet · send a question or click a turn to see details")}</div>;
   }
   return <>{children(view, now)}</>;
 }

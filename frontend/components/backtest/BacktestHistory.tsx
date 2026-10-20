@@ -11,9 +11,11 @@ import { useCallback, useEffect, useState } from "react";
 import { StateDot, dotFor } from "@/components/ui/StateDot";
 import { backtestApi, type BacktestBrief } from "@/lib/backtest-api";
 import { formatRelative } from "@/lib/format";
+import { useT } from "@/lib/i18n";
 import { formatPct, upDownClass } from "@/lib/portfolio-format";
 
 export function BacktestHistory({ compact, onNavigate }: { compact: boolean; onNavigate?: () => void }) {
+  const t = useT();
   const pathname = usePathname() ?? "";
   const router = useRouter();
   const [items, setItems] = useState<BacktestBrief[]>([]);
@@ -40,7 +42,12 @@ export function BacktestHistory({ compact, onNavigate }: { compact: boolean; onN
   }, [anyRunning, reload]);
 
   const onDelete = async (b: BacktestBrief) => {
-    if (!window.confirm(`ลบ backtest "${b.name || b.symbols.join(", ")}"?\n(trading run ของแต่ละวันจะยังอยู่ และใช้เป็น cache ได้)`)) return;
+    const name = b.name || b.symbols.join(", ");
+    const message = t(
+      `ลบ backtest "${name}"?\n(trading run ของแต่ละวันจะยังอยู่ และใช้เป็น cache ได้)`,
+      `Delete backtest "${name}"?\n(the daily trading runs are kept and can be reused as cache)`,
+    );
+    if (!window.confirm(message)) return;
     try {
       await backtestApi.remove(b.backtest_id);
       if (pathname === `/backtest/${b.backtest_id}`) router.push("/backtest");
@@ -85,7 +92,7 @@ export function BacktestHistory({ compact, onNavigate }: { compact: boolean; onN
               {compact ? null : (
                 <button
                   type="button"
-                  aria-label={`ลบ backtest ${b.name || b.backtest_id}`}
+                  aria-label={t(`ลบ backtest ${b.name || b.backtest_id}`, `Delete backtest ${b.name || b.backtest_id}`)}
                   onClick={() => void onDelete(b)}
                   className="absolute right-1 top-1/2 -translate-y-1/2 rounded-md p-1 text-subtle opacity-0 hover:bg-error/15 hover:text-error group-hover:opacity-100"
                 >

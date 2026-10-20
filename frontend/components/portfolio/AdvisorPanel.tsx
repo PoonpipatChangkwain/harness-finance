@@ -22,6 +22,7 @@ import { ReasoningToast } from "@/components/memory/ReasoningToast";
 import { api, ApiError, type SessionDetail, type SkillInfo } from "@/lib/api";
 import { sendChatMessage } from "@/lib/chat";
 import { useNow } from "@/lib/hooks";
+import { localized, tr, useT } from "@/lib/i18n";
 import { memoryApi, profileSummary, type MemoryProfileOut } from "@/lib/memory-api";
 import { portfolioApi, type AdvisorRun, type RiskProfile } from "@/lib/portfolio-api";
 import { isTerminal } from "@/stores/run-reducer";
@@ -30,11 +31,40 @@ import { ALL, usePortfolioStore } from "@/stores/portfolio-store";
 import { useUiStore } from "@/stores/ui-store";
 
 const SESSION_KEY = (id: string) => `fh-pf-advisor-session:${id}`;
-const RISK_LABEL: Record<RiskProfile, string> = { conservative: "ระมัดระวัง", balanced: "สมดุล", aggressive: "เชิงรุก" };
+const RISK_LABEL: Record<RiskProfile, string> = localized({
+  conservative: ["ระมัดระวัง", "Conservative"],
+  balanced: ["สมดุล", "Balanced"],
+  aggressive: ["เชิงรุก", "Aggressive"],
+});
 
+/** Button label + the question sent to the AI, both in the UI language. */
 export const QUICK_ACTIONS = [
-  { id: "risk", label: "ตรวจความเสี่ยงพอร์ต", skill: "portfolio-risk-review", text: "ตรวจความเสี่ยงพอร์ตนี้: ความกระจุกตัว, sector, correlation และตัวที่ขับความเสี่ยงหลัก" },
-  { id: "weakness", label: "หาจุดอ่อน", skill: "portfolio-weakness", text: "หาจุดอ่อนของพอร์ตนี้: ตัวที่ contribution to risk สูงแต่ fundamentals อ่อน" },
+  {
+    id: "risk",
+    skill: "portfolio-risk-review",
+    get label() {
+      return tr("ตรวจความเสี่ยงพอร์ต", "Portfolio risk check");
+    },
+    get text() {
+      return tr(
+        "ตรวจความเสี่ยงพอร์ตนี้: ความกระจุกตัว, sector, correlation และตัวที่ขับความเสี่ยงหลัก",
+        "Check this portfolio's risk: concentration, sectors, correlation and the main risk drivers",
+      );
+    },
+  },
+  {
+    id: "weakness",
+    skill: "portfolio-weakness",
+    get label() {
+      return tr("หาจุดอ่อน", "Find weak spots");
+    },
+    get text() {
+      return tr(
+        "หาจุดอ่อนของพอร์ตนี้: ตัวที่ contribution to risk สูงแต่ fundamentals อ่อน",
+        "Find this portfolio's weak spots: holdings with a high contribution to risk but weak fundamentals",
+      );
+    },
+  },
 ] as const;
 
 function readSession(id: string): string | null {
@@ -64,7 +94,7 @@ export function advisorTurns(detail: SessionDetail | null, runs: AdvisorRun[], l
   for (const r of runs) {
     items.push({
       key: r.run_id,
-      text: `เสนอ rebalance · ${RISK_LABEL[r.risk_profile ?? "balanced"]}`,
+      text: `${tr("เสนอ rebalance", "Propose rebalance")} · ${RISK_LABEL[r.risk_profile ?? "balanced"]}`,
       skill: "portfolio_advisor",
       runId: r.run_id,
       at: r.started_at,
@@ -78,6 +108,7 @@ export function advisorTurns(detail: SessionDetail | null, runs: AdvisorRun[], l
 }
 
 export function AdvisorPanel() {
+  const t = useT();
   const selectedId = usePortfolioStore((s) => s.selectedId);
   const portfolios = usePortfolioStore((s) => s.portfolios);
   const revision = usePortfolioStore((s) => s.revision);
@@ -190,7 +221,13 @@ export function AdvisorPanel() {
       setAdvisorRun(id, run_id);
       setLocal((l) => [
         ...l,
-        { key: run_id, text: `เสนอ rebalance · ${RISK_LABEL[risk]}${goal.trim() ? ` · ${goal.trim()}` : ""}`, skill: "portfolio_advisor", runId: run_id, at: new Date().toISOString() },
+        {
+          key: run_id,
+          text: `${tr("เสนอ rebalance", "Propose rebalance")} · ${RISK_LABEL[risk]}${goal.trim() ? ` · ${goal.trim()}` : ""}`,
+          skill: "portfolio_advisor",
+          runId: run_id,
+          at: new Date().toISOString(),
+        },
       ]);
       setRebalanceOpen(false);
       selectRun(run_id);
@@ -204,7 +241,9 @@ export function AdvisorPanel() {
   if (!id) {
     return (
       <div data-testid="advisor-panel" className="p-4 text-[12.5px] text-subtle">
-        {selectedId === ALL || !selectedId ? "เลือกพอร์ตด้านซ้ายเพื่อคุยกับ AI Advisor" : "บันทึกพอร์ตก่อน แล้วค่อยให้ AI วิเคราะห์"}
+        {selectedId === ALL || !selectedId
+          ? t("เลือกพอร์ตด้านซ้ายเพื่อคุยกับ AI Advisor", "Pick a portfolio on the left to talk to the AI Advisor")
+          : t("บันทึกพอร์ตก่อน แล้วค่อยให้ AI วิเคราะห์", "Save the portfolio first, then let the AI analyze it")}
       </div>
     );
   }
@@ -234,7 +273,7 @@ export function AdvisorPanel() {
             onClick={() => setRebalanceOpen((v) => !v)}
             className="inline-flex items-center gap-1 rounded-md bg-accent-muted px-2 py-1 text-[12px] text-accent disabled:opacity-50"
           >
-            <Target className="size-3.5" aria-hidden /> เสนอ rebalance <ChevronDown className="size-3" aria-hidden />
+            <Target className="size-3.5" aria-hidden /> {t("เสนอ rebalance", "Propose rebalance")} <ChevronDown className="size-3" aria-hidden />
           </button>
           <button
             type="button"
@@ -249,7 +288,7 @@ export function AdvisorPanel() {
         {rebalanceOpen ? (
           <div data-testid="rebalance-form" className="space-y-1.5 rounded-md border border-line bg-layer-2/40 p-2 text-[12px]">
             <label className="flex items-center gap-2 text-muted">
-              ความเสี่ยง
+              {t("ความเสี่ยง", "Risk")}
               <select
                 aria-label="risk profile"
                 value={risk}
@@ -267,7 +306,7 @@ export function AdvisorPanel() {
               aria-label="goal"
               value={goal}
               onChange={(e) => setGoal(e.target.value)}
-              placeholder="เป้าหมาย (ไม่บังคับ) เช่น ลดความกระจุกตัวใน Energy"
+              placeholder={t("เป้าหมาย (ไม่บังคับ) เช่น ลดความกระจุกตัวใน Energy", "Goal (optional), e.g. reduce concentration in Energy")}
               className="w-full rounded-md border border-line bg-bg px-2 py-1 text-fg outline-none focus:border-accent"
             />
             <button
@@ -277,20 +316,25 @@ export function AdvisorPanel() {
               onClick={() => void rebalance()}
               className="rounded-md bg-accent px-3 py-1 text-bg disabled:opacity-50"
             >
-              เริ่มวิเคราะห์
+              {t("เริ่มวิเคราะห์", "Start analysis")}
             </button>
           </div>
         ) : null}
         {pending ? (
           <button type="button" onClick={focusProposal} className="w-full rounded-md bg-warning/15 px-2 py-1 text-left text-[12px] text-warning">
-            ข้อเสนอรออนุมัติ → ไปที่ Rebalance proposal
+            {t("ข้อเสนอรออนุมัติ → ไปที่ Rebalance proposal", "Proposal awaiting approval → go to the Rebalance proposal")}
           </button>
         ) : null}
         {error ? <p className="text-[12px] text-error">{error}</p> : null}
       </div>
       <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-2 py-3">
         {turns.length === 0 ? (
-          <p className="px-2 text-[12.5px] text-subtle">ถามเกี่ยวกับพอร์ตนี้ หรือกดปุ่มด่วนด้านบน — AI เห็นข้อมูล analytics ของพอร์ตพร้อม provenance</p>
+          <p className="px-2 text-[12.5px] text-subtle">
+            {t(
+              "ถามเกี่ยวกับพอร์ตนี้ หรือกดปุ่มด่วนด้านบน — AI เห็นข้อมูล analytics ของพอร์ตพร้อม provenance",
+              "Ask about this portfolio or use the quick buttons above — the AI sees the portfolio analytics with provenance",
+            )}
+          </p>
         ) : (
           turns.map((t, i) => (
             <Turn
@@ -314,7 +358,7 @@ export function AdvisorPanel() {
           running={running && !pending}
           busy={busy}
           disabled={pending}
-          disabledReason={pending ? "รออนุมัติ proposal ในหน้าหลัก" : undefined}
+          disabledReason={pending ? t("รออนุมัติ proposal ในหน้าหลัก", "Waiting for proposal approval on the main page") : undefined}
           onSend={() => void ask(text, skill)}
           onStop={() => latestRunId && void api.cancelRun(latestRunId).catch(() => {})}
         />
@@ -329,6 +373,7 @@ export function AdvisorPanel() {
  * (`GET /memory/profile`), refreshed after each run, with a link to /memory.
  */
 export function ProfileLine({ refreshKey }: { refreshKey?: string }) {
+  const t = useT();
   const [profile, setProfile] = useState<MemoryProfileOut | null | undefined>(undefined);
   useEffect(() => {
     let cancelled = false;
@@ -348,10 +393,10 @@ export function ProfileLine({ refreshKey }: { refreshKey?: string }) {
       <span className="min-w-0 truncate" title={profile?.profile_text}>
         {summary ? (
           <>
-            ใช้โปรไฟล์ของคุณ: <span className="text-fg">{summary}</span>
+            {t("ใช้โปรไฟล์ของคุณ", "Using your profile")}: <span className="text-fg">{summary}</span>
           </>
         ) : (
-          "ยังไม่มีโปรไฟล์ในความจำ — AI จะจำจากที่คุยกัน"
+          t("ยังไม่มีโปรไฟล์ในความจำ — AI จะจำจากที่คุยกัน", "No profile in memory yet — the AI learns it from your chats")
         )}
       </span>
       <Link href="/memory" className="shrink-0 text-accent hover:underline">

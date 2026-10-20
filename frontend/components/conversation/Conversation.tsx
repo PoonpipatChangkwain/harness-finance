@@ -12,6 +12,7 @@ import { useRef, type ReactNode } from "react";
 
 import { StateDot, dotFor } from "@/components/ui/StateDot";
 import { formatCost, formatDuration } from "@/lib/format";
+import { useT } from "@/lib/i18n";
 import { useScrollFollow } from "@/lib/use-scroll-follow";
 import type { RunView } from "@/stores/run-reducer";
 
@@ -79,6 +80,7 @@ export function Conversation({
   empty?: ReactNode;
   skillLabel?: (s: string) => string;
 }) {
+  const t = useT();
   const scroller = useRef<HTMLDivElement>(null);
   const { atBottom, scrollToBottom } = useScrollFollow(scroller);
 
@@ -97,7 +99,7 @@ export function Conversation({
             onClick={() => scrollToBottom(true)}
             className="absolute -top-10 left-1/2 inline-flex -translate-x-1/2 items-center gap-1 rounded-full border border-line-strong bg-layer-1 px-3 py-1 text-[12px] text-muted shadow hover:text-fg"
           >
-            <ArrowDown className="size-3.5" aria-hidden /> ล่าสุด
+            <ArrowDown className="size-3.5" aria-hidden /> {t("ล่าสุด", "Latest")}
           </button>
         ) : null}
         {composer}

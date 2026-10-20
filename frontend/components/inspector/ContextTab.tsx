@@ -4,9 +4,11 @@
 
 import { COMPACT_RESERVE_TOKENS, ContextMeter, contextPercent } from "@/components/conversation/ContextMeter";
 import { formatTime, formatTokens } from "@/lib/format";
+import { useT } from "@/lib/i18n";
 import type { RunView } from "@/stores/run-reducer";
 
 export function ContextTab({ view }: { view: RunView }) {
+  const t = useT();
   const { used, window, compactions } = view.context;
   const results = Object.values(view.calls).filter((c) => c.finishedAt !== null).length;
   const cleared = compactions.filter((c) => c.kind === "micro").reduce((n, c) => n + (c.cleared ?? 0), 0);
@@ -32,7 +34,7 @@ export function ContextTab({ view }: { view: RunView }) {
       </dl>
       <section>
         <h3 className="mb-1 text-[11px] uppercase tracking-wide text-subtle">Compactions · {compactions.length}</h3>
-        {compactions.length === 0 ? <div className="text-subtle">ยังไม่มี compaction ใน run นี้</div> : null}
+        {compactions.length === 0 ? <div className="text-subtle">{t("ยังไม่มี compaction ใน run นี้", "No compaction in this run yet")}</div> : null}
         <ul className="space-y-1.5">
           {compactions.map((c) => (
             <li key={c.seq} className="rounded-md border border-line p-2">

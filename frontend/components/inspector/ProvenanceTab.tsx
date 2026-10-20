@@ -27,6 +27,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 
 import { api, type LineageNode, type ProvenanceRecord } from "@/lib/api";
 import { formatValue, shortId } from "@/lib/format";
+import { useT } from "@/lib/i18n";
 import type { RunView } from "@/stores/run-reducer";
 import { useUiStore } from "@/stores/ui-store";
 
@@ -87,6 +88,7 @@ function LineageTree({ node, depth = 0 }: { node: LineageNode; depth?: number })
 }
 
 export function Lineage({ pid }: { pid: string }) {
+  const t = useT();
   const [tree, setTree] = useState<LineageNode | null | undefined>(undefined);
   useEffect(() => {
     let alive = true;
@@ -99,12 +101,13 @@ export function Lineage({ pid }: { pid: string }) {
       alive = false;
     };
   }, [pid]);
-  if (tree === undefined) return <div className="text-subtle">กำลังโหลด lineage…</div>;
-  if (tree === null) return <div className="text-error">โหลด lineage ไม่ได้</div>;
+  if (tree === undefined) return <div className="text-subtle">{t("กำลังโหลด lineage…", "Loading lineage…")}</div>;
+  if (tree === null) return <div className="text-error">{t("โหลด lineage ไม่ได้", "Could not load lineage")}</div>;
   return <LineageTree node={tree} />;
 }
 
 export function ProvenanceTab({ view }: { view: RunView }) {
+  const t = useT();
   const [records, setRecords] = useState<ProvenanceRecord[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [sorting, setSorting] = useState<SortingState>([]);
@@ -149,18 +152,18 @@ export function ProvenanceTab({ view }: { view: RunView }) {
         <input
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
-          placeholder="กรอง value / source / tool…"
+          placeholder={t("กรอง value / source / tool…", "Filter value / source / tool…")}
           className="min-w-0 flex-1 rounded-sm border border-line bg-layer-2 px-2 py-0.5 outline-none"
         />
         <span className="num text-subtle">{table.getRowModel().rows.length}/{data.length}</span>
       </div>
       {error ? <div className="p-3 text-error">{error}</div> : null}
-      {records === null && !error ? <div className="p-3 text-subtle">กำลังโหลด…</div> : null}
+      {records === null && !error ? <div className="p-3 text-subtle">{t("กำลังโหลด…", "Loading…")}</div> : null}
       {selected ? (
         <div className="border-b border-line bg-layer-2/40 p-2">
           <div className="mb-1 flex items-center justify-between text-[11px] uppercase tracking-wide text-subtle">
             Lineage · <span className="num normal-case">{shortId(selected)}</span>
-            <button type="button" onClick={() => setSelected(null)} className="normal-case text-accent">ปิด</button>
+            <button type="button" onClick={() => setSelected(null)} className="normal-case text-accent">{t("ปิด", "Close")}</button>
           </div>
           <Lineage pid={selected} />
         </div>

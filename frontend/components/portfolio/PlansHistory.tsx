@@ -12,12 +12,18 @@ import { useCallback, useEffect, useState } from "react";
 
 import { ApiError } from "@/lib/api";
 import { formatRelative } from "@/lib/format";
+import { localized, useT } from "@/lib/i18n";
 import { formatPct, formatQty } from "@/lib/portfolio-format";
 import { portfolioApi, type ApplyDiff, type PlanRecord, type RevisionRecord } from "@/lib/portfolio-api";
 
 import { ProposalTable } from "./ProposalTable";
 
-const REASON: Record<string, string> = { created: "สร้าง", edit: "แก้ไข", import: "Import CSV", apply_plan: "Apply แผน" };
+const REASON: Record<string, string> = localized({
+  created: ["สร้าง", "Created"],
+  edit: ["แก้ไข", "Edited"],
+  import: ["Import CSV", "Import CSV"],
+  apply_plan: ["Apply แผน", "Applied plan"],
+});
 
 function ApplyDialog({
   plan,
@@ -36,32 +42,39 @@ function ApplyDialog({
   onConfirm: () => void;
   onClose: () => void;
 }) {
+  const t = useT();
   return (
     <div role="dialog" aria-modal="true" aria-label="Apply plan" className="fixed inset-0 z-50 grid place-items-center bg-black/50 p-4">
       <div data-testid="apply-dialog" className="w-full max-w-lg rounded-lg border border-line-strong bg-layer-1 shadow-xl">
         <div className="flex items-center border-b border-line px-4 py-2">
-          <h2 className="text-[14px] font-semibold">Apply แผนเข้าพอร์ต?</h2>
+          <h2 className="text-[14px] font-semibold">{t("Apply แผนเข้าพอร์ต?", "Apply the plan to the portfolio?")}</h2>
           <span className="flex-1" />
-          <button type="button" aria-label="ปิด" onClick={onClose} className="rounded-md p-1 text-muted hover:bg-layer-2">
+          <button type="button" aria-label={t("ปิด", "Close")} onClick={onClose} className="rounded-md p-1 text-muted hover:bg-layer-2">
             <X className="size-4" aria-hidden />
           </button>
         </div>
         <div className="space-y-2 p-4 text-[12.5px]">
           <p className="text-muted">
-            จำนวนหุ้นจะเปลี่ยนตามแผน {plan.id} (ไม่มีการส่งคำสั่งซื้อขายจริง) และบันทึกเป็น revision ใหม่
+            {t(
+              `จำนวนหุ้นจะเปลี่ยนตามแผน ${plan.id} (ไม่มีการส่งคำสั่งซื้อขายจริง) และบันทึกเป็น revision ใหม่`,
+              `Quantities change according to plan ${plan.id} (no real orders are sent) and are saved as a new revision`,
+            )}
           </p>
           {stale ? (
             <p className="rounded-md bg-warning/15 p-2 text-warning">
-              พอร์ตเปลี่ยนไปหลังจากสร้างแผนนี้ — แนะนำให้รัน advisor ใหม่ หรือกด Apply อีกครั้งเพื่อบังคับ
+              {t(
+                "พอร์ตเปลี่ยนไปหลังจากสร้างแผนนี้ — แนะนำให้รัน advisor ใหม่ หรือกด Apply อีกครั้งเพื่อบังคับ",
+                "The portfolio changed after this plan was made — re-run the advisor, or press Apply again to force it",
+              )}
             </p>
           ) : null}
           <table data-testid="apply-diff" className="num w-full">
             <thead className="text-left text-[11px] text-subtle">
               <tr>
                 <th className="font-normal">Symbol</th>
-                <th className="text-right font-normal">ก่อน</th>
-                <th className="text-right font-normal">หลัง</th>
-                <th className="text-right font-normal">เปลี่ยน</th>
+                <th className="text-right font-normal">{t("ก่อน", "Before")}</th>
+                <th className="text-right font-normal">{t("หลัง", "After")}</th>
+                <th className="text-right font-normal">{t("เปลี่ยน", "Change")}</th>
               </tr>
             </thead>
             <tbody>
@@ -77,19 +90,19 @@ function ApplyDialog({
                 </tr>
               ))}
               <tr className="border-t border-line/50 text-muted">
-                <td className="py-0.5 font-sans">เงินสด</td>
+                <td className="py-0.5 font-sans">{t("เงินสด", "Cash")}</td>
                 <td className="text-right">{formatQty(diff.cash_before)}</td>
                 <td className="text-right">{formatQty(diff.cash_after)}</td>
                 <td />
               </tr>
             </tbody>
           </table>
-          {diff.positions.length === 0 ? <p className="text-subtle">แผนนี้ไม่มีการเปลี่ยนจำนวนหุ้น (ทุกตัว hold)</p> : null}
+          {diff.positions.length === 0 ? <p className="text-subtle">{t("แผนนี้ไม่มีการเปลี่ยนจำนวนหุ้น (ทุกตัว hold)", "This plan changes no quantities (all hold)")}</p> : null}
           {error ? <p className="text-error">{error}</p> : null}
         </div>
         <div className="flex justify-end gap-2 border-t border-line px-4 py-2">
           <button type="button" onClick={onClose} className="rounded-md px-3 py-1 text-[13px] text-muted hover:bg-layer-2">
-            ยกเลิก
+            {t("ยกเลิก", "Cancel")}
           </button>
           <button
             type="button"
@@ -98,7 +111,7 @@ function ApplyDialog({
             onClick={onConfirm}
             className="rounded-md bg-accent px-3 py-1 text-[13px] text-bg disabled:opacity-50"
           >
-            {stale ? "บังคับ Apply" : "Apply"}
+            {stale ? t("บังคับ Apply", "Force Apply") : "Apply"}
           </button>
         </div>
       </div>
@@ -107,6 +120,7 @@ function ApplyDialog({
 }
 
 export function PlansHistory({ portfolioId, revision, onApplied }: { portfolioId: string; revision: number; onApplied: () => void }) {
+  const t = useT();
   const [plans, setPlans] = useState<PlanRecord[] | null>(null);
   const [revisions, setRevisions] = useState<RevisionRecord[] | null>(null);
   const [open, setOpen] = useState<string | null>(null);
@@ -170,7 +184,7 @@ export function PlansHistory({ portfolioId, revision, onApplied }: { portfolioId
   return (
     <section data-testid="plans-history" className="rounded-md border border-line bg-layer-1 p-3">
       <div className="mb-2 flex items-center gap-2">
-        <h2 className="text-[13px] font-semibold">แผนที่อนุมัติแล้ว</h2>
+        <h2 className="text-[13px] font-semibold">{t("แผนที่อนุมัติแล้ว", "Approved plans")}</h2>
         <span className="flex-1" />
         <button
           type="button"
@@ -181,8 +195,8 @@ export function PlansHistory({ portfolioId, revision, onApplied }: { portfolioId
         </button>
       </div>
       {error && !applying ? <p className="mb-1 text-[12px] text-error">{error}</p> : null}
-      {plans === null ? <p className="text-[12px] text-subtle">กำลังโหลด…</p> : null}
-      {plans?.length === 0 ? <p className="text-[12px] text-subtle">ยังไม่มีแผน · กด “เสนอ rebalance” ใน AI Advisor</p> : null}
+      {plans === null ? <p className="text-[12px] text-subtle">{t("กำลังโหลด…", "Loading…")}</p> : null}
+      {plans?.length === 0 ? <p className="text-[12px] text-subtle">{t("ยังไม่มีแผน · กด “เสนอ rebalance” ใน AI Advisor", "No plans yet · press “Propose rebalance” in the AI Advisor")}</p> : null}
       <ul className="space-y-1">
         {plans?.map((p) => {
           const card = p.proposal.card;
@@ -197,7 +211,7 @@ export function PlansHistory({ portfolioId, revision, onApplied }: { portfolioId
                 <span className={clsx("rounded-sm px-1.5 text-[11px]", p.status === "applied" ? "bg-done/15 text-done" : "bg-accent-muted text-accent")}>
                   {p.status}
                 </span>
-                {p.response?.outcome === "edited" ? <span className="text-[11px] text-warning">แก้ target</span> : null}
+                {p.response?.outcome === "edited" ? <span className="text-[11px] text-warning">{t("แก้ target", "targets edited")}</span> : null}
                 <span className="text-muted">
                   {trades} trades · turnover {formatPct(card?.turnover, 1)}
                 </span>

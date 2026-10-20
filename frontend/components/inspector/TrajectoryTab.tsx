@@ -11,6 +11,7 @@ import { useMemo, useState } from "react";
 
 import { parseTs } from "@/lib/events";
 import { formatDuration } from "@/lib/format";
+import { useT } from "@/lib/i18n";
 import type { RunView } from "@/stores/run-reducer";
 
 interface Bar {
@@ -46,6 +47,7 @@ export function timelineBars(view: RunView): Bar[] {
 }
 
 function Timeline({ view, now }: { view: RunView; now: number }) {
+  const t = useT();
   const bars = timelineBars(view);
   const t0 = view.startedAt ?? bars[0]?.start ?? now;
   const t1 = view.finishedAt ?? now;
@@ -73,12 +75,13 @@ function Timeline({ view, now }: { view: RunView; now: number }) {
           </div>
         );
       })}
-      {bars.length === 0 ? <div className="text-subtle">ยังไม่มี call</div> : null}
+      {bars.length === 0 ? <div className="text-subtle">{t("ยังไม่มี call", "No calls yet")}</div> : null}
     </div>
   );
 }
 
 export function TrajectoryTab({ view, now }: { view: RunView; now: number }) {
+  const t = useT();
   const [type, setType] = useState("");
   const types = useMemo(() => [...new Set(view.events.map((e) => e.type))], [view.events]);
   const t0 = view.startedAt ?? (view.events[0] ? parseTs(view.events[0].ts) : 0);
@@ -88,7 +91,7 @@ export function TrajectoryTab({ view, now }: { view: RunView; now: number }) {
       <Timeline view={view} now={now} />
       <div className="sticky top-0 flex items-center gap-2 border-y border-line bg-layer-1 p-2">
         <select aria-label="Filter by event type" value={type} onChange={(e) => setType(e.target.value)} className="rounded-sm border border-line bg-layer-2 px-1 py-0.5">
-          <option value="">ทุก event</option>
+          <option value="">{t("ทุก event", "All events")}</option>
           {types.map((t) => (
             <option key={t}>{t}</option>
           ))}

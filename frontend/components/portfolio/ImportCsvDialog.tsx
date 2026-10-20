@@ -12,6 +12,7 @@ import Papa from "papaparse";
 import { useRef, useState, type DragEvent } from "react";
 
 import { ApiError } from "@/lib/api";
+import { tr, useT } from "@/lib/i18n";
 import { entryErrors, portfolioApi, type EntryError, type ImportPreview } from "@/lib/portfolio-api";
 import { formatQty } from "@/lib/portfolio-format";
 
@@ -34,7 +35,7 @@ export function parseCsvPreview(text: string): { header: string[]; rows: Record<
   return {
     header: parsed.meta.fields ?? [],
     rows: parsed.data,
-    errors: parsed.errors.map((e) => `แถว ${(e.row ?? 0) + 1}: ${e.message}`),
+    errors: parsed.errors.map((e) => `${tr("แถว", "Row")} ${(e.row ?? 0) + 1}: ${e.message}`),
   };
 }
 
@@ -49,6 +50,7 @@ export function ImportCsvDialog({
   onCommitted: () => void;
   api?: ImportApi;
 }) {
+  const t = useT();
   const [text, setText] = useState<string | null>(null);
   const [fileName, setFileName] = useState<string | null>(null);
   const [server, setServer] = useState<ImportPreview | null>(null);
@@ -108,7 +110,7 @@ export function ImportCsvDialog({
         <div className="flex items-center border-b border-line px-4 py-2">
           <h2 className="text-[14px] font-semibold">Import CSV</h2>
           <span className="flex-1" />
-          <button type="button" aria-label="ปิด" onClick={onClose} className="rounded-md p-1 text-muted hover:bg-layer-2">
+          <button type="button" aria-label={t("ปิด", "Close")} onClick={onClose} className="rounded-md p-1 text-muted hover:bg-layer-2">
             <X className="size-4" aria-hidden />
           </button>
         </div>
@@ -127,7 +129,7 @@ export function ImportCsvDialog({
             )}
           >
             <FileUp className="size-5 text-muted" aria-hidden />
-            <span>{fileName ?? "ลากไฟล์ CSV มาวาง หรือคลิกเพื่อเลือก"}</span>
+            <span>{fileName ?? t("ลากไฟล์ CSV มาวาง หรือคลิกเพื่อเลือก", "Drop a CSV file here, or click to choose one")}</span>
             <span className="num text-[11px] text-subtle">symbol,quantity,avg_cost,weight,note (+ value,pnl_pct,pnl_amount,cost_total,mode,target_weight)</span>
             <input
               ref={input}
@@ -142,21 +144,23 @@ export function ImportCsvDialog({
             />
           </div>
           <p className="text-[11.5px] text-subtle">
-            weight / pnl_pct รับได้ทั้ง <span className="num">15%</span>, <span className="num">15</span> หรือ{" "}
-            <span className="num">0.15</span> · Commit จะแทนที่ positions ทั้งหมดของพอร์ตนี้ (เงินสดคงเดิม) ·{" "}
+            {t("weight / pnl_pct รับได้ทั้ง", "weight / pnl_pct accept")} <span className="num">15%</span>, <span className="num">15</span>{" "}
+            {t("หรือ", "or")} <span className="num">0.15</span> ·{" "}
+            {t("Commit จะแทนที่ positions ทั้งหมดของพอร์ตนี้ (เงินสดคงเดิม)", "Commit replaces all positions of this portfolio (cash is kept)")} ·{" "}
             <a
               className="text-accent"
               download="portfolio-template.csv"
               href={`data:text/csv;charset=utf-8,${encodeURIComponent(CSV_TEMPLATE)}`}
             >
-              ดาวน์โหลดตัวอย่าง
+              {t("ดาวน์โหลดตัวอย่าง", "Download a template")}
             </a>
           </p>
 
           {local ? (
             <div>
               <div className="mb-1 text-[11.5px] text-muted">
-                ไฟล์: {local.rows.length} แถว{local.rows.length > PREVIEW_ROWS ? ` (แสดง ${PREVIEW_ROWS} แถวแรก)` : ""}
+                {t(`ไฟล์: ${local.rows.length} แถว`, `File: ${local.rows.length} rows`)}
+                {local.rows.length > PREVIEW_ROWS ? t(` (แสดง ${PREVIEW_ROWS} แถวแรก)`, ` (showing the first ${PREVIEW_ROWS})`) : ""}
               </div>
               <div className="max-h-48 overflow-auto rounded-md border border-line">
                 <table data-testid="csv-preview" className="num w-full text-[12px]">
@@ -195,17 +199,20 @@ export function ImportCsvDialog({
             </div>
           ) : null}
 
-          {busy ? <p className="text-subtle">กำลังตรวจสอบกับ server…</p> : null}
+          {busy ? <p className="text-subtle">{t("กำลังตรวจสอบกับ server…", "Checking with the server…")}</p> : null}
           {failure ? <p className="text-error">{failure}</p> : null}
           {server ? (
             <div data-testid="server-preview" className="space-y-1">
               <p>
-                server: อ่านได้ <span className="num">{server.positions.length}</span> / {server.rows} positions
-                {server.converted.length ? ` · แปลงมูลค่าเป็นจำนวนหน่วย ${server.converted.length} ตัว` : ""}
+                server: {t("อ่านได้", "parsed")} <span className="num">{server.positions.length}</span> / {server.rows} positions
+                {server.converted.length
+                  ? t(` · แปลงมูลค่าเป็นจำนวนหน่วย ${server.converted.length} ตัว`, ` · converted value to units for ${server.converted.length}`)
+                  : ""}
               </p>
               {server.converted.map((c) => (
                 <p key={String(c.symbol)} className="num text-[11.5px] text-muted">
-                  {String(c.symbol)}: ราคา {formatQty(String(c.price))} → {formatQty(String(c.units))} หน่วย @ {formatQty(String(c.avg_cost))}
+                  {String(c.symbol)}: {t("ราคา", "price")} {formatQty(String(c.price))} → {formatQty(String(c.units))} {t("หน่วย", "units")} @{" "}
+                  {formatQty(String(c.avg_cost))}
                 </p>
               ))}
             </div>
@@ -214,7 +221,7 @@ export function ImportCsvDialog({
             <ul data-testid="import-errors" className="space-y-0.5 rounded-md bg-error/10 p-2 text-error">
               {errors.map((e, i) => (
                 <li key={i}>
-                  {e.index !== null ? `แถว ${e.index + 1}` : "ทั้งไฟล์"}
+                  {e.index !== null ? `${t("แถว", "Row")} ${e.index + 1}` : t("ทั้งไฟล์", "Whole file")}
                   {e.symbol ? ` (${e.symbol})` : ""}: {e.message}
                 </li>
               ))}
@@ -223,7 +230,7 @@ export function ImportCsvDialog({
         </div>
         <div className="flex justify-end gap-2 border-t border-line px-4 py-2">
           <button type="button" onClick={onClose} className="rounded-md px-3 py-1 text-[13px] text-muted hover:bg-layer-2">
-            ยกเลิก
+            {t("ยกเลิก", "Cancel")}
           </button>
           <button
             type="button"

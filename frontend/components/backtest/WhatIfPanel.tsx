@@ -11,6 +11,7 @@ import { useEffect, useState } from "react";
 
 import { simFormFrom, toSimConfig, type SimForm } from "@/lib/backtest";
 import { backtestApi, type Sim, type SimBrief } from "@/lib/backtest-api";
+import { useT } from "@/lib/i18n";
 import { formatMoney, formatPct } from "@/lib/portfolio-format";
 
 import { SimFields } from "./SimFields";
@@ -30,6 +31,7 @@ export function WhatIfPanel({
   onSim: (sim: Sim) => void;
   onPick: (simId: string) => void;
 }) {
+  const t = useT();
   const [form, setForm] = useState<SimForm>(() => simFormFrom(current?.config));
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -54,8 +56,8 @@ export function WhatIfPanel({
   return (
     <section data-testid="what-if" className="space-y-2 rounded-md border border-line bg-layer-1 p-3">
       <div className="flex items-center gap-2">
-        <h2 className="text-[13.5px] font-medium">ถ้าเปลี่ยนเงินต้น/ความเสี่ยง จะได้เท่าไหร่?</h2>
-        <span className="text-[11.5px] text-subtle">ใช้การตัดสินใจชุดเดิม ไม่เรียก LLM</span>
+        <h2 className="text-[13.5px] font-medium">{t("ถ้าเปลี่ยนเงินต้น/ความเสี่ยง จะได้เท่าไหร่?", "What if the capital/risk were different?")}</h2>
+        <span className="text-[11.5px] text-subtle">{t("ใช้การตัดสินใจชุดเดิม ไม่เรียก LLM", "Same decisions, no LLM calls")}</span>
       </div>
       <SimFields value={form} onChange={setForm} disabled={busy || disabled} />
       <div className="flex items-center gap-2">
@@ -66,7 +68,7 @@ export function WhatIfPanel({
           onClick={() => void run()}
           className="inline-flex items-center gap-1 rounded-md bg-accent px-3 py-1 text-[13px] font-medium text-bg disabled:opacity-50"
         >
-          <RefreshCw className={clsx("size-3.5", busy && "animate-spin")} aria-hidden /> จำลองใหม่
+          <RefreshCw className={clsx("size-3.5", busy && "animate-spin")} aria-hidden /> {t("จำลองใหม่", "Re-simulate")}
         </button>
         {error ? (
           <span role="alert" className="text-[12.5px] text-error">
@@ -79,12 +81,12 @@ export function WhatIfPanel({
           <table data-testid="sims-table" className="w-full text-[12px]">
             <thead className="text-left text-muted">
               <tr>
-                <th className="py-1 font-normal">เงินต้น</th>
-                <th className="font-normal">เสี่ยง/เทรด</th>
-                <th className="font-normal">ค่าคอมฯ</th>
-                <th className="font-normal">เงินสุดท้าย</th>
+                <th className="py-1 font-normal">{t("เงินต้น", "Capital")}</th>
+                <th className="font-normal">{t("เสี่ยง/เทรด", "Risk/trade")}</th>
+                <th className="font-normal">{t("ค่าคอมฯ", "Commission")}</th>
+                <th className="font-normal">{t("เงินสุดท้าย", "Final equity")}</th>
                 <th className="font-normal">Return</th>
-                <th className="font-normal">เทรด</th>
+                <th className="font-normal">{t("เทรด", "Trades")}</th>
               </tr>
             </thead>
             <tbody>

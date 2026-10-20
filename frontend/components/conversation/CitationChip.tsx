@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 
 import { api, type ProvenanceRecord } from "@/lib/api";
 import { formatValue } from "@/lib/format";
+import { useT } from "@/lib/i18n";
 import { useUiStore } from "@/stores/ui-store";
 
 const cache = new Map<string, Promise<ProvenanceRecord | null>>();
@@ -36,6 +37,7 @@ export function CitationChip({
   runId: string;
   load?: (pid: string) => Promise<ProvenanceRecord | null>;
 }) {
+  const t = useT();
   const [hover, setHover] = useState(false);
   const [record, setRecord] = useState<ProvenanceRecord | null | undefined>(undefined);
   const focusProvenance = useUiStore((s) => s.focusProvenance);
@@ -58,7 +60,7 @@ export function CitationChip({
         onFocus={() => setHover(true)}
         onBlur={() => setHover(false)}
         className="num mx-0.5 rounded-sm bg-accent-muted px-1 align-super text-[10px] leading-none text-accent hover:bg-accent hover:text-bg"
-        aria-label={`แหล่งที่มา ${marker}`}
+        aria-label={t(`แหล่งที่มา ${marker}`, `Source ${marker}`)}
       >
         {marker}
       </button>
@@ -69,9 +71,9 @@ export function CitationChip({
           className="absolute bottom-full left-1/2 z-30 mb-1 block w-72 -translate-x-1/2 rounded-md border border-line-strong bg-layer-1 p-2 text-left text-xs shadow-lg"
         >
           {record === undefined ? (
-            <span className="text-subtle">กำลังโหลด…</span>
+            <span className="text-subtle">{t("กำลังโหลด…", "Loading…")}</span>
           ) : record === null ? (
-            <span className="text-error">ไม่พบ provenance {provenanceId}</span>
+            <span className="text-error">{t("ไม่พบ provenance", "Provenance not found:")} {provenanceId}</span>
           ) : (
             <span className="block space-y-0.5">
               <span className="num block break-words text-fg">
@@ -83,7 +85,7 @@ export function CitationChip({
               </span>
               {record.as_of ? <span className="block text-subtle">as of {record.as_of}</span> : null}
               {record.calculation ? <span className="num block text-subtle">{record.calculation}</span> : null}
-              <span className="block pt-1 text-[10px] text-subtle">คลิกเพื่อดู lineage</span>
+              <span className="block pt-1 text-[10px] text-subtle">{t("คลิกเพื่อดู lineage", "Click to view lineage")}</span>
             </span>
           )}
         </span>

@@ -6,6 +6,7 @@ import { clsx } from "clsx";
 import type { ReactNode } from "react";
 
 import type { SimMetrics } from "@/lib/backtest-api";
+import { useT } from "@/lib/i18n";
 import { formatMoney, formatPct, upDownClass } from "@/lib/portfolio-format";
 
 function Tile({ label, children, sub, testId }: { label: string; children: ReactNode; sub?: ReactNode; testId?: string }) {
@@ -22,15 +23,16 @@ const pct = (v: number | null | undefined, signed = false) => (v === null || v =
 const ratio = (v: number | null | undefined) => (v === null || v === undefined ? "–" : v.toFixed(2));
 
 export function ResultTiles({ m }: { m: SimMetrics }) {
+  const t = useT();
   const ccy = <span className="ml-1 text-[11px] font-normal text-subtle">{m.currency}</span>;
   const skipped = Object.values(m.skipped).reduce((a, b) => a + b, 0);
   return (
     <div data-testid="result-tiles" className="grid grid-cols-2 gap-2 md:grid-cols-4 xl:grid-cols-8">
-      <Tile label="เงินต้น → เงินสุดท้าย" testId="tile-final" sub={<>เริ่ม {formatMoney(Number(m.initial_capital), 0)}</>}>
+      <Tile label={t("เงินต้น → เงินสุดท้าย", "Start → final equity")} testId="tile-final" sub={<>{t("เริ่ม", "start")} {formatMoney(Number(m.initial_capital), 0)}</>}>
         {formatMoney(Number(m.final_equity), 0)}
         {ccy}
       </Tile>
-      <Tile label="กำไร/ขาดทุน" sub={<span className={upDownClass(m.total_return)}>{pct(m.total_return, true)}</span>}>
+      <Tile label={t("กำไร/ขาดทุน", "Profit/loss")} sub={<span className={upDownClass(m.total_return)}>{pct(m.total_return, true)}</span>}>
         <span className={upDownClass(Number(m.profit))}>{formatMoney(Number(m.profit), 0)}</span>
       </Tile>
       <Tile label="Buy & hold" sub={m.alpha !== null && m.alpha !== undefined ? <>alpha {pct(m.alpha, true)}</> : null}>
@@ -43,10 +45,10 @@ export function ResultTiles({ m }: { m: SimMetrics }) {
       <Tile label="Sharpe / Sortino">
         {ratio(m.sharpe)} / {ratio(m.sortino)}
       </Tile>
-      <Tile label="เทรด · ชนะ" sub={<>PF {ratio(m.profit_factor)} · avg {m.expectancy_r === null ? "–" : `${m.expectancy_r.toFixed(2)}R`}</>}>
+      <Tile label={t("เทรด · ชนะ", "Trades · win")} sub={<>PF {ratio(m.profit_factor)} · avg {m.expectancy_r === null ? "–" : `${m.expectancy_r.toFixed(2)}R`}</>}>
         {m.trades} · {pct(m.win_rate)}
       </Tile>
-      <Tile label="ข้าม · ค่าธรรมเนียม" sub={<>ถือ position {pct(m.exposure)} ของเวลา</>}>
+      <Tile label={t("ข้าม · ค่าธรรมเนียม", "Skipped · fees")} sub={<>{t(`ถือ position ${pct(m.exposure)} ของเวลา`, `in a position ${pct(m.exposure)} of the time`)}</>}>
         {skipped} · {formatMoney(Number(m.fees), 0)}
       </Tile>
     </div>

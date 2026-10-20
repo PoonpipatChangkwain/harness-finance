@@ -14,6 +14,7 @@
  */
 
 import type { EntryError, EntryMode, PortfolioData, PositionInput } from "./portfolio-api";
+import { tr } from "./i18n";
 import { fractionToPercentText, numberText, percentTextToFraction } from "./portfolio-format";
 
 export type { EntryMode } from "./portfolio-api";
@@ -77,28 +78,28 @@ export const MODE_SPEC: Record<GuidedMode, ModeSpec> = {
   },
 };
 
-/** "THB" → "บาท", anything else → its code ("USD"). */
+/** "THB" → "บาท" (Thai UI), anything else → its code ("USD"). */
 export const moneyUnit = (currency: string | null | undefined): string =>
-  !currency || currency === "THB" ? "บาท" : currency;
+  !currency || currency === "THB" ? tr("บาท", "THB") : currency;
 
 /** Label of a mode as the broker apps show it; money labels follow the symbol's currency. */
 export function modeLabel(mode: EntryMode, currency?: string | null): string {
   const unit = moneyUnit(currency);
   switch (mode) {
     case "qty_cost":
-      return "จำนวน + ต้นทุนเฉลี่ย";
+      return tr("จำนวน + ต้นทุนเฉลี่ย", "Quantity + avg cost");
     case "qty_pnl_pct":
-      return "จำนวน + % กำไร/ขาดทุน";
+      return tr("จำนวน + % กำไร/ขาดทุน", "Quantity + % P/L");
     case "qty_pnl_amount":
-      return `จำนวน + กำไร/ขาดทุน (${unit})`;
+      return tr(`จำนวน + กำไร/ขาดทุน (${unit})`, `Quantity + P/L (${unit})`);
     case "value_pnl_pct":
-      return "มูลค่า + % กำไร/ขาดทุน";
+      return tr("มูลค่า + % กำไร/ขาดทุน", "Value + % P/L");
     case "value_pnl_amount":
-      return `มูลค่า + กำไร/ขาดทุน (${unit})`;
+      return tr(`มูลค่า + กำไร/ขาดทุน (${unit})`, `Value + P/L (${unit})`);
     case "cost_total":
-      return "จำนวน + ต้นทุนรวม";
+      return tr("จำนวน + ต้นทุนรวม", "Quantity + total cost");
     default:
-      return "% น้ำหนัก";
+      return tr("% น้ำหนัก", "% weight");
   }
 }
 
@@ -107,17 +108,17 @@ export function fieldLabel(field: DraftField, currency?: string | null): string 
   const unit = moneyUnit(currency);
   switch (field) {
     case "quantity":
-      return "จำนวนหุ้น";
+      return tr("จำนวนหุ้น", "Shares");
     case "value":
-      return `มูลค่า (${unit})`;
+      return tr(`มูลค่า (${unit})`, `Value (${unit})`);
     case "avgCost":
-      return `ต้นทุนเฉลี่ย (${unit})`;
+      return tr(`ต้นทุนเฉลี่ย (${unit})`, `Avg cost (${unit})`);
     case "pnlPct":
-      return "% กำไร/ขาดทุน";
+      return tr("% กำไร/ขาดทุน", "% P/L");
     case "pnlAmount":
-      return `กำไร/ขาดทุน (${unit})`;
+      return tr(`กำไร/ขาดทุน (${unit})`, `P/L (${unit})`);
     default:
-      return `ต้นทุนรวม (${unit})`;
+      return tr(`ต้นทุนรวม (${unit})`, `Total cost (${unit})`);
   }
 }
 
@@ -274,29 +275,42 @@ export function validateRows(rows: DraftRow[]): EntryError[] {
   rows.forEach((r, index) => {
     const err = (field: string, message: string) => errors.push({ index, symbol: r.symbol || null, field, message });
     const sym = r.symbol.trim().toUpperCase();
-    if (!sym) return err("symbol", "เลือก symbol");
-    if (seen.has(sym)) err("symbol", `ซ้ำกับแถว ${seen.get(sym)! + 1}`);
+    if (!sym) return err("symbol", tr("เลือก symbol", "Pick a symbol"));
+    if (seen.has(sym)) err("symbol", tr(`ซ้ำกับแถว ${seen.get(sym)! + 1}`, `Duplicate of row ${seen.get(sym)! + 1}`));
     seen.set(sym, index);
     if (r.kind === "weight") {
       const n = pctNum(r.weightPct);
-      if (!r.weightPct.trim() || !Number.isFinite(n) || n <= 0 || n > 100) err("weight", "% น้ำหนัก 0–100");
+      if (!r.weightPct.trim() || !Number.isFinite(n) || n <= 0 || n > 100) err("weight", tr("% น้ำหนัก 0–100", "% weight 0–100"));
     } else {
       const spec = MODE_SPEC[r.kind];
       if (spec.first.field === "quantity") {
-        if (!isNum(r.quantity)) err("quantity", "กรอกจำนวนหุ้น");
-        else if (asNum(r.quantity) === 0) err("quantity", "จำนวนต้องไม่เป็น 0");
-      } else if (!isNum(r.value) || asNum(r.value) <= 0) err("value", "มูลค่าต้องมากกว่า 0");
+        if (!isNum(r.quantity)) err("quantity", tr("กรอกจำนวนหุ้น", "Enter the number of shares"));
+        else if (asNum(r.quantity) === 0) err("quantity", tr("จำนวนต้องไม่เป็น 0", "Quantity must not be 0"));
+      } else if (!isNum(r.value) || asNum(r.value) <= 0) err("value", tr("มูลค่าต้องมากกว่า 0", "Value must be greater than 0"));
 
       const text = r[spec.second.field];
       const field = spec.second.api;
       if (!text.trim()) {
-        if (spec.second.required) err(field, field === "pnl_amount" ? "กรอกกำไร/ขาดทุน" : field === "pnl_pct" ? "กรอก % กำไร/ขาดทุน" : "กรอกต้นทุนรวม");
+        if (spec.second.required)
+          err(
+            field,
+            field === "pnl_amount"
+              ? tr("กรอกกำไร/ขาดทุน", "Enter the P/L")
+              : field === "pnl_pct"
+                ? tr("กรอก % กำไร/ขาดทุน", "Enter the % P/L")
+                : tr("กรอกต้นทุนรวม", "Enter the total cost"),
+          );
       } else if (field === "pnl_pct") {
-        if (!Number.isFinite(pctNum(text)) || pctNum(text) <= -100) err(field, "% กำไร/ขาดทุนต้องมากกว่า -100");
+        if (!Number.isFinite(pctNum(text)) || pctNum(text) <= -100) err(field, tr("% กำไร/ขาดทุนต้องมากกว่า -100", "% P/L must be greater than -100"));
       } else if (!isNum(text)) {
-        err(field, "ต้องเป็นตัวเลข");
+        err(field, tr("ต้องเป็นตัวเลข", "Must be a number"));
       } else if (field !== "pnl_amount" && asNum(text) < 0) {
-        err(field, field === "avg_cost" ? "ต้นทุนต้องเป็นตัวเลข ≥ 0" : "ต้นทุนรวมต้องเป็นตัวเลข ≥ 0");
+        err(
+          field,
+          field === "avg_cost"
+            ? tr("ต้นทุนต้องเป็นตัวเลข ≥ 0", "Cost must be a number ≥ 0")
+            : tr("ต้นทุนรวมต้องเป็นตัวเลข ≥ 0", "Total cost must be a number ≥ 0"),
+        );
       }
     }
     if (r.targetPct.trim()) {
@@ -305,7 +319,7 @@ export function validateRows(rows: DraftRow[]): EntryError[] {
     }
   });
   if (rows.some((r) => r.kind === "weight") && declaredTotalPct(rows) > 100 + 1e-9) {
-    errors.push({ index: null, symbol: null, field: "weight", message: `% รวม ${declaredTotalPct(rows).toFixed(2)}% เกิน 100%` });
+    errors.push({ index: null, symbol: null, field: "weight", message: tr(`% รวม ${declaredTotalPct(rows).toFixed(2)}% เกิน 100%`, `Total ${declaredTotalPct(rows).toFixed(2)}% exceeds 100%`) });
   }
   return errors;
 }
@@ -351,6 +365,7 @@ export function remapErrors(errors: EntryError[], indexOf: number[]): EntryError
     if (e.index === null || e.index === undefined) return e;
     const at = indexOf.indexOf(e.index);
     if (at >= 0) return { ...e, index: at };
-    return { ...e, index: null, message: `แถว ${e.index + 1}${e.symbol ? ` (${e.symbol})` : ""} ในพอร์ต: ${e.message}` };
+    const row = `${e.index + 1}${e.symbol ? ` (${e.symbol})` : ""}`;
+    return { ...e, index: null, message: tr(`แถว ${row} ในพอร์ต: ${e.message}`, `Row ${row} in the portfolio: ${e.message}`) };
   });
 }

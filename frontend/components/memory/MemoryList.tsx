@@ -23,6 +23,7 @@ import {
 } from "@/lib/memory-api";
 
 import { Drawer, Pill, RatioBar, formatDate } from "./bits";
+import { useT } from "@/lib/i18n";
 
 const errText = (err: unknown) => (err instanceof Error ? err.message : String(err));
 
@@ -67,19 +68,23 @@ function ActionButton({
 }
 
 export function ForgetDialog({ item, onCancel, onConfirm, busy }: { item: MemoryItemOut; onCancel: () => void; onConfirm: () => void; busy: boolean }) {
+  const t = useT();
   return (
-    <div role="dialog" aria-modal="true" aria-label="ลืมความจำ" className="fixed inset-0 z-50 grid place-items-center bg-black/50 p-4">
+    <div role="dialog" aria-modal="true" aria-label={t("ลืมความจำ", "Forget memory")} className="fixed inset-0 z-50 grid place-items-center bg-black/50 p-4">
       <div className="w-full max-w-sm space-y-3 rounded-lg border border-line bg-layer-1 p-4 text-[13px]">
         <h2 className="flex items-center gap-1.5 text-[14px] font-semibold text-error">
-          <ShieldAlert className="size-4" aria-hidden /> ลบถาวรรวมประวัติ?
+          <ShieldAlert className="size-4" aria-hidden /> {t("ลบถาวรรวมประวัติ?", "Delete permanently, including history?")}
         </h2>
         <p className="rounded-md bg-layer-2/60 p-2 text-fg">{item.text}</p>
         <p className="text-[12px] text-muted">
-          ข้อนี้และประวัติทั้งเส้น (ที่ถูกแทนที่ไปแล้ว) จะถูกลบออกจากความจำและการค้นหาทันที ย้อนกลับไม่ได้ — ถ้าแค่ไม่อยากให้ AI ใช้ ให้กด “เลิกใช้” แทน
+          {t(
+            "ข้อนี้และประวัติทั้งเส้น (ที่ถูกแทนที่ไปแล้ว) จะถูกลบออกจากความจำและการค้นหาทันที ย้อนกลับไม่ได้ — ถ้าแค่ไม่อยากให้ AI ใช้ ให้กด “เลิกใช้” แทน",
+            "This item and its whole history (already superseded versions) are removed from memory and search right away. This cannot be undone — if you only want the AI to stop using it, press “Retire” instead.",
+          )}
         </p>
         <div className="flex justify-end gap-2">
           <button type="button" onClick={onCancel} className="rounded-md px-3 py-1 text-[12.5px] text-muted hover:bg-layer-2">
-            ยกเลิก
+            {t("ยกเลิก", "Cancel")}
           </button>
           <button
             type="button"
@@ -88,7 +93,7 @@ export function ForgetDialog({ item, onCancel, onConfirm, busy }: { item: Memory
             onClick={onConfirm}
             className="rounded-md bg-error px-3 py-1 text-[12.5px] text-bg disabled:opacity-50"
           >
-            ลบถาวร
+            {t("ลบถาวร", "Delete permanently")}
           </button>
         </div>
       </div>
@@ -97,6 +102,7 @@ export function ForgetDialog({ item, onCancel, onConfirm, busy }: { item: Memory
 }
 
 export function HistoryDrawer({ item, onClose }: { item: MemoryItemOut; onClose: () => void }) {
+  const t = useT();
   const [chain, setChain] = useState<MemoryItemOut[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   useEffect(() => {
@@ -110,9 +116,14 @@ export function HistoryDrawer({ item, onClose }: { item: MemoryItemOut; onClose:
     };
   }, [item.id]);
   return (
-    <Drawer label="ประวัติความจำ" onClose={onClose}>
-      <p className="mb-3 text-[11.5px] text-muted">เก่า → ใหม่ · ความจำไม่ถูกแก้ทับ: ทุกการเปลี่ยนคือแถวใหม่ที่แทนที่แถวเดิม</p>
-      {error ? <p className="text-error">โหลดประวัติไม่ได้: {error}</p> : null}
+    <Drawer label={t("ประวัติความจำ", "Memory history")} onClose={onClose}>
+      <p className="mb-3 text-[11.5px] text-muted">
+        {t(
+          "เก่า → ใหม่ · ความจำไม่ถูกแก้ทับ: ทุกการเปลี่ยนคือแถวใหม่ที่แทนที่แถวเดิม",
+          "Old → new · memories are never overwritten: every change is a new row that supersedes the previous one",
+        )}
+      </p>
+      {error ? <p className="text-error">{t("โหลดประวัติไม่ได้", "Could not load history")}: {error}</p> : null}
       {!chain && !error ? <div className="h-24 animate-pulse rounded-md bg-layer-2" /> : null}
       <ol data-testid="history-chain" className="relative space-y-3 border-l border-line pl-4">
         {(chain ?? []).map((m) => (
@@ -123,7 +134,7 @@ export function HistoryDrawer({ item, onClose }: { item: MemoryItemOut; onClose:
               <Pill className={STATUS_STYLE[m.status]}>{STATUS_LABEL[m.status] ?? m.status}</Pill>
               <span>{SOURCE_LABEL[m.source] ?? m.source}</span>
               <span className="num" data-testid="history-validity">
-                {formatDate(m.valid_from)} → {m.valid_to ? formatDate(m.valid_to) : "ปัจจุบัน"}
+                {formatDate(m.valid_from)} → {m.valid_to ? formatDate(m.valid_to) : t("ปัจจุบัน", "now")}
               </span>
             </div>
           </li>
@@ -144,6 +155,7 @@ function MemoryItemRow({
   onHistory: (m: MemoryItemOut) => void;
   onForget: (m: MemoryItemOut) => void;
 }) {
+  const t = useT();
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(item.text);
   const [busy, setBusy] = useState(false);
@@ -177,7 +189,7 @@ function MemoryItemRow({
       {editing ? (
         <div className="space-y-1.5">
           <textarea
-            aria-label="แก้ข้อความความจำ"
+            aria-label={t("แก้ข้อความความจำ", "Edit memory text")}
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
             rows={2}
@@ -191,7 +203,7 @@ function MemoryItemRow({
               onClick={() => void act(() => memoryApi.patch(item.id, { text: draft.trim() }))}
               className="rounded-md bg-accent px-2.5 py-0.5 text-[12px] text-bg disabled:opacity-40"
             >
-              บันทึก
+              {t("บันทึก", "Save")}
             </button>
             <button
               type="button"
@@ -201,10 +213,12 @@ function MemoryItemRow({
               }}
               className="rounded-md px-2.5 py-0.5 text-[12px] text-muted hover:bg-layer-2"
             >
-              ยกเลิก
+              {t("ยกเลิก", "Cancel")}
             </button>
           </div>
-          <p className="text-[11px] text-subtle">การแก้จะสร้างความจำใหม่แทนข้อเดิม (ข้อเดิมยังดูได้ในประวัติ)</p>
+          <p className="text-[11px] text-subtle">
+            {t("การแก้จะสร้างความจำใหม่แทนข้อเดิม (ข้อเดิมยังดูได้ในประวัติ)", "Editing creates a new memory that replaces this one (the old one stays in the history)")}
+          </p>
         </div>
       ) : (
         <p className={clsx("break-words text-[13px] text-fg", !live && "line-through decoration-subtle")}>{item.text}</p>
@@ -212,8 +226,8 @@ function MemoryItemRow({
       <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-subtle">
         <Pill className="bg-accent-muted text-accent">{SOURCE_LABEL[item.source] ?? item.source}</Pill>
         {item.status !== "active" ? <Pill className={STATUS_STYLE[item.status]}>{STATUS_LABEL[item.status] ?? item.status}</Pill> : null}
-        {item.sensitivity !== "normal" ? <Pill title="ไม่ถูกส่งไป ReasoningBank และถูกปิดบังใน log">ข้อมูลอ่อนไหว</Pill> : null}
-        <RatioBar value={item.confidence} label="ความมั่นใจ" tone="accent" />
+        {item.sensitivity !== "normal" ? <Pill title={t("ไม่ถูกส่งไป ReasoningBank และถูกปิดบังใน log", "Never sent to the ReasoningBank and masked in logs")}>{t("ข้อมูลอ่อนไหว", "Sensitive")}</Pill> : null}
+        <RatioBar value={item.confidence} label={t("ความมั่นใจ", "Confidence")} tone="accent" />
         <span className="num">
           {formatDate(item.valid_from)}
           {item.valid_to ? ` → ${formatDate(item.valid_to)}` : ""}
@@ -224,28 +238,28 @@ function MemoryItemRow({
           {item.status === "candidate" ? (
             <>
               <ActionButton testId="memory-confirm" disabled={busy} onClick={() => void act(() => memoryApi.confirm(item.id))}>
-                <Check className="size-3.5 text-done" aria-hidden /> ยืนยัน
+                <Check className="size-3.5 text-done" aria-hidden /> {t("ยืนยัน", "Confirm")}
               </ActionButton>
-              <ActionButton testId="memory-reject" disabled={busy} onClick={() => void act(() => memoryApi.reject(item.id))} title="ไม่ใช่ความจริง — ไม่ต้องจำ">
-                <X className="size-3.5" aria-hidden /> ไม่ใช่
+              <ActionButton testId="memory-reject" disabled={busy} onClick={() => void act(() => memoryApi.reject(item.id))} title={t("ไม่ใช่ความจริง — ไม่ต้องจำ", "Not true — don't remember it")}>
+                <X className="size-3.5" aria-hidden /> {t("ไม่ใช่", "Not true")}
               </ActionButton>
             </>
           ) : null}
           {live ? (
             <ActionButton testId="memory-edit" disabled={busy} onClick={() => setEditing(true)}>
-              <Pencil className="size-3.5" aria-hidden /> แก้
+              <Pencil className="size-3.5" aria-hidden /> {t("แก้", "Edit")}
             </ActionButton>
           ) : null}
           {item.status === "active" ? (
-            <ActionButton testId="memory-retire" disabled={busy} onClick={() => void act(() => memoryApi.retire(item.id))} title="AI จะไม่ใช้ข้อนี้อีก แต่ยังดูประวัติได้">
-              <Archive className="size-3.5" aria-hidden /> เลิกใช้
+            <ActionButton testId="memory-retire" disabled={busy} onClick={() => void act(() => memoryApi.retire(item.id))} title={t("AI จะไม่ใช้ข้อนี้อีก แต่ยังดูประวัติได้", "The AI stops using this, but the history stays")}>
+              <Archive className="size-3.5" aria-hidden /> {t("เลิกใช้", "Retire")}
             </ActionButton>
           ) : null}
           <ActionButton testId="memory-history" onClick={() => onHistory(item)}>
-            <History className="size-3.5" aria-hidden /> ประวัติ
+            <History className="size-3.5" aria-hidden /> {t("ประวัติ", "History")}
           </ActionButton>
           <ActionButton testId="memory-forget" danger disabled={busy} onClick={() => onForget(item)}>
-            <Trash2 className="size-3.5" aria-hidden /> ลืม
+            <Trash2 className="size-3.5" aria-hidden /> {t("ลืม", "Forget")}
           </ActionButton>
         </div>
       ) : null}
@@ -263,6 +277,7 @@ export function MemoryList({
   showInactive: boolean;
   onChanged: () => void;
 }) {
+  const t = useT();
   const [history, setHistory] = useState<MemoryItemOut | null>(null);
   const [forget, setForget] = useState<MemoryItemOut | null>(null);
   const [forgetting, setForgetting] = useState(false);
@@ -274,7 +289,7 @@ export function MemoryList({
   const groups = MEMORY_CATEGORIES.map((c) => ({ ...c, items: rest.filter((m) => m.category === c.id).sort(byImportance) }));
   const known = new Set<string>(MEMORY_CATEGORIES.map((c) => c.id));
   const other = rest.filter((m) => !known.has(m.category));
-  if (other.length) groups.push({ id: "investment_style", label: "อื่น ๆ", items: other });
+  if (other.length) groups.push({ id: "investment_style", label: t("อื่น ๆ", "Other"), items: other });
 
   const doForget = async () => {
     if (!forget) return;
@@ -297,11 +312,16 @@ export function MemoryList({
 
   return (
     <div className="space-y-4">
-      {forgetError ? <p className="text-[12px] text-error">ลบไม่สำเร็จ: {forgetError}</p> : null}
+      {forgetError ? <p className="text-[12px] text-error">{t("ลบไม่สำเร็จ", "Delete failed")}: {forgetError}</p> : null}
       {candidates.length ? (
         <section data-testid="memory-candidates" className="space-y-2 rounded-lg border border-warning/40 bg-warning/5 p-3">
-          <h2 className="text-[13.5px] font-semibold text-warning">รอยืนยัน · {candidates.length}</h2>
-          <p className="text-[11.5px] text-muted">AI อนุมานข้อเหล่านี้จากการคุย — ยังไม่ใช้เป็นข้อเท็จจริงจนกว่าคุณจะยืนยัน</p>
+          <h2 className="text-[13.5px] font-semibold text-warning">{t("รอยืนยัน", "Pending confirmation")} · {candidates.length}</h2>
+          <p className="text-[11.5px] text-muted">
+            {t(
+              "AI อนุมานข้อเหล่านี้จากการคุย — ยังไม่ใช้เป็นข้อเท็จจริงจนกว่าคุณจะยืนยัน",
+              "The AI inferred these from your chats — they are not used as facts until you confirm them",
+            )}
+          </p>
           <ul className="space-y-2">{candidates.map(row)}</ul>
         </section>
       ) : null}
@@ -319,7 +339,10 @@ export function MemoryList({
 
       {!candidates.length && !rest.length ? (
         <p data-testid="memory-empty" className="rounded-lg border border-dashed border-line p-6 text-center text-[12.5px] text-subtle">
-          ยังไม่มีความจำ — เล่าเรื่องการลงทุนของคุณในหน้า Research หรือเพิ่มเองด้วยฟอร์ม “เพิ่มความจำ”
+          {t(
+            "ยังไม่มีความจำ — เล่าเรื่องการลงทุนของคุณในหน้า Research หรือเพิ่มเองด้วยฟอร์ม “เพิ่มความจำ”",
+            "No memories yet — tell the AI about your investing on the Research page, or add one with the “Add a memory” form",
+          )}
         </p>
       ) : null}
 

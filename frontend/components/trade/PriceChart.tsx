@@ -34,6 +34,7 @@ import {
   type IndicatorSet,
   type Ohlcv,
 } from "@/lib/trade-api";
+import { intlLocale, useT } from "@/lib/i18n";
 
 const RANGES: { id: ChartRange; label: string }[] = [
   { id: "1mo", label: "1M" },
@@ -180,6 +181,7 @@ export function PriceChart({
   height?: number;
   initialInterval?: ChartInterval;
 }) {
+  const t = useT();
   const el = useRef<HTMLDivElement>(null);
   const [tf, setTf] = useState<ChartInterval>("1d");
   const [range, setRange] = useState<ChartRange>("6mo");
@@ -425,13 +427,13 @@ export function PriceChart({
           {live && updatedAt ? (
             <span data-testid="chart-live" className={clsx("num flex items-center gap-1", stale && "text-warning")}>
               <span className={clsx("h-1.5 w-1.5 rounded-full", stale ? "bg-warning" : "animate-pulse bg-up")} />
-              {stale ? "อัปเดตไม่ได้" : "LIVE"} {updatedAt.toLocaleTimeString("th-TH", { hour12: false })}
+              {stale ? t("อัปเดตไม่ได้", "Update failed") : "LIVE"} {updatedAt.toLocaleTimeString(intlLocale(), { hour12: false })}
             </span>
           ) : null}
           {!live && asOf ? <span className="text-warning">as of {asOf}</span> : null}
         </span>
       </div>
-      {error ? <p className="p-3 text-[12.5px] text-error">โหลดกราฟไม่ได้: {error}</p> : null}
+      {error ? <p className="p-3 text-[12.5px] text-error">{t("โหลดกราฟไม่ได้", "Could not load the chart")}: {error}</p> : null}
       <div ref={el} style={{ height }} className={clsx(!ohlcv && "fh-shimmer")} />
     </section>
   );

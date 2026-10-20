@@ -9,6 +9,7 @@
 import { clsx } from "clsx";
 
 import type { MlSignal } from "@/lib/trade-api";
+import { intlLocale, useT } from "@/lib/i18n";
 
 const SIGNAL_CLASS: Record<string, string> = {
   long: "bg-up/15 text-up",
@@ -32,12 +33,16 @@ function Bar({ label, value, tone }: { label: string; value: number; tone: strin
 }
 
 export function MlSignalCard({ ml }: { ml: MlSignal | null | undefined }) {
+  const t = useT();
   if (!ml) return null;
   if (!ml.available) {
     return (
       <section data-testid="ml-signal" className="rounded-md border border-line bg-layer-1 p-3">
         <h3 className="mb-1.5 text-[12px] font-medium uppercase tracking-wide text-subtle">ML Bull/Bear</h3>
-        <p className="text-[12.5px] text-warning">โมเดลไม่พร้อมรอบนี้: {ml.error ?? "ไม่ทราบสาเหตุ"} (ไม่ได้แปลว่าสัญญาณเป็น flat)</p>
+        <p className="text-[12.5px] text-warning">
+          {t("โมเดลไม่พร้อมรอบนี้", "Model unavailable this time")}: {ml.error ?? t("ไม่ทราบสาเหตุ", "unknown reason")}{" "}
+          {t("(ไม่ได้แปลว่าสัญญาณเป็น flat)", "(this does not mean the signal is flat)")}
+        </p>
       </section>
     );
   }
@@ -51,7 +56,7 @@ export function MlSignalCard({ ml }: { ml: MlSignal | null | undefined }) {
         ML Bull/Bear
         <span className="normal-case tracking-normal">
           {ml.model} {ml.version} · {ml.timeframe}
-          {ml.bar_ts ? ` · แท่ง ${new Date(ml.bar_ts).toLocaleString("th-TH", { dateStyle: "short", timeStyle: "short" })}` : ""}
+          {ml.bar_ts ? ` · ${t("แท่ง", "bar")} ${new Date(ml.bar_ts).toLocaleString(intlLocale(), { dateStyle: "short", timeStyle: "short" })}` : ""}
         </span>
       </h3>
       <div className="mb-2 flex flex-wrap items-center gap-3 text-[12.5px]">
@@ -59,7 +64,7 @@ export function MlSignalCard({ ml }: { ml: MlSignal | null | undefined }) {
         <span className="text-muted">
           confidence <b className="num text-fg">{fixed(ml.confidence)}</b>
         </span>
-        {ml.daily_trend ? <span className="text-muted">เทรนด์ D1: {ml.daily_trend}</span> : null}
+        {ml.daily_trend ? <span className="text-muted">{t("เทรนด์ D1", "D1 trend")}: {ml.daily_trend}</span> : null}
         {ml.session ? <span className="text-muted">session: {ml.session}</span> : null}
         {ml.vix != null ? (
           <span className="text-muted">
@@ -74,17 +79,25 @@ export function MlSignalCard({ ml }: { ml: MlSignal | null | undefined }) {
       </div>
       {ml.tp_r_long != null || ml.time_stop_bars != null ? (
         <p className="mt-2 text-[11.5px] text-subtle">
-          P = โอกาสถึง TP (long +{ml.tp_r_long}R / short +{ml.tp_r_short}R) ก่อนโดน −1R ภายใน {ml.time_stop_bars} แท่ง
+          {t(
+            `P = โอกาสถึง TP (long +${ml.tp_r_long}R / short +${ml.tp_r_short}R) ก่อนโดน −1R ภายใน ${ml.time_stop_bars} แท่ง`,
+            `P = chance of reaching TP (long +${ml.tp_r_long}R / short +${ml.tp_r_short}R) before −1R within ${ml.time_stop_bars} bars`,
+          )}
         </p>
       ) : null}
       {m ? (
         <p className="num mt-1 text-[11.5px] text-subtle">
-          track record ({tr?.period}): {m.trades} เทรด · win {pct(m.win_rate)} · PF {fixed(m.profit_factor)} · always-long win{" "}
+          track record ({tr?.period}): {m.trades} {t("เทรด", "trades")} · win {pct(m.win_rate)} · PF {fixed(m.profit_factor)} · always-long win{" "}
           {pct(al?.win_rate)} PF {fixed(al?.profit_factor)}
         </p>
       ) : null}
       {ml.missing_features?.length ? (
-        <p className="mt-1 text-[11.5px] text-warning">feature ขาด {ml.missing_features.length} ตัว (โมเดลคิดโดยปล่อยเป็น NaN)</p>
+        <p className="mt-1 text-[11.5px] text-warning">
+          {t(
+            `feature ขาด ${ml.missing_features.length} ตัว (โมเดลคิดโดยปล่อยเป็น NaN)`,
+            `${ml.missing_features.length} feature(s) missing (the model ran with them as NaN)`,
+          )}
+        </p>
       ) : null}
     </section>
   );

@@ -11,6 +11,7 @@ import { clsx } from "clsx";
 import { useState } from "react";
 
 import type { DistilledLesson, OutcomeKind, TradeOutcomeBody, TradeResult } from "@/lib/trade-api";
+import { tr, useT } from "@/lib/i18n";
 
 const num = (v: unknown) =>
   typeof v === "number" ? v.toLocaleString("en-US", { maximumSignificantDigits: 6 }) : "–";
@@ -23,6 +24,7 @@ export function TradeOutcomePanel({
   /** error text, or null / the lessons the backend distilled (P17) on success */
   onSettle: (body: TradeOutcomeBody) => Promise<string | null | { distilled: DistilledLesson[] }>;
 }) {
+  const t = useT();
   const card = result.card ?? {};
   const targets = Array.isArray(card.targets) ? (card.targets as number[]) : [];
   const [editing, setEditing] = useState(result.outcome === null);
@@ -52,7 +54,7 @@ export function TradeOutcomePanel({
 
   return (
     <section data-testid="trade-outcome" className="space-y-2 rounded-lg border border-line bg-layer-1 p-3">
-      <h3 className="text-[12px] font-medium uppercase tracking-wide text-subtle">ผลการเทรด</h3>
+      <h3 className="text-[12px] font-medium uppercase tracking-wide text-subtle">{t("ผลการเทรด", "Trade outcome")}</h3>
 
       {outcome && !editing ? (
         <div className="space-y-1.5 text-[13px]">
@@ -66,17 +68,22 @@ export function TradeOutcomePanel({
               </span>
             ) : null}
             <button type="button" className="ml-3 text-[12px] text-accent hover:underline" onClick={() => setEditing(true)}>
-              แก้ไข
+              {t("แก้ไข", "Edit")}
             </button>
           </p>
-          {outcome.note ? <p className="text-[12.5px] text-muted">โน้ต: {outcome.note}</p> : null}
+          {outcome.note ? <p className="text-[12.5px] text-muted">{t("โน้ต", "Note")}: {outcome.note}</p> : null}
           {result.reflection ? (
             <p data-testid="reflection" className="rounded-md bg-layer-2 p-2 text-[12.5px]">
-              <span className="text-subtle">บทเรียน (ส่งต่อให้รอบถัดไปของ {result.symbol}): </span>
+              <span className="text-subtle">
+                {t(`บทเรียน (ส่งต่อให้รอบถัดไปของ ${result.symbol}): `, `Lesson (carried into the next ${result.symbol} run): `)}
+              </span>
               {result.reflection}
             </p>
           ) : result.reflection_error ? (
-            <p className="text-[12px] text-warning">เขียนบทเรียนไม่สำเร็จ: {result.reflection_error} — กดแก้ไขแล้วบันทึกอีกครั้งเพื่อลองใหม่</p>
+            <p className="text-[12px] text-warning">
+              {t("เขียนบทเรียนไม่สำเร็จ", "Could not write the lesson")}: {result.reflection_error} —{" "}
+              {t("กดแก้ไขแล้วบันทึกอีกครั้งเพื่อลองใหม่", "press Edit and save again to retry")}
+            </p>
           ) : null}
         </div>
       ) : (
@@ -94,17 +101,17 @@ export function TradeOutcomePanel({
             </button>
             <button type="button" disabled={busy} className={clsx(btn, exitKind === "manual_exit" && "bg-layer-2")}
               onClick={() => setExitKind("manual_exit")}>
-              ออกเอง…
+              {t("ออกเอง…", "Manual exit…")}
             </button>
             <button type="button" disabled={busy} className={clsx(btn, exitKind === "time_stop" && "bg-layer-2")}
               onClick={() => setExitKind("time_stop")}>
-              หมดเวลา (time stop)…
+              {t("หมดเวลา (time stop)…", "Time stop…")}
             </button>
             <button type="button" disabled={busy} className={btn} onClick={() => void submit({ outcome: "not_filled" })}>
-              ไม่ได้เข้า
+              {t("ไม่ได้เข้า", "Not filled")}
             </button>
             <button type="button" disabled={busy} className={btn} onClick={() => void submit({ outcome: "cancelled" })}>
-              ยกเลิก
+              {t("ยกเลิก", "Cancelled")}
             </button>
           </div>
           {exitKind ? (
@@ -113,7 +120,7 @@ export function TradeOutcomePanel({
               onSubmit={(e) => {
                 e.preventDefault();
                 const p = Number(price);
-                if (!Number.isFinite(p) || p <= 0) return setError("ใส่ราคาออกให้ถูกต้อง");
+                if (!Number.isFinite(p) || p <= 0) return setError(tr("ใส่ราคาออกให้ถูกต้อง", "Enter a valid exit price"));
                 void submit({ outcome: exitKind, exit_price: p });
               }}
             >
@@ -122,11 +129,11 @@ export function TradeOutcomePanel({
                 inputMode="decimal"
                 value={price}
                 onChange={(e) => setPrice(e.target.value)}
-                placeholder="ราคาที่ออก"
+                placeholder={t("ราคาที่ออก", "Exit price")}
                 className="num w-32 rounded-md border border-line bg-bg px-2 py-1 text-[12.5px]"
               />
               <button type="submit" disabled={busy} className={btn}>
-                บันทึก
+                {t("บันทึก", "Save")}
               </button>
             </form>
           ) : null}
@@ -134,20 +141,20 @@ export function TradeOutcomePanel({
             aria-label="note"
             value={note}
             onChange={(e) => setNote(e.target.value)}
-            placeholder="โน้ต (ไม่บังคับ) เช่น ข่าวออกแล้วกระชาก, เลื่อน stop ตาม"
+            placeholder={t("โน้ต (ไม่บังคับ) เช่น ข่าวออกแล้วกระชาก, เลื่อน stop ตาม", "Note (optional), e.g. spiked on the news, trailed the stop")}
             className="w-full rounded-md border border-line bg-bg px-2 py-1 text-[12.5px]"
           />
-          {busy ? <p className="text-[12px] text-muted">กำลังบันทึกและเขียนบทเรียน…</p> : null}
+          {busy ? <p className="text-[12px] text-muted">{t("กำลังบันทึกและเขียนบทเรียน…", "Saving and writing the lesson…")}</p> : null}
           {outcome ? (
             <button type="button" className="text-[12px] text-muted hover:underline" onClick={() => setEditing(false)}>
-              ยกเลิกการแก้ไข
+              {t("ยกเลิกการแก้ไข", "Cancel editing")}
             </button>
           ) : null}
         </div>
       )}
       {distilled?.length && !editing ? (
         <p data-testid="distilled-note" className="text-[12px] text-subtle" title={distilled.map((d) => d.title).join("\n")}>
-          บันทึกบทเรียน {distilled.length} ข้อลง ReasoningBank
+          {t(`บันทึกบทเรียน ${distilled.length} ข้อลง ReasoningBank`, `Saved ${distilled.length} lesson(s) to the ReasoningBank`)}
         </p>
       ) : null}
       {error ? <p className="text-[12px] text-error">{error}</p> : null}

@@ -12,6 +12,7 @@ import { useCallback, useEffect, useState } from "react";
 
 import { StateDot, dotFor } from "@/components/ui/StateDot";
 import { formatRelative } from "@/lib/format";
+import { intlLocale, useT } from "@/lib/i18n";
 import { portfolioApi, type WeeklyReports as Reports } from "@/lib/portfolio-api";
 
 import { ProvValue } from "./ProvValue";
@@ -28,6 +29,7 @@ export function WeeklyReports({
   names: Map<string, string>;
   revision: number;
 }) {
+  const t = useT();
   const [data, setData] = useState<Reports | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -68,12 +70,12 @@ export function WeeklyReports({
     <section data-testid="weekly-reports" className="rounded-md border border-line bg-layer-1 p-3">
       <div className="mb-2 flex flex-wrap items-center gap-2">
         <CalendarClock className="size-4 text-muted" aria-hidden />
-        <h2 className="text-[13px] font-semibold">รายงาน AI รายสัปดาห์</h2>
+        <h2 className="text-[13px] font-semibold">{t("รายงาน AI รายสัปดาห์", "Weekly AI report")}</h2>
         {schedule ? (
           <span className="text-[11.5px] text-subtle">
             {schedule.enabled
-              ? `ทุกศุกร์ 03:00 (เวลาไทย) · ครั้งถัดไป ${new Date(schedule.next_run).toLocaleString("th-TH", BKK)}`
-              : "ปิดอยู่ (PORTFOLIO_WEEKLY_ENABLED=false)"}
+              ? `${t("ทุกศุกร์ 03:00 (เวลาไทย) · ครั้งถัดไป", "Every Friday 03:00 (Bangkok time) · next")} ${new Date(schedule.next_run).toLocaleString(intlLocale(), BKK)}`
+              : t("ปิดอยู่ (PORTFOLIO_WEEKLY_ENABLED=false)", "Disabled (PORTFOLIO_WEEKLY_ENABLED=false)")}
           </span>
         ) : null}
         <span className="flex-1" />
@@ -84,11 +86,11 @@ export function WeeklyReports({
           onClick={() => void runNow()}
           className="inline-flex items-center gap-1 rounded-md bg-layer-2 px-2 py-0.5 text-[12px] hover:text-fg disabled:opacity-50"
         >
-          <Play className="size-3.5" aria-hidden /> {busy ? "กำลังเริ่ม…" : "รันตอนนี้"}
+          <Play className="size-3.5" aria-hidden /> {busy ? t("กำลังเริ่ม…", "Starting…") : t("รันตอนนี้", "Run now")}
         </button>
       </div>
       {error ? <p className="text-[12px] text-error">{error}</p> : null}
-      {data && data.reports.length === 0 ? <p className="text-[12px] text-subtle">ยังไม่มีรายงาน</p> : null}
+      {data && data.reports.length === 0 ? <p className="text-[12px] text-subtle">{t("ยังไม่มีรายงาน", "No reports yet")}</p> : null}
       <ul className="space-y-0.5">
         {data?.reports.slice(0, 12).map((r) => {
           const s = r.summary;
@@ -108,7 +110,7 @@ export function WeeklyReports({
               <span className="flex-1" />
               {r.session_id ? (
                 <Link href={`/research/${r.session_id}`} className="text-[12px] text-accent hover:underline">
-                  ดูรายงาน
+                  {t("ดูรายงาน", "View report")}
                 </Link>
               ) : null}
             </li>

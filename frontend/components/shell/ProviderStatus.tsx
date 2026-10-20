@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 
 import { StateDot } from "@/components/ui/StateDot";
 import { api, type ConfigStatus } from "@/lib/api";
+import { useT } from "@/lib/i18n";
 
 const ENV_HINT: Record<string, string> = {
   anthropic: "ANTHROPIC_API_KEY",
@@ -44,6 +45,7 @@ function loadStatus(): Promise<ConfigStatus> {
 }
 
 export function ProviderStatus({ compact }: { compact?: boolean }) {
+  const t = useT();
   const [status, setStatus] = useState<ConfigStatus | null>(null);
   const [error, setError] = useState(false);
 
@@ -53,7 +55,7 @@ export function ProviderStatus({ compact }: { compact?: boolean }) {
       .catch(() => setError(true));
   }, []);
 
-  if (error) return <div className="px-2 text-[11px] text-error">config/status ไม่ตอบ</div>;
+  if (error) return <div className="px-2 text-[11px] text-error">{t("config/status ไม่ตอบ", "config/status not responding")}</div>;
   if (!status) return null;
   const llm = "error" in status.llm ? null : status.llm;
   const llmProviders = llm ? Object.entries(llm.providers) : [];
@@ -62,7 +64,14 @@ export function ProviderStatus({ compact }: { compact?: boolean }) {
   const dot = (id: string, label: string, configured: boolean) => (
     <span
       key={id}
-      title={configured ? `${label}: configured` : `${label}: ไม่มี key — ใส่ ${ENV_HINT[id] ?? id.toUpperCase()} ใน backend/.env`}
+      title={
+        configured
+          ? `${label}: configured`
+          : t(
+              `${label}: ไม่มี key — ใส่ ${ENV_HINT[id] ?? id.toUpperCase()} ใน backend/.env`,
+              `${label}: no key — set ${ENV_HINT[id] ?? id.toUpperCase()} in backend/.env`,
+            )
+      }
       className="inline-flex items-center gap-1"
     >
       <StateDot state={configured ? "done" : "idle"} label={`${label} ${configured ? "configured" : "missing"}`} />

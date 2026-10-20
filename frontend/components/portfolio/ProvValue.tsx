@@ -12,6 +12,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { loadProvenance } from "@/components/conversation/CitationChip";
 import type { ProvenanceRecord } from "@/lib/api";
 import { formatValue } from "@/lib/format";
+import { useT } from "@/lib/i18n";
 import { formatMoney, formatPct, formatSigned, upDownClass } from "@/lib/portfolio-format";
 import type { PV } from "@/lib/portfolio-api";
 import { useUiStore } from "@/stores/ui-store";
@@ -57,6 +58,7 @@ export function ProvValue({
   className?: string;
   load?: (pid: string) => Promise<ProvenanceRecord | null>;
 }) {
+  const t = useT();
   const v = pv ? pv.value : (value ?? null);
   const pid = pv?.provenance_id ?? provenanceId ?? null;
   const [hover, setHover] = useState(false);
@@ -102,9 +104,9 @@ export function ProvValue({
           className="absolute left-0 top-full z-40 mt-1 block w-72 rounded-md border border-line-strong bg-layer-1 p-2 text-left text-xs font-normal text-fg shadow-lg"
         >
           {record === undefined ? (
-            <span className="text-subtle">กำลังโหลด…</span>
+            <span className="text-subtle">{t("กำลังโหลด…", "Loading…")}</span>
           ) : record === null ? (
-            <span className="text-error">ไม่พบ provenance {pid}</span>
+            <span className="text-error">{t("ไม่พบ provenance", "Provenance not found:")} {pid}</span>
           ) : (
             <span className="block space-y-0.5">
               <span className="num block break-words">
@@ -116,7 +118,7 @@ export function ProvValue({
               </span>
               {record.as_of ? <span className="block text-subtle">as of {record.as_of}</span> : null}
               {record.calculation ? <span className="num block text-accent">{record.calculation}</span> : null}
-              <span className="block pt-1 text-[10px] text-subtle">คลิกเพื่อดู lineage</span>
+              <span className="block pt-1 text-[10px] text-subtle">{t("คลิกเพื่อดู lineage", "Click to view lineage")}</span>
             </span>
           )}
         </span>

@@ -10,9 +10,11 @@ import { RefreshCcw } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { api } from "@/lib/api";
+import { useT } from "@/lib/i18n";
 import { useRunStore } from "@/stores/run-store";
 
 export function ConnectionBanner() {
+  const t = useT();
   const streamDown = useRunStore((s) => Object.values(s.conn).some((c) => c === "reconnecting"));
   const [backendDown, setBackendDown] = useState(false);
 
@@ -43,7 +45,9 @@ export function ConnectionBanner() {
       className="flex items-center justify-center gap-2 bg-warning/15 px-3 py-1 text-[12.5px] text-warning"
     >
       <RefreshCcw className="size-3.5 animate-spin" aria-hidden />
-      {backendDown ? "ติดต่อ backend ไม่ได้ · กำลังเชื่อมต่อใหม่…" : "การเชื่อมต่อหลุด · กำลังเชื่อมต่อใหม่…"}
+      {backendDown
+        ? t("ติดต่อ backend ไม่ได้ · กำลังเชื่อมต่อใหม่…", "Cannot reach the backend · reconnecting…")
+        : t("การเชื่อมต่อหลุด · กำลังเชื่อมต่อใหม่…", "Connection lost · reconnecting…")}
     </div>
   );
 }

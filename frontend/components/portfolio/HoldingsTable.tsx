@@ -54,6 +54,7 @@ import {
   type DraftRow,
   type EntryMode,
 } from "@/lib/holdings";
+import { localized, tr, useT } from "@/lib/i18n";
 import type { EntryError, HoldingAnalytics, PortfolioAnalytics, PortfolioData, PositionInput } from "@/lib/portfolio-api";
 import { formatQty, numberText } from "@/lib/portfolio-format";
 
@@ -80,20 +81,20 @@ const features = tableFeatures({
 });
 const col = createColumnHelper<typeof features, Row>();
 
-const COLUMN_LABELS: Record<string, string> = {
-  symbol: "Symbol",
-  qty: "Qty",
-  avg: "Avg cost",
-  declared: "% ที่กรอก",
-  price: "Price",
-  value: "Value",
-  weight: "Weight%",
-  target: "Target%",
-  pnl: "P&L",
-  pnlPct: "P&L%",
-  sector: "Sector",
-  note: "Note",
-};
+const COLUMN_LABELS: Record<string, string> = localized({
+  symbol: ["Symbol", "Symbol"],
+  qty: ["Qty", "Qty"],
+  avg: ["Avg cost", "Avg cost"],
+  declared: ["% ที่กรอก", "Declared %"],
+  price: ["Price", "Price"],
+  value: ["Value", "Value"],
+  weight: ["Weight%", "Weight%"],
+  target: ["Target%", "Target%"],
+  pnl: ["P&L", "P&L"],
+  pnlPct: ["P&L%", "P&L%"],
+  sector: ["Sector", "Sector"],
+  note: ["Note", "Note"],
+});
 const PERCENT_HIDDEN = ["qty", "avg", "price", "value", "pnl", "pnlPct"];
 const QTY_HIDDEN = ["declared"];
 
@@ -171,6 +172,7 @@ export function HoldingsTable({
   /** injectable preview/quote calls of the add dialog (tests) */
   addApi?: AddPositionApi;
 }) {
+  const t = useT();
   const [rows, setRows] = useState<DraftRow[]>(() => rowsFromBook(book));
   const [percent, setPercent] = useState(() => isPercentBook(book));
   const [cash, setCash] = useState(book?.cash ?? "");
@@ -241,7 +243,7 @@ export function HoldingsTable({
   const check = (): EntryError[] => {
     const found = validateRows(rows);
     if (!percent && cash.trim() && (numberText(cash) === undefined || Number(numberText(cash)) < 0)) {
-      found.push({ index: null, symbol: null, field: "cash", message: "เงินสดต้องเป็นตัวเลข ≥ 0" });
+      found.push({ index: null, symbol: null, field: "cash", message: tr("เงินสดต้องเป็นตัวเลข ≥ 0", "Cash must be a number ≥ 0") });
     }
     return found;
   };
@@ -251,7 +253,14 @@ export function HoldingsTable({
     const found = check();
     if (found.length) {
       setErrors(found);
-      return [{ index: null, symbol: null, field: null, message: "แก้แถวในตาราง Holdings ที่มีปัญหาก่อน แล้วค่อยบันทึก" }];
+      return [
+        {
+          index: null,
+          symbol: null,
+          field: null,
+          message: tr("แก้แถวในตาราง Holdings ที่มีปัญหาก่อน แล้วค่อยบันทึก", "Fix the rows with problems in the Holdings table first, then save"),
+        },
+      ];
     }
     const merged = mergePositions(buildPositions(rows), added);
     const result = await onSave(merged.positions, cashValue());
@@ -332,7 +341,7 @@ export function HoldingsTable({
             {h ? <AssetBadge symbol={h} /> : null}
             {h && h.status !== "ok" && h.status !== "declared" ? (
               <span className="rounded-sm bg-warning/15 px-1 text-[10.5px] text-warning">
-                {h.status === "no_price" ? "ไม่มีราคา" : "ไม่มี FX"}
+                {h.status === "no_price" ? t("ไม่มีราคา", "no price") : t("ไม่มี FX", "no FX")}
               </span>
             ) : null}
           </div>
@@ -351,13 +360,13 @@ export function HoldingsTable({
     }),
     col.display({
       id: "declared",
-      header: "% ที่กรอก",
+      header: t("% ที่กรอก", "Declared %"),
       cell: (c) => {
         const r = c.row.original;
         return (
           <CellInput
             label={`weight ${r.draft.symbol || c.row.index + 1}`}
-            placeholder="เช่น 25"
+            placeholder={t("เช่น 25", "e.g. 25")}
             value={r.draft.weightPct}
             invalid={rowErr(r, "weight")}
             onChange={(v) => edit(r.draft.key, { weightPct: v })}
@@ -441,9 +450,9 @@ export function HoldingsTable({
           <div className="flex items-center justify-end gap-1">
             {d.isNew && d.kind !== "weight" ? (
               <select
-                aria-label={`โหมดกรอก ${d.symbol || c.row.index + 1}`}
+                aria-label={t(`โหมดกรอก ${d.symbol || c.row.index + 1}`, `Entry mode ${d.symbol || c.row.index + 1}`)}
                 data-testid="row-mode"
-                title="คุณเห็นอะไรในแอปโบรกเกอร์?"
+                title={t("คุณเห็นอะไรในแอปโบรกเกอร์?", "What does your broker app show?")}
                 value={d.kind}
                 onChange={(e) => {
                   const kind = e.target.value;
@@ -460,7 +469,7 @@ export function HoldingsTable({
             ) : null}
             <button
               type="button"
-              aria-label={`ลบ ${d.symbol || "แถว"}`}
+              aria-label={t(`ลบ ${d.symbol || "แถว"}`, `Remove ${d.symbol || "row"}`)}
               onClick={() => remove(d.key)}
               className="rounded-sm p-1 text-subtle hover:bg-error/15 hover:text-error"
             >
@@ -504,18 +513,18 @@ export function HoldingsTable({
         <input
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
-          placeholder="กรอง symbol / sector…"
+          placeholder={t("กรอง symbol / sector…", "Filter symbol / sector…")}
           aria-label="filter holdings"
           className="w-40 rounded-sm border border-line bg-layer-2 px-2 py-0.5 text-[12px] outline-none"
         />
         <span className="flex-1" />
         {!percent ? (
           <label className="flex items-center gap-1 text-[12px] text-muted">
-            เงินสด ({ccy})
+            {t("เงินสด", "Cash")} ({ccy})
             <input
               aria-label="cash"
               value={cash}
-              placeholder="ไม่ระบุ"
+              placeholder={t("ไม่ระบุ", "not given")}
               inputMode="decimal"
               onChange={(e) => {
                 setCash(e.target.value);
@@ -531,7 +540,7 @@ export function HoldingsTable({
             onClick={() => setShowColumns((v) => !v)}
             className="inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[12px] text-muted hover:bg-layer-2"
           >
-            <Columns3 className="size-3.5" aria-hidden /> คอลัมน์
+            <Columns3 className="size-3.5" aria-hidden /> {t("คอลัมน์", "Columns")}
           </button>
           {showColumns ? (
             <div className="absolute right-0 z-30 mt-1 w-40 rounded-md border border-line-strong bg-layer-1 p-1 shadow-lg">
@@ -599,7 +608,7 @@ export function HoldingsTable({
             {rows.length === 0 ? (
               <tr>
                 <td colSpan={20} className="px-3 py-4 text-center text-[12.5px] text-subtle">
-                  ยังไม่มี position · กด “+ เพิ่ม” หรือ Import CSV
+                  {t("ยังไม่มี position · กด “+ เพิ่ม” หรือ Import CSV", "No positions yet · press “+ Add” or Import CSV")}
                 </td>
               </tr>
             ) : null}
@@ -615,12 +624,15 @@ export function HoldingsTable({
             total > 100 + 1e-9 ? "text-error" : Math.abs(total - 100) > 1e-9 ? "text-warning" : "text-done",
           )}
         >
-          รวม {total.toFixed(2)}%
+          {t("รวม", "Total")} {total.toFixed(2)}%
           {total > 100 + 1e-9
-            ? " · เกิน 100% บันทึกไม่ได้"
+            ? t(" · เกิน 100% บันทึกไม่ได้", " · over 100%, cannot save")
             : Math.abs(total - 100) > 1e-9
-              ? ` · ไม่ครบ 100% — ส่วนต่าง ${(100 - total).toFixed(2)}% ถือเป็นเงินสด`
-              : " · ครบ 100%"}
+              ? t(
+                  ` · ไม่ครบ 100% — ส่วนต่าง ${(100 - total).toFixed(2)}% ถือเป็นเงินสด`,
+                  ` · under 100% — the remaining ${(100 - total).toFixed(2)}% counts as cash`,
+                )
+              : t(" · ครบ 100%", " · exactly 100%")}
         </div>
       ) : null}
       {grouped.book.length ? (
@@ -633,7 +645,7 @@ export function HoldingsTable({
 
       <div className="flex flex-wrap items-center gap-2 border-t border-line px-3 py-2">
         <button type="button" data-testid="add-row" onClick={add} className="inline-flex items-center gap-1 rounded-md bg-layer-2 px-2 py-1 text-[12.5px]">
-          <Plus className="size-3.5" aria-hidden /> เพิ่ม
+          <Plus className="size-3.5" aria-hidden /> {t("เพิ่ม", "Add")}
         </button>
         <button type="button" onClick={onImport} className="inline-flex items-center gap-1 rounded-md bg-layer-2 px-2 py-1 text-[12.5px]">
           <FileUp className="size-3.5" aria-hidden /> Import CSV
@@ -643,11 +655,15 @@ export function HoldingsTable({
             type="button"
             data-testid="paste-holdings"
             disabled={dirty}
-            title={dirty ? "บันทึกหรือยกเลิกการแก้ไขในตารางก่อน" : "วางข้อความจากแอปโบรกเกอร์ ให้ AI แปลงเป็นแถว"}
+            title={
+              dirty
+                ? t("บันทึกหรือยกเลิกการแก้ไขในตารางก่อน", "Save or discard the table edits first")
+                : t("วางข้อความจากแอปโบรกเกอร์ ให้ AI แปลงเป็นแถว", "Paste text from your broker app and let the AI turn it into rows")
+            }
             onClick={onPaste}
             className="inline-flex items-center gap-1 rounded-md bg-layer-2 px-2 py-1 text-[12.5px] disabled:opacity-50"
           >
-            <ClipboardPaste className="size-3.5" aria-hidden /> วางข้อความ
+            <ClipboardPaste className="size-3.5" aria-hidden /> {t("วางข้อความ", "Paste text")}
           </button>
         ) : null}
         <button
@@ -657,13 +673,13 @@ export function HoldingsTable({
           onClick={togglePercent}
           className={clsx("inline-flex items-center gap-1 rounded-md px-2 py-1 text-[12.5px]", percent ? "bg-accent-muted text-accent" : "bg-layer-2")}
         >
-          <Percent className="size-3.5" aria-hidden /> กรอกแบบ % อย่างเดียว
+          <Percent className="size-3.5" aria-hidden /> {t("กรอกแบบ % อย่างเดียว", "Percent-only entry")}
         </button>
         <span className="flex-1" />
         {dirty ? (
           <>
             <button type="button" onClick={discard} className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-[12.5px] text-muted hover:bg-layer-2">
-              <RotateCcw className="size-3.5" aria-hidden /> ยกเลิก
+              <RotateCcw className="size-3.5" aria-hidden /> {t("ยกเลิก", "Discard")}
             </button>
             <button
               type="button"
@@ -672,12 +688,12 @@ export function HoldingsTable({
               onClick={() => void save()}
               className="inline-flex items-center gap-1 rounded-md bg-accent px-3 py-1 text-[12.5px] text-bg disabled:opacity-60"
             >
-              <Save className="size-3.5" aria-hidden /> {saving ? "กำลังบันทึก…" : "บันทึก"}
+              <Save className="size-3.5" aria-hidden /> {saving ? t("กำลังบันทึก…", "Saving…") : t("บันทึก", "Save")}
             </button>
           </>
         ) : (
           <span className="text-[11.5px] text-subtle">
-            {book ? `${book.positions.length} positions · ${formatQty(book.cash)} เงินสด` : "ยังไม่ได้บันทึก"}
+            {book ? `${book.positions.length} positions · ${formatQty(book.cash)} ${t("เงินสด", "cash")}` : t("ยังไม่ได้บันทึก", "Not saved yet")}
           </span>
         )}
       </div>

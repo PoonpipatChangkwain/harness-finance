@@ -3,6 +3,8 @@
  * Token format after deepseek-harness ui-chat `token-format.ts`: 950, 1.2k, 3.4M.
  */
 
+import { intlLocale, tr } from "@/lib/i18n";
+
 export function formatTokens(n: number): string {
   if (!Number.isFinite(n)) return "–";
   const abs = Math.abs(n);
@@ -35,7 +37,7 @@ export function formatTime(ts: number | string | null | undefined): string {
   if (ts === null || ts === undefined) return "";
   const d = typeof ts === "number" ? new Date(ts) : new Date(ts);
   if (Number.isNaN(d.getTime())) return "";
-  return d.toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+  return d.toLocaleTimeString(intlLocale(), { hour: "2-digit", minute: "2-digit", second: "2-digit" });
 }
 
 export function formatRelative(iso: string | null | undefined, now = Date.now()): string {
@@ -43,10 +45,10 @@ export function formatRelative(iso: string | null | undefined, now = Date.now())
   const t = Date.parse(/(?:Z|[+-]\d{2}:?\d{2})$/.test(iso) ? iso : `${iso}Z`);
   if (Number.isNaN(t)) return "";
   const diff = Math.max(0, now - t) / 1000;
-  if (diff < 60) return "เมื่อสักครู่";
-  if (diff < 3600) return `${Math.floor(diff / 60)} นาทีที่แล้ว`;
-  if (diff < 86400) return `${Math.floor(diff / 3600)} ชม.ที่แล้ว`;
-  return new Date(t).toLocaleDateString("th-TH", { day: "numeric", month: "short" });
+  if (diff < 60) return tr("เมื่อสักครู่", "just now");
+  if (diff < 3600) return tr(`${Math.floor(diff / 60)} นาทีที่แล้ว`, `${Math.floor(diff / 60)} min ago`);
+  if (diff < 86400) return tr(`${Math.floor(diff / 3600)} ชม.ที่แล้ว`, `${Math.floor(diff / 3600)} h ago`);
+  return new Date(t).toLocaleDateString(intlLocale(), { day: "numeric", month: "short" });
 }
 
 export function shortId(id: string, keep = 6): string {

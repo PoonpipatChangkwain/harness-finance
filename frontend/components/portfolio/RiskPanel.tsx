@@ -12,6 +12,7 @@ import { formatPct } from "@/lib/portfolio-format";
 import type { PortfolioAnalytics } from "@/lib/portfolio-api";
 
 import { ProvValue } from "./ProvValue";
+import { useT } from "@/lib/i18n";
 
 function Metric({ label, children, hint }: { label: string; children: ReactNode; hint?: string }) {
   return (
@@ -38,8 +39,9 @@ export function CorrelationHeatmap({
   provenanceId: string;
   labels: Map<string, string>;
 }) {
+  const t = useT();
   const keys = Object.keys(matrix);
-  if (keys.length < 2) return <p className="text-[12px] text-subtle">ต้องมีอย่างน้อย 2 ตัวจึงแสดง correlation</p>;
+  if (keys.length < 2) return <p className="text-[12px] text-subtle">{t("ต้องมีอย่างน้อย 2 ตัวจึงแสดง correlation", "Correlation needs at least 2 holdings")}</p>;
   const name = (k: string) => labels.get(k) ?? k;
   return (
     <div className="overflow-x-auto">
@@ -85,6 +87,7 @@ export function CorrelationHeatmap({
 }
 
 export function RiskPanel({ analytics }: { analytics: PortfolioAnalytics }) {
+  const t = useT();
   const r = analytics.risk;
   const c = analytics.concentration;
   const labels = new Map(analytics.holdings.map((h) => [h.symbol, h.display]));
@@ -97,15 +100,15 @@ export function RiskPanel({ analytics }: { analytics: PortfolioAnalytics }) {
         <h2 className="text-[13px] font-semibold">Risk</h2>
         {r ? (
           <span className="text-[11.5px] text-subtle">
-            {r.observations} วัน ({r.start} → {r.end}) · {r.method}
+            {r.observations} {t("วัน", "days")} ({r.start} → {r.end}) · {r.method}
           </span>
         ) : null}
       </div>
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-        <Metric label="Volatility (ต่อปี)">{r ? <ProvValue pv={r.volatility} format="pct" /> : "–"}</Metric>
+        <Metric label={t("Volatility (ต่อปี)", "Volatility (annualized)")}>{r ? <ProvValue pv={r.volatility} format="pct" /> : "–"}</Metric>
         <Metric label="Max drawdown">{r ? <ProvValue pv={r.max_drawdown} format="pct" /> : "–"}</Metric>
         <Metric label={`Beta vs ${r?.benchmark ?? "benchmark"}`}>{r?.beta ? <ProvValue pv={r.beta} format="ratio" digits={2} /> : "–"}</Metric>
-        <Metric label="VaR 95% / CVaR 95% (1 วัน)">
+        <Metric label={t("VaR 95% / CVaR 95% (1 วัน)", "VaR 95% / CVaR 95% (1 day)")}>
           {r ? (
             <>
               <ProvValue pv={r.var_95} format="pct" /> / <ProvValue pv={r.cvar_95} format="pct" />
@@ -114,7 +117,7 @@ export function RiskPanel({ analytics }: { analytics: PortfolioAnalytics }) {
             "–"
           )}
         </Metric>
-        <Metric label="HHI" hint="Herfindahl–Hirschman: Σ w² (1/N = กระจายเท่ากัน)">
+        <Metric label="HHI" hint={t("Herfindahl–Hirschman: Σ w² (1/N = กระจายเท่ากัน)", "Herfindahl–Hirschman: Σ w² (1/N = equally spread)")}>
           {c ? <ProvValue value={c.hhi} provenanceId={c.provenance_id} format="ratio" /> : "–"}
         </Metric>
         <Metric label="Effective N">{c ? <ProvValue value={c.effective_n} provenanceId={c.provenance_id} format="number" digits={1} /> : "–"}</Metric>
@@ -129,7 +132,7 @@ export function RiskPanel({ analytics }: { analytics: PortfolioAnalytics }) {
           )}
         </Metric>
       </div>
-      {!r ? <p className="mt-2 text-[12px] text-subtle">ยังคำนวณความเสี่ยงไม่ได้ (ดูคำเตือนด้านบน)</p> : null}
+      {!r ? <p className="mt-2 text-[12px] text-subtle">{t("ยังคำนวณความเสี่ยงไม่ได้ (ดูคำเตือนด้านบน)", "Risk cannot be computed yet (see the warnings above)")}</p> : null}
       {r ? (
         <div className="mt-3 grid gap-4 lg:grid-cols-[auto_1fr]">
           <div>

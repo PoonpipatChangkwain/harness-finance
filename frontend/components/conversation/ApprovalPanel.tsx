@@ -11,6 +11,7 @@ import { useEffect } from "react";
 import { JsonView } from "@/components/ui/JsonView";
 import { Kbd } from "@/components/ui/Kbd";
 import type { ApprovalView } from "@/stores/run-reducer";
+import { useT } from "@/lib/i18n";
 
 export function ApprovalPanel({
   approval,
@@ -19,6 +20,7 @@ export function ApprovalPanel({
   approval: ApprovalView;
   onResolve: (outcome: "approved" | "rejected") => void;
 }) {
+  const t = useT();
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement | null;
@@ -32,7 +34,7 @@ export function ApprovalPanel({
 
   return (
     <div data-testid="approval-panel" className="space-y-2 rounded-lg border border-warning/60 bg-layer-1 p-3">
-      <div className="text-[13px] font-medium text-warning">ต้องอนุมัติ: {approval.title}</div>
+      <div className="text-[13px] font-medium text-warning">{t("ต้องอนุมัติ", "Approval required")}: {approval.title}</div>
       <JsonView data={approval.proposal} />
       {approval.policyResults.length ? (
         <ul className="space-y-0.5 text-[12.5px]">

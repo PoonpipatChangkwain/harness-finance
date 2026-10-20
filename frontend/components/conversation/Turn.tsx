@@ -16,6 +16,7 @@ import { DiscoveryCard, GoalChip } from "./DiscoveryCard";
 import { MemoryChips } from "./MemoryChip";
 import { StatsPills } from "./StatsPills";
 import { TurnProcess } from "./TurnProcess";
+import { useT } from "@/lib/i18n";
 
 export interface TurnData {
   key: string;
@@ -40,6 +41,7 @@ export function Turn({
   /** (P17) the newest turn: only its DiscoveryCard offers "ข้าม" */
   latest?: boolean;
 }) {
+  const t = useT();
   const view = useRun(turn.runId);
   const selected = useUiStore((s) => s.selectedRunId === turn.runId && turn.runId !== null);
   const selectRun = useUiStore((s) => s.selectRun);
@@ -65,7 +67,7 @@ export function Turn({
               className="mr-1 inline-flex items-center gap-1 rounded-full border border-done/40 px-2 py-px text-[11px] text-done"
             >
               <Briefcase className="size-3" aria-hidden />
-              ใช้พอร์ต: {turn.portfolios.join(", ")}
+              {t("ใช้พอร์ต", "Portfolios")}: {turn.portfolios.join(", ")}
             </span>
           ) : null}
           {turn.skill ? (
@@ -77,7 +79,7 @@ export function Turn({
           <p className="whitespace-pre-wrap text-[14px] text-fg">{turn.text}</p>
         </div>
       </div>
-      {view ? <TurnProcess view={view} now={now} /> : turn.runId ? <div className="fh-shimmer text-[12.5px]">กำลังโหลด run…</div> : null}
+      {view ? <TurnProcess view={view} now={now} /> : turn.runId ? <div className="fh-shimmer text-[12.5px]">{t("กำลังโหลด run…", "Loading run…")}</div> : null}
       {view?.answer ? (
         <Answer
           markdown={view.answer.markdown}

@@ -6,6 +6,7 @@
 
 import { json, query, request } from "./api";
 import type { components } from "./api-types";
+import { localized } from "./i18n";
 
 type Schemas = components["schemas"];
 
@@ -19,37 +20,47 @@ export type MemoryCategory = MemoryItemOut["category"];
 export type MemorySource = MemoryItemOut["source"];
 export type MemoryStatus = MemoryItemOut["status"];
 
-/** Display order of the categories on /memory, with their Thai names (phase-17 §17.3). */
-export const MEMORY_CATEGORIES: { id: MemoryCategory; label: string }[] = [
-  { id: "investment_style", label: "สไตล์การลงทุน" },
-  { id: "risk_tolerance", label: "การรับความเสี่ยง" },
-  { id: "risk_capacity", label: "ความสามารถรับความเสี่ยง" },
-  { id: "goal", label: "เป้าหมาย" },
-  { id: "constraint", label: "ข้อจำกัด" },
-  { id: "preference", label: "ความชอบ" },
-  { id: "life_fact", label: "ข้อมูลชีวิต" },
-  { id: "behavioral_pattern", label: "พฤติกรรม" },
-  { id: "knowledge_level", label: "ระดับความรู้" },
-];
+/** Category names in the UI language; key order = display order on /memory (phase-17 §17.3). */
+const CATEGORY_NAMES: Record<MemoryCategory, string> = localized({
+  investment_style: ["สไตล์การลงทุน", "Investment style"],
+  risk_tolerance: ["การรับความเสี่ยง", "Risk tolerance"],
+  risk_capacity: ["ความสามารถรับความเสี่ยง", "Risk capacity"],
+  goal: ["เป้าหมาย", "Goals"],
+  constraint: ["ข้อจำกัด", "Constraints"],
+  preference: ["ความชอบ", "Preferences"],
+  life_fact: ["ข้อมูลชีวิต", "Life facts"],
+  behavioral_pattern: ["พฤติกรรม", "Behavior"],
+  knowledge_level: ["ระดับความรู้", "Knowledge level"],
+});
 
-export const CATEGORY_LABEL: Record<string, string> = Object.fromEntries(MEMORY_CATEGORIES.map((c) => [c.id, c.label]));
+/** Display order of the categories on /memory; `label` follows the UI language. */
+export const MEMORY_CATEGORIES: { readonly id: MemoryCategory; readonly label: string }[] = (
+  Object.keys(CATEGORY_NAMES) as MemoryCategory[]
+).map((id) => ({
+  id,
+  get label() {
+    return CATEGORY_NAMES[id];
+  },
+}));
 
-export const SOURCE_LABEL: Record<MemorySource, string> = {
-  user_stated: "คุณบอกเอง",
-  user_confirmed: "ยืนยันแล้ว",
-  inferred_behavior: "AI อนุมาน",
-  questionnaire: "แบบสอบถาม",
-  portfolio_data: "จากข้อมูลพอร์ต",
-  manual: "กรอกเอง",
-};
+export const CATEGORY_LABEL: Record<string, string> = CATEGORY_NAMES;
 
-export const STATUS_LABEL: Record<MemoryStatus, string> = {
-  candidate: "รอยืนยัน",
-  active: "ใช้อยู่",
-  superseded: "ถูกแทนที่",
-  retired: "เลิกใช้",
-  rejected: "ปฏิเสธ",
-};
+export const SOURCE_LABEL: Record<MemorySource, string> = localized({
+  user_stated: ["คุณบอกเอง", "You said"],
+  user_confirmed: ["ยืนยันแล้ว", "Confirmed"],
+  inferred_behavior: ["AI อนุมาน", "AI inferred"],
+  questionnaire: ["แบบสอบถาม", "Questionnaire"],
+  portfolio_data: ["จากข้อมูลพอร์ต", "From portfolio data"],
+  manual: ["กรอกเอง", "Entered manually"],
+});
+
+export const STATUS_LABEL: Record<MemoryStatus, string> = localized({
+  candidate: ["รอยืนยัน", "Pending"],
+  active: ["ใช้อยู่", "Active"],
+  superseded: ["ถูกแทนที่", "Superseded"],
+  retired: ["เลิกใช้", "Retired"],
+  rejected: ["ปฏิเสธ", "Rejected"],
+});
 
 export type MemoryCounts = Schemas["MemoryCounts"];
 export type MemoryListOut = Schemas["MemoryList"];

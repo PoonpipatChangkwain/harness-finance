@@ -17,6 +17,7 @@ import { PolicyList } from "@/components/trade/DecisionCard";
 import { Kbd } from "@/components/ui/Kbd";
 import { orderLabel, type PolicyResult } from "@/lib/trade-api";
 import type { ApprovalView } from "@/stores/run-reducer";
+import { tr, useT } from "@/lib/i18n";
 
 export type ApprovalOutcome =
   | { outcome: "approved" | "rejected" }
@@ -28,24 +29,24 @@ export type ApprovalOutcome =
 const optionalNumber = z
   .string()
   .trim()
-  .refine((v) => v === "" || Number.isFinite(Number(v)), "ต้องเป็นตัวเลข");
+  .refine((v) => v === "" || Number.isFinite(Number(v)), { error: () => tr("ต้องเป็นตัวเลข", "Must be a number") });
 
 export const editSchema = z.object({
   sizePct: z
     .string()
     .trim()
     .refine((v) => v === "" || (Number.isFinite(Number(v)) && Number(v) >= 0 && Number(v) <= 100), "0–100"),
-  stop: optionalNumber.refine((v) => v === "" || Number(v) > 0, "ต้องมากกว่า 0"),
+  stop: optionalNumber.refine((v) => v === "" || Number(v) > 0, { error: () => tr("ต้องมากกว่า 0", "Must be greater than 0") }),
   // only shown for a pending (limit / stop) order
-  orderPrice: optionalNumber.refine((v) => v === "" || Number(v) > 0, "ต้องมากกว่า 0"),
+  orderPrice: optionalNumber.refine((v) => v === "" || Number(v) > 0, { error: () => tr("ต้องมากกว่า 0", "Must be greater than 0") }),
   targets: z
     .string()
     .trim()
     .refine(
       (v) => v === "" || v.split(",").every((t) => t.trim() !== "" && Number.isFinite(Number(t)) && Number(t) > 0),
-      "ราคาคั่นด้วย , เช่น 37, 39",
+      { error: () => tr("ราคาคั่นด้วย , เช่น 37, 39", "Prices separated by commas, e.g. 37, 39") },
     )
-    .refine((v) => v === "" || v.split(",").length <= 5, "ไม่เกิน 5 เป้า"),
+    .refine((v) => v === "" || v.split(",").length <= 5, { error: () => tr("ไม่เกิน 5 เป้า", "At most 5 targets") }),
 });
 
 export type EditForm = z.infer<typeof editSchema>;
@@ -81,6 +82,7 @@ export function TradeApprovalPanel({
   onResolve: (answer: ApprovalOutcome) => void;
   busy?: boolean;
 }) {
+  const t = useT();
   const [editing, setEditing] = useState(false);
   const p = approval.proposal;
   const pending = orderLabel(typeof p.order === "string" ? p.order : null);
@@ -104,7 +106,7 @@ export function TradeApprovalPanel({
   const submit = form.handleSubmit((values) => {
     const edits = buildEdits(values);
     if (!Object.keys(edits).length) {
-      form.setError("sizePct", { message: "แก้อย่างน้อย 1 ช่อง" });
+      form.setError("sizePct", { message: tr("แก้อย่างน้อย 1 ช่อง", "Change at least 1 field") });
       return;
     }
     onResolve({ outcome: "edited", edits });
@@ -113,12 +115,12 @@ export function TradeApprovalPanel({
   const err = form.formState.errors;
   return (
     <div data-testid="trade-approval-panel" className="space-y-2 rounded-lg border border-warning/60 bg-layer-1 p-3">
-      <div className="text-[13px] font-medium text-warning">ต้องอนุมัติ: {approval.title}</div>
+      <div className="text-[13px] font-medium text-warning">{t("ต้องอนุมัติ", "Approval required")}: {approval.title}</div>
       <div className="num flex flex-wrap gap-x-4 gap-y-1 text-[12.5px] text-muted">
         <span data-testid="approval-entry">
           {pending ? `${pending} ` : "entry "}
           {num(p.entry)}
-          {pending ? ` (ตอนนี้ ${num(p.market_price)})` : ""}
+          {pending ? ` (${t("ตอนนี้", "now")} ${num(p.market_price)})` : ""}
         </span>
         <span>stop {num(p.stop)}</span>
         <span>targets {Array.isArray(p.targets) ? p.targets.map(num).join(", ") : "–"}</span>
@@ -126,16 +128,21 @@ export function TradeApprovalPanel({
         <span>weight {typeof p.position_weight === "number" ? `${(p.position_weight * 100).toFixed(2)}%` : "–"}</span>
       </div>
       <PolicyList results={asPolicy(approval.policyResults)} />
-      <p className="text-[11.5px] text-subtle">ไม่มีการส่งคำสั่งซื้อขายจริง — อนุมัติแล้วระบบจะบันทึกการตัดสินใจเท่านั้น</p>
+      <p className="text-[11.5px] text-subtle">
+        {t(
+          "ไม่มีการส่งคำสั่งซื้อขายจริง — อนุมัติแล้วระบบจะบันทึกการตัดสินใจเท่านั้น",
+          "No real orders are sent — approving only records the decision",
+        )}
+      </p>
 
       {editing ? (
         <form data-testid="approval-edit-form" onSubmit={submit} className="grid gap-2 sm:grid-cols-3">
           <label className="text-[12px] text-muted">
-            ขนาด (% ของขนาดที่ PM เสนอ)
+            {t("ขนาด (% ของขนาดที่ PM เสนอ)", "Size (% of the PM's proposed size)")}
             <input
               {...form.register("sizePct")}
               inputMode="decimal"
-              placeholder="เช่น 50"
+              placeholder={t("เช่น 50", "e.g. 50")}
               aria-label="size percent"
               className="num mt-0.5 w-full rounded-md border border-line bg-bg px-2 py-1 text-[13px] text-fg"
             />
@@ -143,7 +150,7 @@ export function TradeApprovalPanel({
           </label>
           {pending ? (
             <label className="text-[12px] text-muted">
-              ราคา {pending}
+              {t("ราคา", "Price")} {pending}
               <input
                 {...form.register("orderPrice")}
                 inputMode="decimal"
@@ -155,7 +162,7 @@ export function TradeApprovalPanel({
             </label>
           ) : null}
           <label className="text-[12px] text-muted">
-            Stop (ราคา)
+            {t("Stop (ราคา)", "Stop (price)")}
             <input
               {...form.register("stop")}
               inputMode="decimal"
@@ -166,7 +173,7 @@ export function TradeApprovalPanel({
             {err.stop ? <span className="text-[11.5px] text-error">{err.stop.message}</span> : null}
           </label>
           <label className="text-[12px] text-muted">
-            Targets (คั่นด้วย ,)
+            {t("Targets (คั่นด้วย ,)", "Targets (comma-separated)")}
             <input
               {...form.register("targets")}
               placeholder={Array.isArray(p.targets) ? p.targets.join(", ") : ""}
@@ -181,10 +188,10 @@ export function TradeApprovalPanel({
               disabled={busy}
               className="inline-flex items-center gap-1 rounded-md bg-warning/20 px-3 py-1 text-[13px] text-warning"
             >
-              <Check className="size-3.5" /> ส่งการแก้ไข (คำนวณ + ตรวจ policy ใหม่)
+              <Check className="size-3.5" /> {t("ส่งการแก้ไข (คำนวณ + ตรวจ policy ใหม่)", "Submit edits (recompute + re-check policy)")}
             </button>
             <button type="button" onClick={() => setEditing(false)} className="rounded-md px-3 py-1 text-[13px] text-muted hover:bg-layer-2">
-              ยกเลิก
+              {t("ยกเลิก", "Cancel")}
             </button>
           </div>
         </form>

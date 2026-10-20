@@ -26,6 +26,7 @@ import {
   type DraftField,
   type DraftRow,
 } from "@/lib/holdings";
+import { tr, useT } from "@/lib/i18n";
 import {
   entryErrors,
   isLlmNotConfigured,
@@ -49,10 +50,11 @@ const defaultApi: PasteApi = { parse: portfolioApi.parseHoldings, preview: portf
 
 export const PASTE_MAX_CHARS = 20_000;
 
-const HINTS: { id: MarketHint | "auto"; label: string }[] = [
-  { id: "TH", label: "ไทย" },
-  { id: "US", label: "สหรัฐฯ" },
-  { id: "auto", label: "ให้ AI เดา" },
+/** `label` = [Thai, English] */
+const HINTS: { id: MarketHint | "auto"; label: readonly [string, string] }[] = [
+  { id: "TH", label: ["ไทย", "Thai"] },
+  { id: "US", label: ["สหรัฐฯ", "US"] },
+  { id: "auto", label: ["ให้ AI เดา", "Let the AI guess"] },
 ];
 
 const cellCls =
@@ -82,6 +84,7 @@ export function PasteHoldingsDialog({
   api?: PasteApi;
   previewDelayMs?: number;
 }) {
+  const t = useT();
   const [text, setText] = useState("");
   const [hint, setHint] = useState<MarketHint | "auto">("auto");
   const [parsing, setParsing] = useState(false);
@@ -150,7 +153,7 @@ export function PasteHoldingsDialog({
           setPreview({
             key: positionsKey,
             result: null,
-            errors: rowsErr ?? [{ index: null, symbol: null, field: null, message: `preview ไม่ได้: ${err instanceof Error ? err.message : String(err)}` }],
+            errors: rowsErr ?? [{ index: null, symbol: null, field: null, message: `${tr("preview ไม่ได้", "Preview failed")}: ${err instanceof Error ? err.message : String(err)}` }],
           });
         })
         .finally(() => {
@@ -171,7 +174,7 @@ export function PasteHoldingsDialog({
   const bookErrors = [
     ...grouped.book,
     ...(fresh?.result ? fresh.result.errors.filter((e) => e.index === null) : []),
-    ...(attempted && anyRowError ? [{ index: null, symbol: null, field: null, message: "แก้หรือลบแถวที่มีปัญหาก่อนบันทึก" }] : []),
+    ...(attempted && anyRowError ? [{ index: null, symbol: null, field: null, message: t("แก้หรือลบแถวที่มีปัญหาก่อนบันทึก", "Fix or remove the rows with problems before saving") }] : []),
   ];
 
   const edit = (key: string, patch: Partial<DraftRow>) => {
@@ -208,12 +211,12 @@ export function PasteHoldingsDialog({
   };
 
   return (
-    <div role="dialog" aria-modal="true" aria-label="วางข้อความจากแอปโบรกเกอร์" className="fixed inset-0 z-50 grid place-items-center bg-black/50 p-4">
+    <div role="dialog" aria-modal="true" aria-label={t("วางข้อความจากแอปโบรกเกอร์", "Paste from your broker app")} className="fixed inset-0 z-50 grid place-items-center bg-black/50 p-4">
       <div data-testid="paste-dialog" className="flex max-h-[90vh] w-full max-w-3xl flex-col rounded-lg border border-line-strong bg-layer-1 shadow-xl">
         <div className="flex items-center border-b border-line px-4 py-2">
-          <h2 className="text-[14px] font-semibold">วางข้อความจากแอปโบรกเกอร์</h2>
+          <h2 className="text-[14px] font-semibold">{t("วางข้อความจากแอปโบรกเกอร์", "Paste from your broker app")}</h2>
           <span className="flex-1" />
-          <button type="button" aria-label="ปิด" onClick={onClose} className="rounded-md p-1 text-muted hover:bg-layer-2">
+          <button type="button" aria-label={t("ปิด", "Close")} onClick={onClose} className="rounded-md p-1 text-muted hover:bg-layer-2">
             <X className="size-4" aria-hidden />
           </button>
         </div>
@@ -221,18 +224,21 @@ export function PasteHoldingsDialog({
         <div className="min-h-0 flex-1 space-y-3 overflow-y-auto p-4 text-[12.5px]">
           <div>
             <textarea
-              aria-label="ข้อความจากแอปโบรกเกอร์"
+              aria-label={t("ข้อความจากแอปโบรกเกอร์", "Text from your broker app")}
               data-testid="paste-text"
               value={text}
               maxLength={PASTE_MAX_CHARS}
               rows={6}
               onChange={(e) => setText(e.target.value)}
-              placeholder={"คัดลอกหน้าพอร์ตจากแอป/อีเมลสรุปพอร์ตมาวางได้เลย เช่น\nNVDA 549.96 USD +14.52%\nPTT 1,000 32.50 35.00 +7.69%"}
+              placeholder={t(
+                "คัดลอกหน้าพอร์ตจากแอป/อีเมลสรุปพอร์ตมาวางได้เลย เช่น\nNVDA 549.96 USD +14.52%\nPTT 1,000 32.50 35.00 +7.69%",
+                "Copy the portfolio screen from your app or a statement email and paste it here, e.g.\nNVDA 549.96 USD +14.52%\nPTT 1,000 32.50 35.00 +7.69%",
+              )}
               className="num w-full resize-y rounded-md border border-line bg-bg px-2 py-1.5 text-left text-[12.5px] text-fg outline-none placeholder:text-subtle focus:border-accent"
             />
             <div className="mt-1 flex flex-wrap items-center gap-2">
-              <span className="text-[11.5px] text-muted">ตลาด</span>
-              <div role="radiogroup" aria-label="ตลาด" className="flex rounded-md bg-layer-2 p-0.5">
+              <span className="text-[11.5px] text-muted">{t("ตลาด", "Market")}</span>
+              <div role="radiogroup" aria-label={t("ตลาด", "Market")} className="flex rounded-md bg-layer-2 p-0.5">
                 {HINTS.map((h) => (
                   <button
                     key={h.id}
@@ -243,7 +249,7 @@ export function PasteHoldingsDialog({
                     onClick={() => setHint(h.id)}
                     className={clsx("rounded-sm px-2 py-0.5 text-[12px]", hint === h.id ? "bg-layer-1 text-fg shadow-sm" : "text-muted")}
                   >
-                    {h.label}
+                    {t(...h.label)}
                   </button>
                 ))}
               </div>
@@ -258,34 +264,50 @@ export function PasteHoldingsDialog({
                 onClick={() => void parse()}
                 className="inline-flex items-center gap-1 rounded-md bg-accent px-3 py-1 text-[12.5px] text-bg disabled:opacity-50"
               >
-                <ClipboardPaste className="size-3.5" aria-hidden /> {parsing ? "AI กำลังอ่าน…" : "ให้ AI อ่าน"}
+                <ClipboardPaste className="size-3.5" aria-hidden /> {parsing ? t("AI กำลังอ่าน…", "AI is reading…") : t("ให้ AI อ่าน", "Let the AI read it")}
               </button>
             </div>
-            <p className="mt-1 text-[11px] text-subtle">AI อ่านเฉพาะตัวเลขที่เห็นในข้อความ ไม่เดาตัวเลข · ราคาและกำไร/ขาดทุนคำนวณใหม่จากราคาล่าสุด</p>
+            <p className="mt-1 text-[11px] text-subtle">
+              {t(
+                "AI อ่านเฉพาะตัวเลขที่เห็นในข้อความ ไม่เดาตัวเลข · ราคาและกำไร/ขาดทุนคำนวณใหม่จากราคาล่าสุด",
+                "The AI only reads numbers that appear in the text and never guesses · prices and P/L are recomputed from the latest price",
+              )}
+            </p>
           </div>
 
           {llmMissing ? (
             <p data-testid="paste-llm-missing" className="rounded-md bg-warning/10 px-3 py-2 text-warning">
-              ยังไม่มี LLM ที่ใช้ได้ — ตั้งค่า LLM ใน Settings ก่อน{" "}
+              {t("ยังไม่มี LLM ที่ใช้ได้ — ตั้งค่า LLM ใน Settings ก่อน", "No usable LLM yet — set one up in Settings first")}{" "}
               <Link href="/settings" className="text-accent underline">
-                ไปที่ Settings
+                {t("ไปที่ Settings", "Go to Settings")}
               </Link>
             </p>
           ) : null}
-          {failure ? <p className="rounded-md bg-error/10 px-3 py-2 text-error">อ่านข้อความไม่ได้: {failure}</p> : null}
+          {failure ? <p className="rounded-md bg-error/10 px-3 py-2 text-error">{t("อ่านข้อความไม่ได้", "Could not read the text")}: {failure}</p> : null}
 
           {parsed?.mode === "failed" ? (
             <p data-testid="paste-failed" className="rounded-md bg-error/10 px-3 py-2 text-error">
-              AI อ่านข้อความนี้ไม่ได้ — ลองตัดให้เหลือเฉพาะรายการหุ้น หรือกรอกด้วย “เพิ่ม position”
+              {t(
+                "AI อ่านข้อความนี้ไม่ได้ — ลองตัดให้เหลือเฉพาะรายการหุ้น หรือกรอกด้วย “เพิ่ม position”",
+                "The AI could not read this text — trim it down to the holdings list, or enter them with “Add position”",
+              )}
             </p>
           ) : parsed?.mode === "fallback_parsed" ? (
             <p data-testid="paste-fallback" className="rounded-md bg-layer-2 px-3 py-1.5 text-[11.5px] text-muted">
-              AI ตอบไม่ตรงรูปแบบ ระบบแปลงคำตอบให้แทน — ตรวจตัวเลขอีกครั้งก่อนบันทึก
+              {t(
+                "AI ตอบไม่ตรงรูปแบบ ระบบแปลงคำตอบให้แทน — ตรวจตัวเลขอีกครั้งก่อนบันทึก",
+                "The AI answered in the wrong format, so the system converted it — double-check the numbers before saving",
+              )}
             </p>
           ) : null}
           {parsed?.unparsed.length ? (
             <div data-testid="paste-unparsed" className="rounded-md bg-warning/10 px-3 py-1.5 text-warning">
-              <p>บรรทัดที่ AI อ่านไม่ออก ({parsed.unparsed.length}) — ไม่ได้ถูกเพิ่ม:</p>
+              <p>
+                {t(
+                  `บรรทัดที่ AI อ่านไม่ออก (${parsed.unparsed.length}) — ไม่ได้ถูกเพิ่ม:`,
+                  `Lines the AI could not read (${parsed.unparsed.length}) — not added:`,
+                )}
+              </p>
               <ul className="num list-inside list-disc text-[11.5px]">
                 {parsed.unparsed.map((l, i) => (
                   <li key={i}>{l}</li>
@@ -298,25 +320,25 @@ export function PasteHoldingsDialog({
             rows.length ? (
               <div>
                 <div className="mb-1 flex items-center gap-2 text-[11.5px] text-muted">
-                  <span>แถวที่อ่านได้ ({rows.length}) — แก้ได้ก่อนบันทึก</span>
+                  <span>{t(`แถวที่อ่านได้ (${rows.length}) — แก้ได้ก่อนบันทึก`, `Rows read (${rows.length}) — edit before saving`)}</span>
                   {parsed?.provider ? (
                     <span className="num text-subtle">
-                      อ่านโดย {parsed.provider}
+                      {t("อ่านโดย", "read by")} {parsed.provider}
                       {parsed.model ? ` · ${parsed.model}` : ""}
                     </span>
                   ) : null}
                   <span className="flex-1" />
-                  {previewing ? <span className="text-subtle">กำลังคำนวณ…</span> : null}
+                  {previewing ? <span className="text-subtle">{t("กำลังคำนวณ…", "Computing…")}</span> : null}
                 </div>
                 <div className="overflow-x-auto rounded-md border border-line">
                   <table data-testid="paste-rows" className="w-full text-[12.5px]">
                     <thead className="bg-layer-2 text-left text-[11.5px] text-subtle">
                       <tr>
                         <th className="px-2 py-1 font-normal">Symbol</th>
-                        <th className="px-2 py-1 font-normal">สิ่งที่เห็นในแอป</th>
-                        <th className="px-2 py-1 text-right font-normal">ตัวเลข 1</th>
-                        <th className="px-2 py-1 text-right font-normal">ตัวเลข 2</th>
-                        <th className="px-2 py-1 font-normal">ระบบคำนวณ</th>
+                        <th className="px-2 py-1 font-normal">{t("สิ่งที่เห็นในแอป", "What the app shows")}</th>
+                        <th className="px-2 py-1 text-right font-normal">{t("ตัวเลข 1", "Number 1")}</th>
+                        <th className="px-2 py-1 text-right font-normal">{t("ตัวเลข 2", "Number 2")}</th>
+                        <th className="px-2 py-1 font-normal">{t("ระบบคำนวณ", "Computed")}</th>
                         <th className="px-2 py-1" />
                       </tr>
                     </thead>
@@ -326,7 +348,7 @@ export function PasteHoldingsDialog({
                         const currency = pr?.currency || currencies[r.symbol.trim().toUpperCase()] || null;
                         const errs = [...(grouped.rows.get(i) ?? []), ...(pr?.errors ?? [])];
                         const spec = r.kind === "weight" ? null : MODE_SPEC[r.kind];
-                        const label = r.symbol || `แถว ${i + 1}`;
+                        const label = r.symbol || `${t("แถว", "Row")} ${i + 1}`;
                         return (
                           <tr key={r.key} data-testid="paste-row" className={clsx("border-t border-line/60 align-top", pr?.status === "error" && "bg-error/5")}>
                             <td className="px-2 py-1">
@@ -339,7 +361,7 @@ export function PasteHoldingsDialog({
                             </td>
                             <td className="px-2 py-1">
                               <select
-                                aria-label={`โหมดกรอก ${label}`}
+                                aria-label={`${t("โหมดกรอก", "Entry mode")} ${label}`}
                                 value={r.kind}
                                 onChange={(e) => {
                                   const kind = e.target.value;
@@ -372,7 +394,7 @@ export function PasteHoldingsDialog({
                             ) : (
                               <td colSpan={2} className="px-2 py-1">
                                 <input
-                                  aria-label={`% น้ำหนัก ${label}`}
+                                  aria-label={`${t("% น้ำหนัก", "% weight")} ${label}`}
                                   inputMode="decimal"
                                   value={r.weightPct}
                                   onChange={(e) => edit(r.key, { weightPct: e.target.value })}
@@ -391,7 +413,7 @@ export function PasteHoldingsDialog({
                             <td className="px-1 py-1 text-right">
                               <button
                                 type="button"
-                                aria-label={`ลบ ${label}`}
+                                aria-label={`${t("ลบ", "Remove")} ${label}`}
                                 onClick={() => remove(r.key)}
                                 className="rounded-sm p-1 text-subtle hover:bg-error/15 hover:text-error"
                               >
@@ -404,10 +426,15 @@ export function PasteHoldingsDialog({
                     </tbody>
                   </table>
                 </div>
-                <p className="mt-1 text-[11px] text-subtle">กำไร/ขาดทุนที่เป็นลบ = ขาดทุน · ระบบคำนวณจากราคาล่าสุด ค่าจะขยับตามตลาด</p>
+                <p className="mt-1 text-[11px] text-subtle">
+                  {t(
+                    "กำไร/ขาดทุนที่เป็นลบ = ขาดทุน · ระบบคำนวณจากราคาล่าสุด ค่าจะขยับตามตลาด",
+                    "A negative P/L = loss · computed from the latest price; values move with the market",
+                  )}
+                </p>
               </div>
             ) : parsed?.mode !== "failed" ? (
-              <p className="text-muted">ไม่พบรายการหุ้นในข้อความนี้</p>
+              <p className="text-muted">{t("ไม่พบรายการหุ้นในข้อความนี้", "No holdings found in this text")}</p>
             ) : null
           ) : null}
 
@@ -422,7 +449,7 @@ export function PasteHoldingsDialog({
 
         <div className="flex flex-wrap items-center gap-2 border-t border-line px-4 py-2">
           {hasPositions && rows?.length ? (
-            <div role="radiogroup" aria-label="วิธีบันทึก" className="flex rounded-md bg-layer-2 p-0.5 text-[12px]">
+            <div role="radiogroup" aria-label={t("วิธีบันทึก", "How to save")} className="flex rounded-md bg-layer-2 p-0.5 text-[12px]">
               <button
                 type="button"
                 role="radio"
@@ -431,7 +458,7 @@ export function PasteHoldingsDialog({
                 onClick={() => setReplace(false)}
                 className={clsx("rounded-sm px-2 py-0.5", !replace ? "bg-layer-1 text-fg shadow-sm" : "text-muted")}
               >
-                เพิ่มต่อท้าย
+                {t("เพิ่มต่อท้าย", "Append")}
               </button>
               <button
                 type="button"
@@ -441,13 +468,13 @@ export function PasteHoldingsDialog({
                 onClick={() => setReplace(true)}
                 className={clsx("rounded-sm px-2 py-0.5", replace ? "bg-layer-1 text-error shadow-sm" : "text-muted")}
               >
-                แทนที่ทั้งพอร์ต
+                {t("แทนที่ทั้งพอร์ต", "Replace the whole portfolio")}
               </button>
             </div>
           ) : null}
           <span className="flex-1" />
           <button type="button" onClick={onClose} className="rounded-md px-3 py-1 text-[13px] text-muted hover:bg-layer-2">
-            ยกเลิก
+            {t("ยกเลิก", "Cancel")}
           </button>
           <button
             type="button"
@@ -456,7 +483,7 @@ export function PasteHoldingsDialog({
             onClick={() => void save()}
             className="rounded-md bg-accent px-3 py-1 text-[13px] text-bg disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {saving ? "กำลังบันทึก…" : "บันทึก"}
+            {saving ? t("กำลังบันทึก…", "Saving…") : t("บันทึก", "Save")}
           </button>
         </div>
       </div>

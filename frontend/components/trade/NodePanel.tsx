@@ -16,6 +16,7 @@ import { PolicyList } from "@/components/trade/DecisionCard";
 import { JsonView } from "@/components/ui/JsonView";
 import { StateDot, dotFor } from "@/components/ui/StateDot";
 import { formatCost, formatDuration, formatTokens } from "@/lib/format";
+import { tr, useT } from "@/lib/i18n";
 import { isAnalystSubNode } from "@/lib/trade";
 import type { TradeRunDetail } from "@/lib/trade-api";
 import type { RunView } from "@/stores/run-reducer";
@@ -39,7 +40,7 @@ export function nodeOutput(node: string, detail: TradeRunDetail | undefined): { 
   if (speaker) {
     const debate = node.endsWith("_researcher") ? detail.invest_debate : detail.risk_debate;
     const turns = (debate?.history ?? []).filter((t) => t.speaker === speaker);
-    return turns.length ? { markdown: turns.map((t, i) => `**รอบ ${i + 1}**\n\n${t.text}`).join("\n\n---\n\n") } : {};
+    return turns.length ? { markdown: turns.map((t, i) => `**${tr(`รอบ ${i + 1}`, `Round ${i + 1}`)}**\n\n${t.text}`).join("\n\n---\n\n") } : {};
   }
   switch (node) {
     case "resolve_symbol":
@@ -76,7 +77,8 @@ export function NodePanel({
   view: RunView | undefined;
   detail: TradeRunDetail | undefined;
 }) {
-  if (!node) return <div className="p-4 text-[12.5px] text-subtle">คลิก node ใน pipeline เพื่อดูรายละเอียด</div>;
+  const t = useT();
+  if (!node) return <div className="p-4 text-[12.5px] text-subtle">{t("คลิก node ใน pipeline เพื่อดูรายละเอียด", "Click a node in the pipeline to see details")}</div>;
   const run = view?.nodes[node];
   const label = run?.label ?? detail?.graph_view.nodes.find((n) => n.id === node)?.label ?? node;
   const llm = (view?.llm ?? []).filter((c) => c.node === node && !c.failed);
@@ -99,8 +101,8 @@ export function NodePanel({
           <span className="num text-subtle">{node}</span>
         </div>
         <div className="num flex flex-wrap gap-x-3 text-[11.5px] text-muted">
-          <span>{run?.status ?? "ยังไม่รัน"}</span>
-          {run?.runs && run.runs > 1 ? <span>รัน {run.runs} ครั้ง</span> : null}
+          <span>{run?.status ?? t("ยังไม่รัน", "not run")}</span>
+          {run?.runs && run.runs > 1 ? <span>{t(`รัน ${run.runs} ครั้ง`, `ran ${run.runs} times`)}</span> : null}
           <span>{formatDuration(run?.durationMs)}</span>
           {llm.length ? (
             <span>

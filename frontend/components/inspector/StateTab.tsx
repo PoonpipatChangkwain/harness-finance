@@ -7,6 +7,7 @@ import { useCallback, useEffect, useState } from "react";
 
 import { JsonView } from "@/components/ui/JsonView";
 import { tradeApi } from "@/lib/trade-api";
+import { useT } from "@/lib/i18n";
 
 type StateResponse = Awaited<ReturnType<typeof tradeApi.state>>;
 
@@ -22,6 +23,7 @@ export function StateTab({
   fallback?: unknown;
   load?: (runId: string) => Promise<StateResponse>;
 }) {
+  const t = useT();
   const [state, setState] = useState<StateResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -53,16 +55,16 @@ export function StateTab({
         Object.keys(state.values).length ? (
           <JsonView data={state.values} />
         ) : (
-          <p className="text-subtle">checkpoint ว่าง (run จบแล้วและล้าง checkpoint ตาม T3)</p>
+          <p className="text-subtle">{t("checkpoint ว่าง (run จบแล้วและล้าง checkpoint ตาม T3)", "Checkpoint is empty (the run finished and its checkpoint was cleared per T3)")}</p>
         )
       ) : error ? (
-        <p className="text-subtle">ไม่มี checkpoint: {error}</p>
+        <p className="text-subtle">{t("ไม่มี checkpoint", "No checkpoint")}: {error}</p>
       ) : (
-        <p className="text-subtle">กำลังโหลด…</p>
+        <p className="text-subtle">{t("กำลังโหลด…", "Loading…")}</p>
       )}
       {fallback && (!state || !Object.keys(state.values).length) ? (
         <section>
-          <h4 className="mb-1 text-[11px] uppercase tracking-wide text-subtle">State สุดท้าย (จาก output ของ run)</h4>
+          <h4 className="mb-1 text-[11px] uppercase tracking-wide text-subtle">{t("State สุดท้าย (จาก output ของ run)", "Final state (from the run output)")}</h4>
           <JsonView data={fallback} />
         </section>
       ) : null}

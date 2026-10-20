@@ -12,23 +12,25 @@ import Link from "next/link";
 import { useState } from "react";
 
 import type { MemoryChangeEvent } from "@/lib/events";
+import { tr, useT } from "@/lib/i18n";
 import { memoryApi } from "@/lib/memory-api";
 
 export function memoryChipText(c: MemoryChangeEvent): string | null {
   switch (c.op) {
     case "ADD":
-      return `จำแล้ว: ${c.text}`;
+      return `${tr("จำแล้ว", "Remembered")}: ${c.text}`;
     case "UPDATE":
     case "SUPERSEDE":
-      return c.previous_text ? `อัปเดต: ${c.previous_text} → ${c.text}` : `อัปเดต: ${c.text}`;
+      return c.previous_text ? `${tr("อัปเดต", "Updated")}: ${c.previous_text} → ${c.text}` : `${tr("อัปเดต", "Updated")}: ${c.text}`;
     case "RETIRE":
-      return `เลิกใช้: ${c.text}`;
+      return `${tr("เลิกใช้", "Retired")}: ${c.text}`;
     default:
       return null;
   }
 }
 
 export function MemoryChip({ change }: { change: MemoryChangeEvent }) {
+  const t = useT();
   const [state, setState] = useState<"idle" | "busy" | "retired" | "error">("idle");
   const text = memoryChipText(change);
   if (!text) return null;
@@ -54,24 +56,24 @@ export function MemoryChip({ change }: { change: MemoryChangeEvent }) {
       )}
     >
       <Brain className="size-3 shrink-0" aria-hidden />
-      <Link href="/memory" title={`${text} — ดู/แก้ในหน้า Memory`} className="min-w-0 truncate hover:underline">
+      <Link href="/memory" title={`${text} — ${t("ดู/แก้ในหน้า Memory", "view/edit on the Memory page")}`} className="min-w-0 truncate hover:underline">
         {text}
       </Link>
-      {change.status === "candidate" ? <span className="shrink-0 text-warning">(รอยืนยัน)</span> : null}
+      {change.status === "candidate" ? <span className="shrink-0 text-warning">({t("รอยืนยัน", "pending")})</span> : null}
       {canRetire ? (
         <button
           type="button"
           data-testid="memory-chip-retire"
           disabled={state === "busy"}
           onClick={() => void retire()}
-          title="เลิกจำข้อนี้ (ยังดูประวัติได้ในหน้า Memory)"
+          title={t("เลิกจำข้อนี้ (ยังดูประวัติได้ในหน้า Memory)", "Forget this (history stays on the Memory page)")}
           className="ml-0.5 inline-flex shrink-0 items-center gap-0.5 rounded-full px-1 text-muted hover:bg-layer-2 hover:text-fg disabled:opacity-50"
         >
-          <Undo2 className="size-3" aria-hidden /> เลิกจำ
+          <Undo2 className="size-3" aria-hidden /> {t("เลิกจำ", "Forget")}
         </button>
       ) : null}
-      {state === "retired" ? <span className="shrink-0 no-underline">· เลิกจำแล้ว</span> : null}
-      {state === "error" ? <span className="shrink-0 text-error">เลิกจำไม่สำเร็จ</span> : null}
+      {state === "retired" ? <span className="shrink-0 no-underline">· {t("เลิกจำแล้ว", "forgotten")}</span> : null}
+      {state === "error" ? <span className="shrink-0 text-error">{t("เลิกจำไม่สำเร็จ", "Could not forget")}</span> : null}
     </span>
   );
 }

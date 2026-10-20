@@ -13,6 +13,7 @@ import { useEffect, useMemo, useState } from "react";
 import { JsonView } from "@/components/ui/JsonView";
 import { api, type ScratchpadEntry } from "@/lib/api";
 import { formatDuration, formatTime } from "@/lib/format";
+import { useT } from "@/lib/i18n";
 import type { RunView } from "@/stores/run-reducer";
 
 const TYPE_COLOR: Record<string, string> = {
@@ -24,6 +25,7 @@ const TYPE_COLOR: Record<string, string> = {
 };
 
 export function ScratchpadTab({ view }: { view: RunView }) {
+  const t = useT();
   const [entries, setEntries] = useState<ScratchpadEntry[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [tool, setTool] = useState("");
@@ -60,13 +62,13 @@ export function ScratchpadTab({ view }: { view: RunView }) {
     <div data-testid="scratchpad-tab" className="text-[12.5px]">
       <div className="sticky top-0 flex flex-wrap items-center gap-1.5 border-b border-line bg-layer-1 p-2">
         <select aria-label="Filter by type" value={type} onChange={(e) => setType(e.target.value)} className="rounded-sm border border-line bg-layer-2 px-1 py-0.5">
-          <option value="">ทุก type</option>
+          <option value="">{t("ทุก type", "All types")}</option>
           {types.map((t) => (
             <option key={t}>{t}</option>
           ))}
         </select>
         <select aria-label="Filter by tool" value={tool} onChange={(e) => setTool(e.target.value)} className="rounded-sm border border-line bg-layer-2 px-1 py-0.5">
-          <option value="">ทุก tool</option>
+          <option value="">{t("ทุก tool", "All tools")}</option>
           {tools.map((t) => (
             <option key={t}>{t}</option>
           ))}
@@ -78,7 +80,7 @@ export function ScratchpadTab({ view }: { view: RunView }) {
         </button>
       </div>
       {error ? <div className="p-3 text-error">{error}</div> : null}
-      {entries === null && !error ? <div className="p-3 text-subtle">กำลังโหลด…</div> : null}
+      {entries === null && !error ? <div className="p-3 text-subtle">{t("กำลังโหลด…", "Loading…")}</div> : null}
       <ul>
         {shown.map((e, i) => (
           <li key={i} className="border-b border-line/60">

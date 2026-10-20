@@ -12,10 +12,12 @@ import { clsx } from "clsx";
 import { FastForward, HelpCircle, Target } from "lucide-react";
 
 import type { MemoryChangeEvent } from "@/lib/events";
+import { useT } from "@/lib/i18n";
 import type { DiscoveryView } from "@/stores/run-reducer";
 import { useUiStore } from "@/stores/ui-store";
 
 export function DiscoveryCard({ discovery, interactive = true }: { discovery: DiscoveryView; interactive?: boolean }) {
+  const t = useT();
   const skip = useUiStore((s) => s.skipDiscovery);
   const setSkip = useUiStore((s) => s.setSkipDiscovery);
   if (!discovery.question) return null;
@@ -26,7 +28,7 @@ export function DiscoveryCard({ discovery, interactive = true }: { discovery: Di
       <div className="flex flex-wrap items-center gap-2">
         <HelpCircle className="size-3.5 text-accent" aria-hidden />
         <span data-testid="discovery-progress" className="text-muted">
-          คำถาม {n}/{max} เพื่อเข้าใจเป้าหมาย
+          {t(`คำถาม ${n}/${max} เพื่อเข้าใจเป้าหมาย`, `Question ${n}/${max} to understand your goal`)}
         </span>
         <span className="flex gap-0.5" aria-hidden>
           {Array.from({ length: max }, (_, i) => (
@@ -47,10 +49,12 @@ export function DiscoveryCard({ discovery, interactive = true }: { discovery: Di
               skip ? "bg-accent text-bg" : "bg-layer-2 text-fg hover:bg-layer-1",
             )}
           >
-            <FastForward className="size-3.5" aria-hidden /> ข้าม — วิเคราะห์เลย
+            <FastForward className="size-3.5" aria-hidden /> {t("ข้าม — วิเคราะห์เลย", "Skip — analyze now")}
           </button>
           <span className="text-[11.5px] text-subtle">
-            {skip ? "ข้อความถัดไปจะวิเคราะห์ทันทีโดยไม่ถามต่อ" : "ตอบในช่องพิมพ์ด้านล่าง หรือกดข้ามได้เสมอ"}
+            {skip
+              ? t("ข้อความถัดไปจะวิเคราะห์ทันทีโดยไม่ถามต่อ", "The next message will be analyzed right away, no more questions")
+              : t("ตอบในช่องพิมพ์ด้านล่าง หรือกดข้ามได้เสมอ", "Answer in the box below, or skip at any time")}
           </span>
         </div>
       ) : null}
@@ -66,6 +70,7 @@ export function goalText(discovery: DiscoveryView, changes: MemoryChangeEvent[])
 }
 
 export function GoalChip({ discovery, changes }: { discovery: DiscoveryView; changes: MemoryChangeEvent[] }) {
+  const t = useT();
   if (!discovery.rootGoalIdentified) return null;
   const text = goalText(discovery, changes);
   return (
@@ -75,7 +80,7 @@ export function GoalChip({ discovery, changes }: { discovery: DiscoveryView; cha
       className="inline-flex max-w-full items-center gap-1 rounded-full border border-done/40 bg-done/10 px-2 py-0.5 text-[11.5px] text-done"
     >
       <Target className="size-3 shrink-0" aria-hidden />
-      <span className="min-w-0 truncate">{text ? `เข้าใจเป้าหมายแล้ว: ${text}` : "เข้าใจเป้าหมายแล้ว"}</span>
+      <span className="min-w-0 truncate">{text ? `${t("เข้าใจเป้าหมายแล้ว", "Goal understood")}: ${text}` : t("เข้าใจเป้าหมายแล้ว", "Goal understood")}</span>
     </span>
   );
 }

@@ -30,6 +30,7 @@ import { memo, useCallback, useEffect, useMemo, useState } from "react";
 
 import { StateDot, type DotState } from "@/components/ui/StateDot";
 import { formatDuration } from "@/lib/format";
+import { useT } from "@/lib/i18n";
 import { buildPipeline, debateRound, takenEdges, type PipelineEdge, type PipelineNode } from "@/lib/trade";
 import type { AnalystName, GraphView } from "@/lib/trade-api";
 import type { NodeRunView, RunView } from "@/stores/run-reducer";
@@ -96,6 +97,7 @@ export function wrapRows(
 }
 
 export const PipelineNodeCard = memo(function PipelineNodeCard({ data }: NodeProps<Node<PipelineNodeData>>) {
+  const t = useT();
   return (
     <div
       data-testid="pipeline-node"
@@ -119,7 +121,7 @@ export const PipelineNodeCard = memo(function PipelineNodeCard({ data }: NodePro
         <span className="num">{data.durationMs !== null ? formatDuration(data.durationMs) : data.status === "idle" ? "–" : "…"}</span>
         {data.round ? (
           <span data-testid="debate-round">
-            รอบ {data.round.round}/{data.round.of}
+            {t("รอบ", "Round")} {data.round.round}/{data.round.of}
           </span>
         ) : null}
         {data.tools ? (
